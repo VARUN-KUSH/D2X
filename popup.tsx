@@ -27,20 +27,21 @@ function Popup() {
   const toggleSettingsSection = () =>
     setShowSettingsSection(!showSettingsSection)
 
-  // const toggleMainActionSection = (sectionId) => {
-  //     const sections = ["evaluateSection", "screenshotSection", "profileSection"];
-  //     setShowHelpSection(false);
-  //     setShowSettingsSection(false);
+  const toggleMainActionSection = (sectionId: any) => {
+      const sections = ["evaluateSection", "screenshotSection", "profileSection"];
+      setShowHelpSection(false);
+      setShowSettingsSection(false);
 
-  //     sections.forEach((id) => {
-  //         const section = document.getElementById(id);
-  //         if (id === sectionId) {
-  //             section.open = !section.open;
-  //         } else {
-  //             section.open = false;
-  //         }
-  //     });
-  // };
+      sections.forEach((id) => {
+        
+          // const section = document.getElementById(id);
+          // if (id === sectionId) {
+          //     section.open = !section.open;
+          // } else {
+          //     section.open = false;
+          // }
+      });
+  };
 
   const toggleSubSection = (sectionId: any) => {
     setOpenSubSections((prev) => ({
@@ -165,6 +166,7 @@ function Popup() {
       </div>
 
       <main>
+        
         {showHelpSection && (
           <section id="mainHelpSection">
             <h2>Über D2X</h2>
@@ -383,3 +385,5 @@ function Popup() {
 }
 
 export default Popup
+
+
