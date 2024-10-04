@@ -1,32 +1,4 @@
-// import type { PlasmoCSConfig } from "plasmo"
- 
-export const config
-// : PlasmoCSConfig
- = {
-  matches: ["https://x.com/"],
-  all_frames: true
-}
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log("Message received in content script:", request);
-  
-    if (request.action === "startAnalysis") {
-      console.log(
-        `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.targetUrl}`
-      );
-      scrapeContent(request.analysisId, request.screenshotData, request.targetUrl)
-        .then((content) => {
-          console.log(`Content extracted: ${JSON.stringify(content)}`);
-          sendResponse({ status: "Content extracted", content: content });
-          console.log("sendResponse called with content");
-        })
-        .catch((error) => {
-          console.error(`Error scraping content: ${error.message}`);
-          sendResponse({ status: "Error", message: error.message });
-        });
-      return true; // Keeps the message channel open for asynchronous response
-    }
-});
+export{}
 
 console.log("D2X content script loaded", new Date().toISOString());
 
@@ -132,7 +104,26 @@ async function universalScrape(screenshotData, analysisId) {
   return [];
 }
 
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log("Message received in content script:", request);
 
+  if (request.action === "scrapeContent") {
+    console.log(
+      `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.targetUrl}`
+    );
+    scrapeContent(request.analysisId, request.screenshotData, request.targetUrl)
+      .then((content) => {
+        console.log(`Content extracted: ${JSON.stringify(content)}`);
+        sendResponse({ status: "Content extracted", content: content });
+        console.log("sendResponse called with content");
+      })
+      .catch((error) => {
+        console.error(`Error scraping content: ${error.message}`);
+        sendResponse({ status: "Error", message: error.message });
+      });
+    return true; // Keeps the message channel open for asynchronous response
+  }
+});
 
 // Initialize TwitterScraper when the content script loads
 initializeTwitterScraper();
