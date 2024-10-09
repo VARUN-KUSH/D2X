@@ -1,5 +1,5 @@
-export{}
 
+console.log("running the capturepageapi")
 // Screenshot functionality based on Peter Coles - http://mrcoles.com/ - from https://github.com/chemtrails/FullCap
 // This constant should be a var if we want to inject the script twice on the same page
 var CAPTURE_DELAY = 700;

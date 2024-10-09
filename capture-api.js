@@ -1,10 +1,8 @@
-export{}
-
 // Screenshot functionality based on Peter Coles - http://mrcoles.com/ - from https://github.com/chemtrails/FullCap
 function logFileOperation(operation, path) {
   console.log(`File Operation: ${operation}, Path: ${path}`);
 }
-window.CaptureAPI = (function () {
+export const CaptureAPI = (function () {
   const MAX_PRIMARY_DIMENSION = 15000 * 2,
     MAX_SECONDARY_DIMENSION = 4000 * 2,
     MAX_AREA = MAX_PRIMARY_DIMENSION * MAX_SECONDARY_DIMENSION;
@@ -337,7 +335,7 @@ window.CaptureAPI = (function () {
 
       if (chrome.scripting) {
         chrome.scripting.executeScript(
-          { target: { tabId: tab.id }, files: ["capture-page.js"] },
+          { target: { tabId: tab.id }, files: ["contents/capture-page.js"] },
           function () {
             if (timedOut) {
               console.error(

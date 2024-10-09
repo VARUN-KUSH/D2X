@@ -106,24 +106,57 @@ async function universalScrape(screenshotData, analysisId) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log("Message received in content script:", request);
-
-  if (request.action === "scrapeContent") {
-    console.log(
-      `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.targetUrl}`
-    );
-    scrapeContent(request.analysisId, request.screenshotData, request.targetUrl)
-      .then((content) => {
-        console.log(`Content extracted: ${JSON.stringify(content)}`);
-        sendResponse({ status: "Content extracted", content: content });
-        console.log("sendResponse called with content");
-      })
-      .catch((error) => {
-        console.error(`Error scraping content: ${error.message}`);
-        sendResponse({ status: "Error", message: error.message });
-      });
-    return true; // Keeps the message channel open for asynchronous response
+  // Handle the disableTwitterHeader and enableTwitterHeader actions
+  const headerElement = document.querySelector('header[role="banner"]');
+  
+  if (request.action === "disableTwitterHeader") {
+    if (headerElement) {
+      headerElement.style.display = "none"; // Hide the header
+      console.log("Twitter header disabled");
+    }
+    sendResponse({ status: "Twitter header disabled" });
+  } else if (request.action === "enableTwitterHeader") {
+    if (headerElement) {
+      headerElement.style.display = ""; // Show the header
+      console.log("Twitter header enabled");
+    }
+    sendResponse({ status: "Twitter header enabled" });
   }
 });
+
+chrome.runtime.onConnect.addListener(function (port) {
+  if (port.name === "scrapingChannel") {
+    console.log("Connection established in content script:", port);
+
+    port.onMessage.addListener(function (request) {
+      console.log("Message received in content script:", request);
+
+      if (request.action === "scrapeContent") {
+        console.log(
+          `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.tabUrl}`
+        );
+
+        scrapeContent(request.analysisId, request.screenshotData, request.tabUrl)
+          .then((content) => {
+            console.log(`Content extracted: ${JSON.stringify(content)}`);
+            
+            // Send the response back to the background script
+            port.postMessage({ status: "Content extracted", content: content });
+          })
+          .catch((error) => {
+            console.error(`Error scraping content: ${error.message}`);
+            port.postMessage({ status: "Error", message: error.message });
+          });
+      }
+    });
+
+    // Clean up the connection if needed
+    port.onDisconnect.addListener(() => {
+      console.log("Port disconnected in content script");
+    });
+  }
+});
+
 
 // Initialize TwitterScraper when the content script loads
 initializeTwitterScraper();

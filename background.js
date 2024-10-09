@@ -2,7 +2,7 @@
 // TODO implement Workflow
 //  - Start analysis with user button click
 //  - Generate a UID
-//  - trigger screenshot of the social media page
+//  - trigger screenshot of the social media page with timestamps and url added
 //  - trigger scraping
 //  - Use LLM / Assitent API
 //    - if required (i.e. if scraping gives unstructured ORC result from universal scraper(i.e. a scraper flag = universalScraper)) structure the scrape into a format of messages and replies
@@ -14,6 +14,7 @@ let currentAnalysisId = null;
 let activeAnalyses = new Map();
 
 // ## UID generation and management
+
 function generateUniqueId() {
   // The IDs follow the UUID (Universally Unique Identifier) version 4 format
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -107,24 +108,36 @@ function generateScreenshotFilename(analysisId, index, total) {
 
 async function scrapeContent(analysisId, screenshotData, tabUrl, tabId) {
   return new Promise((resolve, reject) => {
-    chrome.tabs.sendMessage(
-      tabId,
-      {
-        action: "scrapeContent",
-        screenshotData: screenshotData,
-        analysisId: analysisId,
-        tabUrl: tabUrl,
-      },
-      function (response) {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else if (response && response.status === "Content extracted") {
-          resolve(response.content);
-        } else {
-          reject(new Error("Failed to scrape content"));
-        }
+    const port = chrome.tabs.connect(tabId, { name: "scrapingChannel" });
+
+    // Send the scrape request via the persistent connection
+    port.postMessage({
+      action: "scrapeContent",
+      screenshotData: screenshotData,
+      analysisId: analysisId,
+      tabUrl: tabUrl,
+    });
+
+    // Listen for messages from the content script
+    port.onMessage.addListener((response) => {
+      if (response.status === "Content extracted") {
+        console.log("Content extracted successfully in background:", response.content);
+        resolve(response.content);
+        port.disconnect(); // Close the port after receiving the response
+      } else if (response.status === "Error") {
+        console.error("Error in content script:", response.message);
+        reject(new Error(response.message));
+        port.disconnect(); // Close the port on error
       }
-    );
+    });
+
+    // Handle errors if the connection fails
+    port.onDisconnect.addListener(() => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      }
+    });
+    
   });
 }
 
@@ -212,10 +225,13 @@ async function handlePostURLScrape(url) {
 async function startFullAnalysis() {
   try {
     const uid = getActiveAnalysisId();
+    console.log("uid>>>>>>>>>>>>>>>>>>>>>", uid)
     console.log(`Starting full analysis with ID: ${uid}`);
 
     const tabId = await getCurrentTabId();
     const url = await getCurrentTabUrl();
+    console.log("tabid>>>>>>>>>>>>>", tabId)
+    console.log("url>>>>>>>>>>>>>>", url)
 
     // Capture initial screenshot without navigation
     await requestScreenshotCapture(url, "initial_page.png", "");
@@ -230,13 +246,13 @@ async function startFullAnalysis() {
     const results = await processContent(scrapedContent);
     console.log("Processed results:", results);
 
-    // After processing, add analysis results to the ZIP
-    await addAnalysisResultsToZip(results);
+    // // After processing, add analysis results to the ZIP
+    // await addAnalysisResultsToZip(results);
 
-    // Signal completion to trigger ZIP download
-    chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid });
+    // // Signal completion to trigger ZIP download
+    // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid });
 
-    updateAnalysisStatus(uid, "completed");
+    // updateAnalysisStatus(uid, "completed");
   } catch (error) {
     console.error("Error during full analysis:", error);
     chrome.runtime.sendMessage({
@@ -269,18 +285,8 @@ async function addAnalysisResultsToZip(results) {
 }
 
 // # Assistent functionality
-// Function to load API key from config file or storage
+// Function to load API key storage
 async function getAPIKey() {
-  try {
-    const response = await fetch(chrome.runtime.getURL("config.json"));
-    const config = await response.json();
-    if (config.API_KEY) {
-      console.log("API key found in config.json");
-      return config.API_KEY;
-    }
-  } catch (error) {
-    console.error("Error reading config.json:", error);
-  }
 
   return new Promise((resolve) => {
     chrome.storage.local.get(["apiKey"], function (result) {
@@ -596,6 +602,7 @@ async function createAssistant(apiKey) {
   try {
     const result = await chrome.storage.local.get(["backgroundInfo"]);
     backgroundInfo = result.backgroundInfo || "";
+    console.log("resultInbackgroundinfo>>>>>>>>>>", result, "backgroundInfo>>>>>>>>", backgroundInfo)
   } catch (error) {
     console.error("Error retrieving background info:", error);
   }
@@ -621,6 +628,7 @@ ${backgroundInfo}
     );
   }
 
+  console.log("apikeys", apiKey)
   const response = await fetch("https://api.openai.com/v1/assistants", {
     method: "POST",
     headers: {
@@ -631,7 +639,7 @@ ${backgroundInfo}
     body: JSON.stringify({
       name: "D2X Evaluation Assistant",
       instructions: systemPromptWithContext,
-      model: "gpt-4o", // TODO replace with "gpt-4o-mini" when openai api is back
+      model: "gpt-4-turbo", // TODO replace with "gpt-4o-mini" when openai api is back
       tools: [{ type: "code_interpreter" }],
     }),
   });
@@ -782,7 +790,7 @@ function parseAssistantResponse(response) {
 
 // Function to process content with batching and error handling
 async function processContent(messages) {
-  try {
+  // try {
     const uid = getActiveAnalysisId();
     console.log(`Processing content for analysis ID: ${uid}`);
     updateAnalysisStatus(uid, "processing");
@@ -796,7 +804,7 @@ async function processContent(messages) {
     let assistant;
     try {
       assistant = await createAssistant(API_KEY);
-      console.log(`Created assistant with ID: ${assistant.id}`);
+      console.log(`Created assistant with ID: ${assistant.id}`, "assistant>>>>>>>>", assistant);
     } catch (error) {
       console.error("Error creating assistant:", error);
       throw error;
@@ -907,29 +915,29 @@ async function processContent(messages) {
 
     console.log("Final processed results:", JSON.stringify(results, null, 2));
 
-    // Identify reportable posts
-    const reportablePosts = results.filter(
-      (post) => post.Anzeige_Entwurf && post.Anzeige_Entwurf.trim() !== ""
-    );
-    console.log("Reportable posts:", reportablePosts);
+  //   // Identify reportable posts
+  //   const reportablePosts = results.filter(
+  //     (post) => post.Anzeige_Entwurf && post.Anzeige_Entwurf.trim() !== ""
+  //   );
+  //   console.log("Reportable posts:", reportablePosts);
 
-    // Capture screenshots for reportable posts and user profiles
-    if (reportablePosts.length > 0) {
-      await captureReportablePostScreenshots(reportablePosts);
-    }
+  //   // Capture screenshots for reportable posts and user profiles
+  //   if (reportablePosts.length > 0) {
+  //     await captureReportablePostScreenshots(reportablePosts);
+  //   }
 
-    updateAnalysisStatus(uid, "completed");
-    return { Posts: results, analysisId: uid };
-  } catch (error) {
-    console.error("Error in content analysis:", error);
-    chrome.runtime.sendMessage({
-      action: "analysisError",
-      error: error.message,
-      analysisId: getActiveAnalysisId(),
-    });
-    updateAnalysisStatus(getActiveAnalysisId(), "error");
-    throw error;
-  }
+  //   updateAnalysisStatus(uid, "completed");
+  //   return { Posts: results, analysisId: uid };
+  // } catch (error) {
+  //   console.error("Error in content analysis:", error);
+  //   chrome.runtime.sendMessage({
+  //     action: "analysisError",
+  //     error: error.message,
+  //     analysisId: getActiveAnalysisId(),
+  //   });
+  //   updateAnalysisStatus(getActiveAnalysisId(), "error");
+  //   throw error;
+  // }
 }
 
 // Neue Funktion zur Verarbeitung erfasster Screenshots

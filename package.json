@@ -25,7 +25,25 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
-    ]
+      "https://api.openai.com/",
+      "http://worldtimeapi.org/",
+      "https://x.com/*"
+    ],
+    "permissions": [
+      "activeTab",
+      "tabs",
+      "scripting",
+      "storage",
+      "unlimitedStorage",
+      "offscreen",
+      "downloads"
+    ],
+    "web_accessible_resources": [{
+    "resources": ["config.json"],
+    "matches": ["<all_urls>"]
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
   }
 }
