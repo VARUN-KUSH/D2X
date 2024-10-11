@@ -10,8 +10,8 @@
 //  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
 
 // ## Global variables
-let currentAnalysisId = null;
-let activeAnalyses = new Map();
+let currentAnalysisId = null
+let activeAnalyses = new Map()
 
 // ## UID generation and management
 
@@ -19,203 +19,216 @@ function generateUniqueId() {
   // The IDs follow the UUID (Universally Unique Identifier) version 4 format
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     var r = (Math.random() * 16) | 0,
-      v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+      v = c == "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 function startNewAnalysis() {
-  const newUID = generateUniqueId();
-  currentAnalysisId = newUID;
-  activeAnalyses.set(newUID, { status: "started", timestamp: Date.now() });
-  return newUID;
+  const newUID = generateUniqueId()
+  currentAnalysisId = newUID
+  activeAnalyses.set(newUID, { status: "started", timestamp: Date.now() })
+  return newUID
 }
 
 function getActiveAnalysisId() {
   if (!currentAnalysisId) {
-    return startNewAnalysis();
+    return startNewAnalysis()
   }
-  return currentAnalysisId;
+  return currentAnalysisId
 }
 
 function updateAnalysisStatus(uid, status) {
   if (activeAnalyses.has(uid)) {
-    console.log(`Updating analysis ${uid} to status: ${status}`);
-    activeAnalyses.get(uid).status = status;
+    console.log(`Updating analysis ${uid} to status: ${status}`)
+    activeAnalyses.get(uid).status = status
   } else {
-    console.warn(`Attempted to update status for unknown analysis ID: ${uid}`);
+    console.warn(`Attempted to update status for unknown analysis ID: ${uid}`)
   }
 }
 
 async function getCurrentTabId() {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tabs[0]?.id;
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+  return tabs[0]?.id
 }
 
 async function getCurrentTabUrl() {
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  return tabs[0]?.url;
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+  return tabs[0]?.url
 }
 
 // ## Utility functions
 function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function waitForTabToLoad(tabId) {
   return new Promise((resolve) => {
     function listener(updatedTabId, info) {
       if (updatedTabId === tabId && info.status === "complete") {
-        chrome.tabs.onUpdated.removeListener(listener);
-        resolve();
+        chrome.tabs.onUpdated.removeListener(listener)
+        resolve()
       }
     }
-    chrome.tabs.onUpdated.addListener(listener);
-  });
+    chrome.tabs.onUpdated.addListener(listener)
+  })
 }
 
 function setAPIKey(apiKey) {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({ apiKey: apiKey }, function () {
       if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError);
+        reject(chrome.runtime.lastError)
       } else {
-        resolve();
+        resolve()
       }
-    });
-  });
+    })
+  })
 }
 
 async function getCurrentTime() {
-  const url = "http://worldtimeapi.org/api/ip";
+  const url = "http://worldtimeapi.org/api/ip"
   try {
-    const response = await fetch(url);
+    const response = await fetch(url)
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-    const data = await response.json();
-    return data.datetime;
+    const data = await response.json()
+    return data.datetime
   } catch (error) {
-    console.error("Error fetching time:", error);
-    return new Date().toISOString(); // Fallback to local system time
+    console.error("Error fetching time:", error)
+    return new Date().toISOString() // Fallback to local system time
   }
 }
 
 function generateScreenshotFilename(analysisId, index, total) {
-  return `screenshot_${analysisId}_${index + 1}_of_${total}.png`;
+  return `screenshot_${analysisId}_${index + 1}_of_${total}.png`
 }
 
-
-async function scrapeContent(analysisId, screenshotData, tabUrl, tabId) {
+async function scrapeContent(analysisId, tabId) {
   return new Promise((resolve, reject) => {
-    const port = chrome.tabs.connect(tabId, { name: "scrapingChannel" });
+    const port = chrome.tabs.connect(tabId, { name: "scrapingChannel" })
 
     // Send the scrape request via the persistent connection
     port.postMessage({
       action: "scrapeContent",
-      screenshotData: screenshotData,
-      analysisId: analysisId,
-      tabUrl: tabUrl,
-    });
+      analysisId: analysisId
+    })
 
     // Listen for messages from the content script
     port.onMessage.addListener((response) => {
       if (response.status === "Content extracted") {
-        console.log("Content extracted successfully in background:", response.content);
-        resolve(response.content);
-        port.disconnect(); // Close the port after receiving the response
+        console.log(
+          "Content extracted successfully in background:",
+          response.content
+        )
+        resolve(response.content)
+        port.disconnect() // Close the port after receiving the response
       } else if (response.status === "Error") {
-        console.error("Error in content script:", response.message);
-        reject(new Error(response.message));
-        port.disconnect(); // Close the port on error
+        console.error("Error in content script:", response.message)
+        reject(new Error(response.message))
+        port.disconnect() // Close the port on error
       }
-    });
+    })
 
     // Handle errors if the connection fails
     port.onDisconnect.addListener(() => {
       if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
+        reject(new Error(chrome.runtime.lastError.message))
       }
-    });
-    
-  });
+    })
+  })
 }
 
-async function handlePostURLScrape(url) {
-  console.log(`Handling post URL scrape for: ${url}`);
-  let tab;
+async function handlePostURLScrape(analysisId, url) {
+  console.log(`Handling post URL scrape for: ${url}`)
+  let tab
   try {
-    tab = await chrome.tabs.create({ url: url, active: false });
-    console.log(`Created new tab with ID: ${tab.id}`);
+    tab = await chrome.tabs.create({ url: url, active: false })
+    console.log(
+      `Created new tab with ID: ${tab.id} and analysisId: ${analysisId}`
+    )
 
     // Wait for the page to load
     await new Promise((resolve) => {
-      chrome.tabs.onUpdated.addListener(function listener(
-        tabId,
-        changeInfo,
-        tab
-      ) {
-        if (changeInfo.status === "loading") {
-          // Reset injectedTabs and captureLocks for this tab
-          injectedTabs.delete(tabId);
-          captureLocks.delete(tabId);
-        }
+      chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
         if (tabId === tab.id && info.status === "complete") {
-          chrome.tabs.onUpdated.removeListener(listener);
-          console.log(`Tab ${tabId} finished loading`);
-          resolve();
+          chrome.tabs.onUpdated.removeListener(listener)
+          console.log(`Tab ${tabId} finished loading`)
+          resolve()
         }
-      });
-    });
+      })
+    })
 
     // First attempt
-    console.log("Waiting for 5 seconds to ensure content is fully loaded...");
-    await delay(5000);
+    console.log("Waiting for 5 seconds to ensure content is fully loaded...")
+    await delay(5000)
 
-    console.log(`Sending scrapeContent message to tab ${tab.id}`);
-    let result = await chrome.tabs.sendMessage(tab.id, {
-      action: "scrapeContent",
-      targetUrl: url,
-    });
-    console.log(`Received scrape result: ${JSON.stringify(result)}`);
+    console.log(`Sending scrapeContent message to tab ${tab.id}`)
 
-    // Check if result is empty and retry if necessary
-    if (!result || !result.content || result.content.length === 0) {
-      console.log(
-        "First scrape attempt returned empty result. Waiting additional 3 seconds and retrying..."
-      );
-      await delay(3000);
+    const result = await new Promise((resolve, reject) => {
+      const port = chrome.tabs.connect(tab.id, {
+        name: "scrapeContent"
+      })
 
-      console.log(`Retrying scrapeContent message to tab ${tab.id}`);
-      result = await chrome.tabs.sendMessage(tab.id, {
+      // Send the scrape request via the persistent connection
+      port.postMessage({
         action: "scrapeContent",
         targetUrl: url,
-      });
-      console.log(`Received retry scrape result: ${JSON.stringify(result)}`);
+        analysisId: analysisId
+      })
+
+      // Listen for messages from the content script
+      port.onMessage.addListener((response) => {
+        if (response.status === "Content extracted") {
+          console.log(
+            "Content extracted successfully in background:",
+            response.content
+          )
+          resolve(response.content)
+          port.disconnect() // Close the port after receiving the response
+        } else if (response.status === "Error") {
+          console.error("Error in content script:", response.message)
+          reject(new Error(response.message))
+          port.disconnect() // Close the port on error
+        }
+      })
+
+      // Handle errors if the connection fails
+      port.onDisconnect.addListener(() => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message))
+        }
+      })
+    })
+    console.log(`Received scrape result: ${JSON.stringify(result)}`)
+
+    // Check if result is empty and retry if necessary
+    if (!result) {
+      console.log(
+        "First scrape attempt returned empty result. Waiting additional 3 seconds and retrying..."
+      )
+      //try again to sendmessage to scrape full post
     }
 
-    if (
-      result &&
-      result.status === "Content extracted" &&
-      Array.isArray(result.content)
-    ) {
-      return result.content;
+    if (result && Array.isArray(result)) {
+      return result
     } else {
       console.error(
         "Invalid scrape result format or scraping failed after retry"
-      );
-      return null;
+      )
+      return null
     }
   } catch (error) {
-    console.error(`Error in handlePostURLScrape: ${error.message}`);
-    return null;
+    console.error(`Error in handlePostURLScrape: ${error.message}`)
+    return null
   } finally {
     if (tab) {
       try {
-        await chrome.tabs.remove(tab.id);
-        console.log(`Removed tab ${tab.id}`);
+        await chrome.tabs.remove(tab.id)
+        console.log(`Removed tab ${tab.id}`)
       } catch (error) {
-        console.error(`Error removing tab ${tab.id}: ${error.message}`);
+        console.error(`Error removing tab ${tab.id}: ${error.message}`)
       }
     }
   }
@@ -224,43 +237,43 @@ async function handlePostURLScrape(url) {
 // ## Main analysis functions
 async function startFullAnalysis() {
   try {
-    const uid = getActiveAnalysisId();
+    const uid = getActiveAnalysisId()
     console.log("uid>>>>>>>>>>>>>>>>>>>>>", uid)
-    console.log(`Starting full analysis with ID: ${uid}`);
+    console.log(`Starting full analysis with ID: ${uid}`)
 
-    const tabId = await getCurrentTabId();
-    const url = await getCurrentTabUrl();
+    const tabId = await getCurrentTabId()
+    const url = await getCurrentTabUrl()
     console.log("tabid>>>>>>>>>>>>>", tabId)
     console.log("url>>>>>>>>>>>>>>", url)
 
     // Capture initial screenshot without navigation
-    await requestScreenshotCapture(url, "initial_page.png", "");
+    await requestScreenshotCapture(url, "initial_page.png", "")
 
     // Proceed with scraping and processing
-    updateAnalysisStatus(uid, "scraping");
-    console.log("Scraping content for URL:", url);
-    const scrapedContent = await scrapeContent(uid, null, url, tabId);
-    console.log("Scraped content:", scrapedContent);
+    updateAnalysisStatus(uid, "scraping")
+    console.log("Scraping content for URL:", url)
+    const scrapedContent = await scrapeContent(uid, tabId)
+    console.log("Scraped content:", scrapedContent)
 
-    updateAnalysisStatus(uid, "processing");
-    const results = await processContent(scrapedContent);
-    console.log("Processed results:", results);
+    updateAnalysisStatus(uid, "processing")
+    const results = await processContent(scrapedContent)
+    console.log("Processed results:", results)
 
-    // // After processing, add analysis results to the ZIP
-    // await addAnalysisResultsToZip(results);
+    // After processing, add analysis results to the ZIP
+    // await addAnalysisResultsToZip(results)
 
-    // // Signal completion to trigger ZIP download
-    // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid });
+    // Signal completion to trigger ZIP download
+    // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
 
-    // updateAnalysisStatus(uid, "completed");
+    // updateAnalysisStatus(uid, "completed")
   } catch (error) {
-    console.error("Error during full analysis:", error);
+    console.error("Error during full analysis:", error)
     chrome.runtime.sendMessage({
       action: "analysisError",
       error: error.message,
-      analysisId: getActiveAnalysisId(),
-    });
-    updateAnalysisStatus(getActiveAnalysisId(), "error");
+      analysisId: getActiveAnalysisId()
+    })
+    updateAnalysisStatus(getActiveAnalysisId(), "error")
   }
 }
 
@@ -271,35 +284,34 @@ async function addAnalysisResultsToZip(results) {
         action: "addToZip",
         fileData: JSON.stringify(results, null, 2),
         filename: "analysis_results.json",
-        directory: "",
+        directory: ""
       },
       (response) => {
         if (chrome.runtime.lastError || (response && response.error)) {
-          reject(chrome.runtime.lastError || response.error);
+          reject(chrome.runtime.lastError || response.error)
         } else {
-          resolve();
+          resolve()
         }
       }
-    );
-  });
+    )
+  })
 }
 
 // # Assistent functionality
 // Function to load API key storage
 async function getAPIKey() {
-
   return new Promise((resolve) => {
     chrome.storage.local.get(["apiKey"], function (result) {
       if (result.apiKey) {
-        console.log("API key found in storage");
-        resolve(result.apiKey);
+        console.log("API key found in storage")
+        resolve(result.apiKey)
       } else {
-        console.log("API key not found in storage or config");
-        chrome.runtime.sendMessage({ action: "requestAPIKey" });
-        resolve(null);
+        console.log("API key not found in storage or config")
+        chrome.runtime.sendMessage({ action: "requestAPIKey" })
+        resolve(null)
       }
-    });
-  });
+    })
+  })
 }
 
 // Evaluator system prompt
@@ -594,38 +606,43 @@ The assistant must follow the given JSON format strictly for the response and av
     }
   ]
 }
-`;
+`
 
 // Function to create an OpenAI Assistant
 async function createAssistant(apiKey) {
-  let backgroundInfo = "";
+  let backgroundInfo = ""
   try {
-    const result = await chrome.storage.local.get(["backgroundInfo"]);
-    backgroundInfo = result.backgroundInfo || "";
-    console.log("resultInbackgroundinfo>>>>>>>>>>", result, "backgroundInfo>>>>>>>>", backgroundInfo)
+    const result = await chrome.storage.local.get(["backgroundInfo"])
+    backgroundInfo = result.backgroundInfo || ""
+    console.log(
+      "resultInbackgroundinfo>>>>>>>>>>",
+      result,
+      "backgroundInfo>>>>>>>>",
+      backgroundInfo
+    )
   } catch (error) {
-    console.error("Error retrieving background info:", error);
+    console.error("Error retrieving background info:", error)
   }
 
-  let systemPromptWithContext = evaluatorSystemPrompt;
+  let systemPromptWithContext = evaluatorSystemPrompt
   if (backgroundInfo.trim() !== "") {
     const contextBlock = `
 # Context by the user
 Additional context provided by the user to be considered during analysis:
 ${backgroundInfo}
 # End of user context
-`;
+`
     // Use a regular expression to safely replace the placeholder
     systemPromptWithContext = evaluatorSystemPrompt.replace(
       /\{\{context_block\}\}\n*/g,
       contextBlock
-    );
+    )
   } else {
     // If no context, just remove the placeholder
     systemPromptWithContext = evaluatorSystemPrompt.replace(
       /\{\{context_block\}\}\n*/g,
       ""
-    );
+    )
   }
 
   console.log("apikeys", apiKey)
@@ -634,21 +651,21 @@ ${backgroundInfo}
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2",
+      "OpenAI-Beta": "assistants=v2"
     },
     body: JSON.stringify({
       name: "D2X Evaluation Assistant",
       instructions: systemPromptWithContext,
-      model: "gpt-4-turbo", // TODO replace with "gpt-4o-mini" when openai api is back
-      tools: [{ type: "code_interpreter" }],
-    }),
-  });
+      model: "gpt-4o-mini", // TODO replace with "gpt-4o-mini" when openai api is back
+      tools: [{ type: "code_interpreter" }]
+    })
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to create assistant: ${response.statusText}`);
+    throw new Error(`Failed to create assistant: ${response.statusText}`)
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 // Function to create a Thread
@@ -658,16 +675,16 @@ async function createThread(apiKey) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2",
+      "OpenAI-Beta": "assistants=v2"
     },
-    body: JSON.stringify({}),
-  });
+    body: JSON.stringify({})
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to create thread: ${response.statusText}`);
+    throw new Error(`Failed to create thread: ${response.statusText}`)
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 // Function to add a message to a Thread
@@ -679,21 +696,20 @@ async function addMessage(apiKey, threadId, content) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
+        "OpenAI-Beta": "assistants=v2"
       },
       body: JSON.stringify({
         role: "user",
-        content:
-          typeof content === "string" ? content : JSON.stringify(content),
-      }),
+        content: typeof content === "string" ? content : JSON.stringify(content)
+      })
     }
-  );
+  )
 
   if (!response.ok) {
-    throw new Error(`Failed to add message: ${response.statusText}`);
+    throw new Error(`Failed to add message: ${response.statusText}`)
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 // Function to run the Assistant on a Thread
@@ -705,19 +721,19 @@ async function runAssistant(apiKey, threadId, assistantId) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "OpenAI-Beta": "assistants=v2",
+        "OpenAI-Beta": "assistants=v2"
       },
       body: JSON.stringify({
-        assistant_id: assistantId,
-      }),
+        assistant_id: assistantId
+      })
     }
-  );
+  )
 
   if (!response.ok) {
-    throw new Error(`Failed to run assistant: ${response.statusText}`);
+    throw new Error(`Failed to run assistant: ${response.statusText}`)
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 // Function to check the status of a Run
@@ -728,23 +744,23 @@ async function checkRunStatus(apiKey, threadId, runId) {
       {
         headers: {
           Authorization: `Bearer ${apiKey}`,
-          "OpenAI-Beta": "assistants=v2",
-        },
+          "OpenAI-Beta": "assistants=v2"
+        }
       }
-    );
+    )
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Run status check failed:", errorData);
+      const errorData = await response.json()
+      console.error("Run status check failed:", errorData)
       throw new Error(
         `Failed to check run status: ${response.status} ${response.statusText}`
-      );
+      )
     }
 
-    return await response.json();
+    return await response.json()
   } catch (error) {
-    console.error("Error in checkRunStatus:", error);
-    throw error;
+    console.error("Error in checkRunStatus:", error)
+    throw error
   }
 }
 
@@ -755,209 +771,213 @@ async function getMessages(apiKey, threadId) {
     {
       headers: {
         Authorization: `Bearer ${apiKey}`,
-        "OpenAI-Beta": "assistants=v2",
-      },
+        "OpenAI-Beta": "assistants=v2"
+      }
     }
-  );
+  )
 
   if (!response.ok) {
-    throw new Error(`Failed to get messages: ${response.statusText}`);
+    throw new Error(`Failed to get messages: ${response.statusText}`)
   }
 
-  return await response.json();
+  return await response.json()
 }
 
 function parseAssistantResponse(response) {
-  console.log("Parsing assistant response:", response);
-  let content = response.text.value;
+  console.log("Parsing assistant response:", response)
+  let content = response.text.value
 
   // Remove JSON code block markers if present
   if (content.startsWith("```json")) {
-    content = content.replace(/^```json\n/, "").replace(/\n```$/, "");
-    console.log("Removed JSON code block markers. Content:", content);
+    content = content.replace(/^```json\n/, "").replace(/\n```$/, "")
+    console.log("Removed JSON code block markers. Content:", content)
   }
 
   try {
-    const parsedContent = JSON.parse(content);
-    console.log("Successfully parsed content:", parsedContent);
-    return parsedContent;
+    const parsedContent = JSON.parse(content)
+    console.log("Successfully parsed content:", parsedContent)
+    return parsedContent
   } catch (error) {
-    console.error("Error parsing JSON:", error);
-    console.log("Raw content that failed to parse:", content);
-    return { Posts: [{ rawContent: content }] };
+    console.error("Error parsing JSON:", error)
+    console.log("Raw content that failed to parse:", content)
+    return { Posts: [{ rawContent: content }] }
   }
 }
 
 // Function to process content with batching and error handling
 async function processContent(messages) {
-  // try {
-    const uid = getActiveAnalysisId();
-    console.log(`Processing content for analysis ID: ${uid}`);
-    updateAnalysisStatus(uid, "processing");
-    const API_KEY = await getAPIKey();
+  try {
+    const uid = getActiveAnalysisId()
+    console.log(`Processing content for analysis ID: ${uid}`)
+    updateAnalysisStatus(uid, "processing")
+    const API_KEY = await getAPIKey()
     if (!API_KEY) {
       throw new Error(
         "API Key not set. Please set your API key in the extension options."
-      );
+      )
     }
 
-    let assistant;
+    let assistant
     try {
-      assistant = await createAssistant(API_KEY);
-      console.log(`Created assistant with ID: ${assistant.id}`, "assistant>>>>>>>>", assistant);
+      assistant = await createAssistant(API_KEY)
+      console.log(
+        `Created assistant with ID: ${assistant.id}`,
+        "assistant>>>>>>>>",
+        assistant
+      )
     } catch (error) {
-      console.error("Error creating assistant:", error);
-      throw error;
+      console.error("Error creating assistant:", error)
+      throw error
     }
 
-    const batchSize = 2;
-    const results = [];
-    const totalBatches = Math.ceil(messages.length / batchSize);
+    const batchSize = 2
+    const results = []
+    const totalBatches = Math.ceil(messages.length / batchSize)
 
     for (let i = 0; i < messages.length; i += batchSize) {
-      const currentBatch = Math.floor(i / batchSize) + 1;
-      const progress = (currentBatch / totalBatches) * 100;
+      const currentBatch = Math.floor(i / batchSize) + 1
+      const progress = (currentBatch / totalBatches) * 100
 
       chrome.runtime.sendMessage({
         action: "progressUpdate",
         progress: progress,
         currentBatch: currentBatch,
         totalBatches: totalBatches,
-        analysisId: uid,
-      });
+        analysisId: uid
+      })
 
-      const batch = messages.slice(i, i + batchSize);
+      const batch = messages.slice(i, i + batchSize)
       console.log(
         `Processing batch ${currentBatch} of ${totalBatches}. Progress: ${progress}%`
-      );
-      console.log(`Batch ${currentBatch} content: ${JSON.stringify(batch)}`);
+      )
+      console.log(`Batch ${currentBatch} content: ${JSON.stringify(batch)}`)
 
-      let retries = 3;
+      let retries = 3
       while (retries > 0) {
         try {
-          const thread = await createThread(API_KEY);
+          const thread = await createThread(API_KEY)
           console.log(
             `Created thread with ID: ${thread.id} for batch ${currentBatch}`
-          );
+          )
 
           for (const message of batch) {
-            await addMessage(API_KEY, thread.id, message);
-            console.log(`Added message to thread ${thread.id}`);
+            await addMessage(API_KEY, thread.id, message)
+            console.log(`Added message to thread ${thread.id}`)
           }
 
-          console.log(`Starting run for thread ${thread.id}`);
-          const run = await runAssistant(API_KEY, thread.id, assistant.id);
+          console.log(`Starting run for thread ${thread.id}`)
+          const run = await runAssistant(API_KEY, thread.id, assistant.id)
           console.log(
             `Finished run for thread ${thread.id} with run ID: ${run.id}`
-          );
+          )
 
-          let runStatus;
-          let retryCount = 0;
+          let runStatus
+          let retryCount = 0
           do {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000))
             try {
-              runStatus = await checkRunStatus(API_KEY, thread.id, run.id);
+              runStatus = await checkRunStatus(API_KEY, thread.id, run.id)
               console.log(
                 `Run status for run ID ${run.id}: ${runStatus.status}`
-              );
+              )
             } catch (error) {
               console.error(
                 `Error checking run status (attempt ${retryCount + 1}):`,
                 error
-              );
-              if (++retryCount > 3) throw error;
+              )
+              if (++retryCount > 3) throw error
             }
-          } while (runStatus.status !== "completed");
+          } while (runStatus.status !== "completed")
 
-          const threadMessages = await getMessages(API_KEY, thread.id);
+          const threadMessages = await getMessages(API_KEY, thread.id)
           const assistantResponses = threadMessages.data.filter(
             (msg) => msg.role === "assistant"
-          );
+          )
 
           console.log(
             `Raw assistant responses for thread ${thread.id}:`,
             JSON.stringify(assistantResponses, null, 2)
-          );
+          )
 
           assistantResponses.forEach((msg, index) => {
-            console.log(`Processing response ${index + 1}:`, msg.content[0]);
-            const parsedContent = parseAssistantResponse(msg.content[0]);
+            console.log(`Processing response ${index + 1}:`, msg.content[0])
+            const parsedContent = parseAssistantResponse(msg.content[0])
             if (parsedContent.Posts) {
-              results.push(...parsedContent.Posts);
+              results.push(...parsedContent.Posts)
             } else {
               console.warn(
                 "Parsed content does not contain Posts array:",
                 parsedContent
-              );
+              )
             }
-          });
+          })
 
           chrome.runtime.sendMessage({
             action: "batchComplete",
             currentBatch: currentBatch,
             totalBatches: totalBatches,
-            analysisId: uid,
-          });
+            analysisId: uid
+          })
 
-          break;
+          break
         } catch (error) {
           console.error(
             `Error processing batch (attempt ${4 - retries}):`,
             error
-          );
+          )
           if (--retries === 0) {
-            throw error;
+            throw error
           }
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          // await new Promise((resolve) => setTimeout(resolve, 5000))
         }
       }
     }
 
-    console.log("Final processed results:", JSON.stringify(results, null, 2));
+    console.log("Final processed results:", JSON.stringify(results, null, 2))
 
-  //   // Identify reportable posts
-  //   const reportablePosts = results.filter(
-  //     (post) => post.Anzeige_Entwurf && post.Anzeige_Entwurf.trim() !== ""
-  //   );
-  //   console.log("Reportable posts:", reportablePosts);
+    // Identify reportable posts
+    const reportablePosts = results.filter(
+      (post) => post.Anzeige_Entwurf && post.Anzeige_Entwurf.trim() !== ""
+    )
+    console.log("Reportable posts:", reportablePosts)
 
-  //   // Capture screenshots for reportable posts and user profiles
-  //   if (reportablePosts.length > 0) {
-  //     await captureReportablePostScreenshots(reportablePosts);
-  //   }
+    // Capture screenshots for reportable posts and user profiles
+    if (reportablePosts.length > 0) {
+      await captureReportablePostScreenshots(reportablePosts)
+    }
 
-  //   updateAnalysisStatus(uid, "completed");
-  //   return { Posts: results, analysisId: uid };
-  // } catch (error) {
-  //   console.error("Error in content analysis:", error);
-  //   chrome.runtime.sendMessage({
-  //     action: "analysisError",
-  //     error: error.message,
-  //     analysisId: getActiveAnalysisId(),
-  //   });
-  //   updateAnalysisStatus(getActiveAnalysisId(), "error");
-  //   throw error;
-  // }
+    updateAnalysisStatus(uid, "completed")
+    return { Posts: results, analysisId: uid }
+  } catch (error) {
+    console.error("Error in content analysis:", error)
+    chrome.runtime.sendMessage({
+      action: "analysisError",
+      error: error.message,
+      analysisId: getActiveAnalysisId()
+    })
+    updateAnalysisStatus(getActiveAnalysisId(), "error")
+    throw error
+  }
 }
 
 // Neue Funktion zur Verarbeitung erfasster Screenshots
 async function captureReportablePostScreenshots(reportablePosts) {
-  const capturedProfiles = new Set();
-  let originalTab;
-  let originalUrl;
+  const capturedProfiles = new Set()
+  let originalTab
+  let originalUrl
 
   try {
     // Get the current active tab and its URL
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    originalTab = tabs[0];
-    originalUrl = originalTab.url;
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+    originalTab = tabs[0]
+    originalUrl = originalTab.url
 
     for (const post of reportablePosts) {
       try {
         // Navigate to post URL if necessary
         if (originalTab.url !== post.Post_URL) {
-          await chrome.tabs.update(originalTab.id, { url: post.Post_URL });
-          await waitForTabToLoad(originalTab.id);
+          await chrome.tabs.update(originalTab.id, { url: post.Post_URL })
+          await waitForTabToLoad(originalTab.id)
         }
 
         // Capture post screenshot
@@ -965,43 +985,40 @@ async function captureReportablePostScreenshots(reportablePosts) {
           post.Post_URL,
           `post_${post.ID}.png`,
           `${post.Username}/Post_${post.ID}`
-        );
+        )
 
         // Optional delay
-        await delay(2000);
+        await delay(2000)
 
         // Capture user profile screenshot if not already done
         if (!capturedProfiles.has(post.User_Profil_URL)) {
           if (originalTab.url !== post.User_Profil_URL) {
             await chrome.tabs.update(originalTab.id, {
-              url: post.User_Profil_URL,
-            });
-            await waitForTabToLoad(originalTab.id);
+              url: post.User_Profil_URL
+            })
+            await waitForTabToLoad(originalTab.id)
           }
 
           await requestScreenshotCapture(
             post.User_Profil_URL,
             `profile_${post.Username}.png`,
             `${post.Username}`
-          );
+          )
 
-          capturedProfiles.add(post.User_Profil_URL);
-          await delay(2000);
+          capturedProfiles.add(post.User_Profil_URL)
+          await delay(2000)
         }
       } catch (error) {
-        console.error(
-          `Error capturing screenshots for post ${post.ID}:`,
-          error
-        );
+        console.error(`Error capturing screenshots for post ${post.ID}:`, error)
       }
     }
 
     // Navigate back to the original URL
     if (originalTab.url !== originalUrl) {
-      await chrome.tabs.update(originalTab.id, { url: originalUrl });
+      await chrome.tabs.update(originalTab.id, { url: originalUrl })
     }
   } catch (error) {
-    console.error(`Error in captureReportablePostScreenshots:`, error);
+    console.error(`Error in captureReportablePostScreenshots:`, error)
   }
 }
 
@@ -1078,17 +1095,17 @@ function requestScreenshotCapture(url, filename, directory) {
         analysisId: getActiveAnalysisId(),
         url: url,
         filename: filename,
-        directory: directory,
+        directory: directory
       },
       (response) => {
         if (chrome.runtime.lastError || (response && response.error)) {
-          reject(chrome.runtime.lastError || response.error);
+          reject(chrome.runtime.lastError || response.error)
         } else {
-          resolve();
+          resolve()
         }
       }
-    );
-  });
+    )
+  })
 }
 
 // Neue Funktion zum Hinzufügen von Zeitstempeln zu Screenshots
@@ -1096,77 +1113,77 @@ async function addTimestampToScreenshots(screenshotFiles, time, url) {
   return Promise.all(
     screenshotFiles.map((file, index) => {
       return new Promise((resolve, reject) => {
-        const img = new Image();
+        const img = new Image()
         img.onload = function () {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
+          const canvas = document.createElement("canvas")
+          const ctx = canvas.getContext("2d")
 
-          const bannerHeight = 80;
-          canvas.width = img.width;
-          canvas.height = img.height + bannerHeight;
+          const bannerHeight = 80
+          canvas.width = img.width
+          canvas.height = img.height + bannerHeight
 
-          ctx.drawImage(img, 0, bannerHeight, img.width, img.height);
+          ctx.drawImage(img, 0, bannerHeight, img.width, img.height)
 
-          ctx.fillStyle = "#f0f0f0";
-          ctx.fillRect(0, 0, canvas.width, bannerHeight);
-          ctx.fillStyle = "#000000";
-          ctx.font = "14px Arial";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
+          ctx.fillStyle = "#f0f0f0"
+          ctx.fillRect(0, 0, canvas.width, bannerHeight)
+          ctx.fillStyle = "#000000"
+          ctx.font = "14px Arial"
+          ctx.textAlign = "left"
+          ctx.textBaseline = "middle"
 
-          const timestamp = `Captured on: ${new Date(time).toUTCString()}`;
-          const urlText = `URL: ${url}`;
-          const idText = `Analysis ID: ${getActiveAnalysisId()}`;
-          const partText = `Part ${index + 1} of ${screenshotFiles.length}`;
+          const timestamp = `Captured on: ${new Date(time).toUTCString()}`
+          const urlText = `URL: ${url}`
+          const idText = `Analysis ID: ${getActiveAnalysisId()}`
+          const partText = `Part ${index + 1} of ${screenshotFiles.length}`
 
-          ctx.fillText(timestamp, 10, bannerHeight / 5);
-          ctx.fillText(urlText, 10, (bannerHeight / 5) * 2);
-          ctx.fillText(idText, 10, (bannerHeight / 5) * 3);
-          ctx.fillText(partText, 10, (bannerHeight / 5) * 4);
+          ctx.fillText(timestamp, 10, bannerHeight / 5)
+          ctx.fillText(urlText, 10, (bannerHeight / 5) * 2)
+          ctx.fillText(idText, 10, (bannerHeight / 5) * 3)
+          ctx.fillText(partText, 10, (bannerHeight / 5) * 4)
 
           canvas.toBlob(function (blob) {
-            const url = URL.createObjectURL(blob);
-            resolve(url);
-          }, "image/png");
-        };
+            const url = URL.createObjectURL(blob)
+            resolve(url)
+          }, "image/png")
+        }
 
         img.onerror = function (error) {
           reject(
             new Error(`Fehler beim Laden des Screenshot-Bildes ${index + 1}`)
-          );
-        };
+          )
+        }
 
-        img.src = file;
-      });
+        img.src = file
+      })
     })
-  );
+  )
 }
 
 // # Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Received message in background:", request);
+  console.log("Received message in background:", request)
 
   if (!request.action) {
-    console.log("Message without action, ignoring:", request);
-    return;
+    console.log("Message without action, ignoring:", request)
+    return
   }
 
-  (async () => {
+  ;(async () => {
     try {
       switch (request.action) {
         case "startAnalysis":
-          await startFullAnalysis();
-          sendResponse({ analysisId: getActiveAnalysisId() });
-          break;
+          await startFullAnalysis()
+          sendResponse({ analysisId: getActiveAnalysisId() })
+          break
 
         case "getCurrentTime":
-          const time = await getCurrentTime();
-          sendResponse({ time: time });
-          break;
+          const time = await getCurrentTime()
+          sendResponse({ time: time })
+          break
 
         case "getActiveAnalysisId":
-          sendResponse({ analysisId: getActiveAnalysisId() });
-          break;
+          sendResponse({ analysisId: getActiveAnalysisId() })
+          break
 
         //case "storeScreenshot":
         //await storeScreenshot(request.analysisId, request.screenshot);
@@ -1177,43 +1194,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const content = await scrapeContent(
             request.analysisId,
             request.screenshotData
-          );
-          sendResponse({ status: "Content scraped", content: content });
-          break;
+          )
+          sendResponse({ status: "Content scraped", content: content })
+          break
 
         case "scrapePostURL":
-          const scrapedPost = await handlePostURLScrape(request.url);
-          sendResponse(scrapedPost);
-          break;
+          analysisId = getActiveAnalysisId()
+          const scrapedPost = await handlePostURLScrape(analysisId, request.url)
+          console.log("scrapedPost>>>>>>>", scrapedPost)
+          sendResponse(scrapedPost)
+          break
 
         case "setAPIKey":
-          await setAPIKey(request.apiKey);
-          sendResponse({ status: "API Key set successfully" });
-          break;
+          await setAPIKey(request.apiKey)
+          sendResponse({ status: "API Key set successfully" })
+          break
 
         //        case "screenshotCaptured":
         //          await handleCapturedScreenshot(request);
         //          break;
 
         case "screenshotError":
-          console.error("Fehler bei der Screenshot-Erfassung:", request.error);
-          break;
+          console.error("Fehler bei der Screenshot-Erfassung:", request.error)
+          break
 
         default:
-          console.warn("Unhandled message action:", request.action);
+          console.warn("Unhandled message action:", request.action)
           sendResponse({
             status: "Error",
-            message: "Unhandled message action",
-          });
-          break;
+            message: "Unhandled message action"
+          })
+          break
       }
     } catch (error) {
-      console.error("Error in message handler:", error);
-      sendResponse({ status: "Error", message: error.message });
+      console.error("Error in message handler:", error)
+      sendResponse({ status: "Error", message: error.message })
     }
-  })();
+  })()
 
-  return true; // Indicates that the response is sent asynchronously
-});
+  return true // Indicates that the response is sent asynchronously
+})
 
-console.log("Background script loaded");
+console.log("Background script loaded")

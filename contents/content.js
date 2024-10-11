@@ -1,4 +1,4 @@
-export{}
+export const config = {}
 
 console.log("D2X content script loaded", new Date().toISOString());
 
@@ -8,8 +8,8 @@ const MAX_INITIALIZATION_ATTEMPTS = 5;
 
 function initializeTwitterScraper() {
   console.log("Attempting to initialize TwitterScraper");
-  if (typeof TwitterScraper !== "undefined") {
-    twitterScraper = new TwitterScraper();
+  if (typeof window.TwitterScraper !== "undefined") {
+    twitterScraper = new window.TwitterScraper();
     console.log("TwitterScraper initialized successfully");
   } else {
     console.log("TwitterScraper not available, waiting for it to be ready");
@@ -57,7 +57,7 @@ function isTwitterOrX() {
   );
 }
 
-async function scrapeContent(analysisId, screenshotData, targetUrl = null) {
+async function scrapeContent(analysisId = null, screenshotData = null, targetUrl = null) {
   console.log(
     `Scraping content for analysisId: ${analysisId}, targetUrl: ${targetUrl}`
   );
@@ -69,12 +69,16 @@ async function scrapeContent(analysisId, screenshotData, targetUrl = null) {
 
       let tweets;
       if (targetUrl) {
+        await delay(3000);
+        //logic when dom is loaded then run it
         // If targetUrl is provided, we're scraping a single tweet
         console.log(`Scraping single tweet: ${targetUrl}`);
         tweets = scraper.parseTweets(analysisId, targetUrl);
+        console.log("fullPostTweet>>>>>>>>>", tweets)
       } else {
         // Otherwise, scrape all tweets on the page
         tweets = await scraper.getTweets(analysisId);
+
       }
 
       if (!tweets || tweets.length === 0) {
@@ -136,7 +140,36 @@ chrome.runtime.onConnect.addListener(function (port) {
           `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.tabUrl}`
         );
 
-        scrapeContent(request.analysisId, request.screenshotData, request.tabUrl)
+        scrapeContent(request.analysisId)
+          .then((content) => {
+            console.log(`Content extracted: ${JSON.stringify(content)}`);
+            
+            // Send the response back to the background script
+            port.postMessage({ status: "Content extracted", content: content });
+          })
+          .catch((error) => {
+            console.error(`Error scraping content: ${error.message}`);
+            port.postMessage({ status: "Error", message: error.message });
+          });
+      }
+    });
+
+    // Clean up the connection if needed
+    port.onDisconnect.addListener(() => {
+      console.log("Port disconnected in content script");
+    });
+  } else  if (port.name === "scrapeContent") {
+    console.log("Connection established in content script:", port);
+
+    port.onMessage.addListener(function (request) {
+      console.log("Message received in content script:", request);
+
+      if (request.action === "scrapeContent") {
+        console.log(
+          `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.tabUrl}`
+        );
+
+        scrapeContent(request.analysisId, request.targetUrl)
           .then((content) => {
             console.log(`Content extracted: ${JSON.stringify(content)}`);
             
@@ -156,6 +189,8 @@ chrome.runtime.onConnect.addListener(function (port) {
     });
   }
 });
+
+
 
 
 // Initialize TwitterScraper when the content script loads

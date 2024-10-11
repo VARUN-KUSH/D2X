@@ -195,27 +195,27 @@ function Popup() {
               })
 
               console.log("Blobsul>>>>>>>>>>>>>>", blobURLs)
-              const timeResponse = await chrome.runtime.sendMessage({
-                action: "getCurrentTime"
-              })
-              const processedScreenshots = await addTimestampToScreenshots(
-                blobURLs,
-                timeResponse.time,
-                url,
-                analysisId
-              )
+              // const timeResponse = await chrome.runtime.sendMessage({
+              //   action: "getCurrentTime"
+              // })
+              // const processedScreenshots = await addTimestampToScreenshots(
+              //   blobURLs,
+              //   timeResponse.time,
+              //   url,
+              //   analysisId
+              // )
 
-              console.log(
-                "processedScreenshots>>>>>>>>>>>>>>>>>",
-                processedScreenshots
-              )
-              // Add processed screenshots to ZIP
-              for (let i = 0; i < processedScreenshots.length; i++) {
-                const response = await fetch(processedScreenshots[i])
-                const blob = await response.blob()
-                const fileName = filename || `screenshot_${i + 1}.png`
-                addToZip(blob, fileName, directory)
-              }
+              // console.log(
+              //   "processedScreenshots>>>>>>>>>>>>>>>>>",
+              //   processedScreenshots
+              // )
+              // // Add processed screenshots to ZIP
+              // for (let i = 0; i < processedScreenshots.length; i++) {
+              //   const response = await fetch(processedScreenshots[i])
+              //   const blob = await response.blob()
+              //   const fileName = filename || `screenshot_${i + 1}.png`
+              //   addToZip(blob, fileName, directory)
+              // }
 
               resolve()
             } catch (error) {
