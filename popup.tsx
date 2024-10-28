@@ -1,15 +1,27 @@
 import { CaptureAPI } from "capture-api"
 import React, { useEffect, useState } from "react"
-import { addTimestampToScreenshots, addToZip, getFilename } from "utility"
+import {
+  addTimestampToScreenshots,
+  addToZip,
+  capturereportablessandchangetoURLs,
+  getFilename
+} from "utility"
 
 import "./popup.css"
 
-
 function Popup() {
-  
+  const [formData, setFormData] = useState({
+    senderAddress: "",
+    recipientAddress: "",
+    recipientContactdetails: "",
+    city: "",
+    fullName: ""
+  })
   const [openSection, setOpenSection] = useState<string | null>(
     "evaluateSection"
   )
+  const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
+  const [backgroundInfo, setbackgroundInfo] = useState("")
   const [analysisId, setAnalysisId] = useState("")
   const [showHelpSection, setShowHelpSection] = useState(false)
   const [showSettingsSection, setShowSettingsSection] = useState(false)
@@ -23,9 +35,10 @@ function Popup() {
   })
   const [apiKeys, setApiKeys] = useState({
     openaiApiKey: "",
-    perplexityApiKey: "",
-  });
+    perplexityApiKey: ""
+  })
   const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(true) // Default is on (header visible)
+  const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(true)
 
   // const [darkMode, setDarkMode] = useState(false); // Track dark mode state
   // useEffect(() => {
@@ -33,6 +46,23 @@ function Popup() {
   //     // Ensure "Seite Auswerten" is open by default
   //     document.getElementById("evaluateSection").open = true;
   // }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
+
+  const handleBackgroundInfo = (e) => {
+    setbackgroundInfo(e.target.value)
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Save the formData locally using chrome.storage.local
+    chrome.storage.local.set({ formData }, () => {
+      console.log("Data saved locally", formData)
+    })
+  }
 
   function updateProgressBar(progress) {
     setProgress(progress)
@@ -76,6 +106,15 @@ function Popup() {
     })
   }
 
+  const handlePerplexityToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked
+    setIsPerplexityDisabled(isChecked)
+
+    // Send message to background script
+     // Store usePerplexity value locally in chrome storage
+    chrome.storage.local.set({ usePerplexity: isChecked });
+  }
+
   useEffect(() => {
     // By default, send message to show the Twitter header
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -98,18 +137,20 @@ function Popup() {
 
   // Handle input change
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value } = event.target
     setApiKeys({
       ...apiKeys,
-      [name]: value,
-    });
-  };
+      [name]: value
+    })
+  }
 
   //API KEY SAVING LOGIC CHANGE
   const saveAPIKey = (param) => {
     let apiKey
-    param == "openai" ? apiKey = apiKeys.openaiApiKey: apiKey = apiKeys.perplexityApiKey
-    
+    param == "openai"
+      ? (apiKey = apiKeys.openaiApiKey)
+      : (apiKey = apiKeys.perplexityApiKey)
+
     chrome.runtime.sendMessage(
       { action: "setAPIKey", apiKey: apiKey, keyType: param },
       function (response) {
@@ -127,21 +168,53 @@ function Popup() {
     )
   }
 
-  const saveAddress = (type) => {
-    const address = document.getElementById(`${type}Address`).value
-    chrome.storage.local.set({ [`${type}Address`]: address }, function () {
-      alert(
-        `${type === "sender" ? "Absender" : "Empfänger"} erfolgreich gespeichert!`
-      )
-    })
-  }
+  // const saveAddress = (type) => {
+  //   const address = document.getElementById(`${type}Address`)
+  //   chrome.storage.local.set({ [`${type}Address`]: address }, function () {
+  //     alert(
+  //       `${type === "sender" ? "Absender" : "Empfänger"} erfolgreich gespeichert!`
+  //     )
+  //   })
+  // }
 
   const saveBackgroundInfo = () => {
-    const backgroundInfo = document.getElementById("backgroundInfo").value
+    // Trim and validate the backgroundInfo string
+    const trimmedBackgroundInfo = backgroundInfo.trim()
+
+    // Check if the trimmed backgroundInfo is empty
+    if (trimmedBackgroundInfo === "") {
+      console.log("Empty input detected. Skipping save.")
+      return
+    }
+    // Remove the assistant ID from chrome.storage.local
+    chrome.storage.local.remove("Assistantid", function () {
+      console.log("Assistant ID removed from local storage.")
+    })
     chrome.storage.local.set({ backgroundInfo: backgroundInfo }, function () {
       alert("Hintergrundinformationen erfolgreich gespeichert!")
+      setbackgroundInfopresent(true)
     })
+    
   }
+
+  useEffect(() => {
+    chrome.storage.local.get(["backgroundInfo"], function (result) {
+      setbackgroundInfo(result.backgroundInfo)
+    })
+  }, [])
+
+  const deleteBackgroundInfo = () => {
+     // Remove the assistant ID from chrome.storage.local
+    chrome.storage.local.remove("Assistantid", function () {
+      console.log("Assistant ID removed from local storage.")
+    })
+
+    chrome.storage.local.remove("backgroundInfo", () => {
+      console.log("Background info removed.");
+      setbackgroundInfo("");
+      setbackgroundInfopresent(false)
+    });
+  };
 
   const triggerFullAnalysis = () => {
     setShowProgressBar(true)
@@ -163,8 +236,23 @@ function Popup() {
   }
 
   const screenshot = {
-    captureAndStoreScreenshot: function (analysisId, url, filename, directory) {
-      console.log("analysisID>>>>", analysisId, "url>>>>>>", url, "filename>>", filename, "directory>>>", directory)
+    captureAndStoreScreenshot: function (
+      analysisId,
+      url,
+      filename,
+      directory,
+      portname = null
+    ) {
+      console.log(
+        "analysisID>>>>",
+        analysisId,
+        "url>>>>>>",
+        url,
+        "filename>>",
+        filename,
+        "directory>>>",
+        directory
+      )
       return new Promise<void>((resolve, reject) => {
         chrome.tabs.query(
           { active: true, currentWindow: true },
@@ -181,43 +269,66 @@ function Popup() {
               reject(new Error("Current tab URL does not match target URL."))
               return
             }
-
+            console.log(
+              "currentTab>>>>>>>>>>",
+              currentTab,
+              "filename>>>>>",
+              filename
+            )
+            let blobURLs
             try {
               // Capture screenshot of the current page
-              const blobURLs = await new Promise((resolve, reject) => {
-                CaptureAPI.captureToFiles(
-                  currentTab,
-                  filename || getFilename(url, analysisId),
-                  resolve,
-                  reject,
-                  (progress) => updateProgressBar(progress * 100)
+              //condition to check ss for reportable posts or for initial posts
+              if (portname == "reportablescreenshotPort") {
+                blobURLs = await new Promise((resolve, reject) => {
+                  capturereportablessandchangetoURLs(
+                    currentTab,
+                    filename || getFilename(url, analysisId),
+                    resolve,
+                    reject,
+                    (progress) => updateProgressBar(progress * 100),
+                    directory,
+                    analysisId
+                  )
+                })
+                resolve(blobURLs)
+              } else {
+                blobURLs = await new Promise((resolve, reject) => {
+                  CaptureAPI.captureToFiles(
+                    currentTab,
+                    filename || getFilename(url, analysisId),
+                    resolve,
+                    reject,
+                    (progress) => updateProgressBar(progress * 100)
+                  )
+                })
+  
+                console.log("Blobsul>>>>>>>>>>>>>>", blobURLs)
+                const timeResponse = await chrome.runtime.sendMessage({
+                  action: "getCurrentTime"
+                })
+                const processedScreenshots = await addTimestampToScreenshots(
+                  blobURLs,
+                  timeResponse.time,
+                  url,
+                  analysisId
                 )
-              })
-
-              console.log("Blobsul>>>>>>>>>>>>>>", blobURLs)
-              // const timeResponse = await chrome.runtime.sendMessage({
-              //   action: "getCurrentTime"
-              // })
-              // const processedScreenshots = await addTimestampToScreenshots(
-              //   blobURLs,
-              //   timeResponse.time,
-              //   url,
-              //   analysisId
-              // )
-
-              // console.log(
-              //   "processedScreenshots>>>>>>>>>>>>>>>>>",
-              //   processedScreenshots
-              // )
-              // // Add processed screenshots to ZIP
-              // for (let i = 0; i < processedScreenshots.length; i++) {
-              //   const response = await fetch(processedScreenshots[i])
-              //   const blob = await response.blob()
-              //   const fileName = filename || `screenshot_${i + 1}.png`
-              //   addToZip(blob, fileName, directory)
-              // }
-
-              resolve()
+  
+                console.log(
+                  "processedScreenshots>>>>>>>>>>>>>>>>>",
+                  processedScreenshots
+                )
+                // Add processed screenshots to ZIP
+                for (let i = 0; i < processedScreenshots.length; i++) {
+                  const response = await fetch(processedScreenshots[i])
+                  const blob = await response.blob()
+                  const fileName = filename || `screenshot_${i + 1}.png`
+                  addToZip(blob, fileName, directory)
+                }
+  
+                resolve()
+              }
+             
             } catch (error) {
               console.error("Error capturing and storing screenshot:", error)
               reject(error)
@@ -227,7 +338,33 @@ function Popup() {
       })
     }
   }
+
   const setupMessageListener = () => {
+    chrome.runtime.onConnect.addListener((port) => {
+      if (port.name === "reportablescreenshotPort") {
+        console.log("Connection established in content script:", port)
+        port.onMessage.addListener(async (request) => {
+          if (request.action === "capturereportabletweetsScreenshot") {
+            try {
+              const modifiedscreenshots = await screenshot.captureAndStoreScreenshot(
+                request.analysisId,
+                request.url,
+                request.filename,
+                request.directory,
+                port.name
+              )
+              port.postMessage({ success: true , modifiedscreenshots: modifiedscreenshots})
+            } catch (error) {
+              port.postMessage({ error: error.message })
+            } finally {
+              // Disconnect the port after sending the response
+              port.disconnect()
+            }
+          }
+        })
+      }
+    })
+
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       ;(async () => {
         try {
@@ -246,7 +383,8 @@ function Popup() {
                 request.directory
               )
               sendResponse({ success: true })
-              break
+              return true
+            // break
             case "analysisComplete":
               // Handle ZIP file generation and download
               break
@@ -346,7 +484,29 @@ function Popup() {
               <label
                 htmlFor="twitterHeaderToggle"
                 id="twitterheaderdisablelabel">
-                Disable Twitter Header
+                Menu auf x.com ausblenden
+              </label>
+            </div>
+            <div
+              //remove instyle and add in popup css
+              style={{
+                display: "flex",
+                alignItems: "center", // camelCase for "align-items"
+                justifyItems: "center", // camelCase for "justify-items"
+                fontSize: "14px", // camelCase for "font-size"
+                fontWeight: "normal", // camelCase for "font-weight"
+                color: "#555555",
+                borderBottom: "1px solid #e6e6e6" // camelCase for "border-bottom"
+              }}>
+              <input
+                type="checkbox"
+                id="perplexityuse"
+                name="PerplexityToggle"
+                checked={isPerplexityDisabled}
+                onChange={handlePerplexityToggle}
+              />
+              <label htmlFor="perplexityuse" id="perplexitylabel">
+                Profilsuche mit Perplexity
               </label>
             </div>
             <section id="settingsSection">
@@ -402,35 +562,92 @@ function Popup() {
                 <summary onClick={() => toggleSubSection("addressSection")}>
                   Adressdaten
                 </summary>
-                <div>
-                  <label htmlFor="senderAddress">
-                    Absender:
-                    <span
-                      className="help-icon"
-                      title="Geben Sie hier die Adresse des Absenders ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
-                      ⓘ
-                    </span>
-                  </label>
-                  <textarea id="senderAddress" name="senderAddress"></textarea>
-                  <button onClick={() => saveAddress("sender")}>
-                    Speichern
-                  </button>
+                <form onSubmit={handleSubmit}>
+                  <div>
+                    <label htmlFor="senderAddress">
+                      Absender:
+                      <span
+                        className="help-icon"
+                        title="Geben Sie hier die Adresse des Absenders ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        ⓘ
+                      </span>
+                    </label>
+                    <textarea
+                      id="senderAddress"
+                      name="senderAddress"
+                      value={formData.senderAddress}
+                      onChange={handleChange}
+                    />
 
-                  <label htmlFor="recipientAddress">
-                    Empfänger:
-                    <span
-                      className="help-icon"
-                      title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
-                      ⓘ
-                    </span>
-                  </label>
-                  <textarea
-                    id="recipientAddress"
-                    name="recipientAddress"></textarea>
-                  <button onClick={() => saveAddress("recipient")}>
-                    Speichern
-                  </button>
-                </div>
+                    <label htmlFor="recipientAddress">
+                      Empfänger:
+                      <span
+                        className="help-icon"
+                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        ⓘ
+                      </span>
+                    </label>
+                    <textarea
+                      id="recipientAddress"
+                      name="recipientAddress"
+                      value={formData.recipientAddress}
+                      placeholder="John Smith, MyStreet 123, 12345 Berlin"
+                      onChange={handleChange}
+                    />
+
+                    <label htmlFor="recipientContact">
+                      Meine Kontakdaten:
+                      <span
+                        className="help-icon"
+                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        ⓘ
+                      </span>
+                    </label>
+                    <textarea
+                      id="recipientContact"
+                      name="recipientContact"
+                      value={formData.recipientContactdetails}
+                      placeholder="+49 123 45678, Me@example.com"
+                      onChange={handleChange}
+                    />
+
+                    <label htmlFor="city">
+                      Stadt für Datumszeile im Brief:
+                      <span
+                        className="help-icon"
+                        title="Geben Sie hier die Adresse des Absenders ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        ⓘ
+                      </span>
+                    </label>
+                    <input
+                      id="city"
+                      name="city"
+                      type="text"
+                      value={formData.city}
+                      placeholder="Berlin"
+                      onChange={handleChange}
+                    />
+
+                    <label htmlFor="fullName">
+                      Name der unterzeichnenden Person:
+                      <span
+                        className="help-icon"
+                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        ⓘ
+                      </span>
+                    </label>
+                    <input
+                      id="fullName"
+                      name="fullName"
+                      type="text"
+                      value={formData.fullName}
+                      placeholder="John Smith"
+                      onChange={handleChange}
+                    />
+
+                    <button type="submit">Speichern</button>
+                  </div>
+                </form>
               </details>
 
               <details id="backgroundInfoSection">
@@ -449,8 +666,15 @@ function Popup() {
                   </label>
                   <textarea
                     id="backgroundInfo"
-                    name="backgroundInfo"></textarea>
-                  <button onClick={saveBackgroundInfo}>Speichern</button>
+                    name="backgroundInfo"
+                    value={backgroundInfo}
+                    placeholder=""
+                    onChange={handleBackgroundInfo}></textarea>
+                  {backgroundInfopresent ? (
+                    <button onClick={deleteBackgroundInfo}  style={{ backgroundColor: "red", color: "white", border: "none", padding: "8px 12px", cursor: "pointer" }}>Löschen</button>
+                  ) : (
+                    <button onClick={saveBackgroundInfo}  style={{ color: "white", border: "none", padding: "8px 12px", cursor: "pointer" }}>Speichern</button>
+                  )}
                 </div>
               </details>
             </section>

@@ -9,6 +9,10 @@
 //    - evaluate if post can be reported to authorities
 //  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
 
+import profileScrape from "./contents/profile-scrapper.js"
+import { callPerplexity, createFinalReport } from "./utility.js"
+import { evaluatorSystemPrompt } from "./utils.js"
+
 // ## Global variables
 let currentAnalysisId = null
 let activeAnalyses = new Map()
@@ -62,6 +66,7 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// may be are using the listeneer inside function
 function waitForTabToLoad(tabId) {
   return new Promise((resolve) => {
     function listener(updatedTabId, info) {
@@ -247,7 +252,7 @@ async function startFullAnalysis() {
     console.log("url>>>>>>>>>>>>>>", url)
 
     // Capture initial screenshot without navigation
-    await requestScreenshotCapture(url, "initial_page.png", "")
+    await requestinitialScreenshotCapture(url, "initial_page.png", "")
 
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
@@ -258,9 +263,9 @@ async function startFullAnalysis() {
     updateAnalysisStatus(uid, "processing")
     const results = await processContent(scrapedContent)
     console.log("Processed results:", results)
-
-    // After processing, add analysis results to the ZIP
-    // await addAnalysisResultsToZip(results)
+    console.log("finalreport>>>>>>", results.Report)
+    // After processing, add analysis results to the ZIP Folder
+    await createFinalReport(results.Report)
 
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
@@ -314,300 +319,6 @@ async function getAPIKey() {
   })
 }
 
-// Evaluator system prompt
-const evaluatorSystemPrompt = `
-The Assistant is a social media-savvy bot designed to help victims of hate and violence on social media manage the flood of messages. The Assistant evaluates messages and message threads based on a guideline to determine if any messages could potentially be reported under German law. The Assistant should always follow the guideline below. 
-Important: Always consider the entire context of a message. Remember that on social media, people often use "dog-whistles" to say something without fearing consequences. These dog-whistles might be difficult for the Assistant to detect without additional context. Some signs of a dog-whistle are if a message appears to be out of context, particularly if multiple messages use a similar phrase. Detecting a dog-whistle could change the way a message is evaluated.
-
-{{context_block}}
-
-# Richtlinien zur Identifikation strafrechtlich relevanter Social Media Beiträge
-
-## 1. Beleidigung
-
-**Definition:** Herabwürdigende Äußerungen über eine Person in Wort, Bild, Schrift oder Geste.  
-**Erkennung:** Enthält die Nachricht Schimpfwörter oder herabwürdigende Ausdrücke, die sich direkt gegen eine Person richten? Zielt der Inhalt darauf ab, jemanden zu diffamieren, statt sich sachlich mit einem Thema auseinanderzusetzen?  
-**Beispiele:**
-
-- "Du bist so hässlich, du Missgeburt!"
-- "Halt's Maul, du dumme Schlampe!"  
-  **Rechtliche Konsequenzen:** Beleidigungen können strafrechtlich verfolgt werden (§ 185 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Es handelt sich um ein Antragsdelikt. Nur die betroffene Person kann innerhalb von drei Monaten nach Kenntnisnahme einen Strafantrag stellen.
-
-## 2. Üble Nachrede
-
-**Definition:** Verbreitung nicht beweisbarer, negativer Tatsachenbehauptungen über eine Person.  
-**Erkennung:** Werden nicht beweisbare, negative Tatsachenbehauptungen über eine Person verbreitet? Ist der Inhalt geeignet, den Ruf oder die Ehre der betroffenen Person zu schädigen?  
-**Beispiele:**
-
-- "Ich habe gehört, dass Lisa zur Finanzierung ihres Studiums als Prostituierte arbeitet."
-- "Der neue Kollege hat bestimmt seinen Abschluss gefälscht, so inkompetent wie der ist."  
-  **Rechtliche Konsequenzen:** Üble Nachrede kann strafrechtlich verfolgt werden (§ 186 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Es handelt sich um ein Antragsdelikt. Nur die betroffene Person kann innerhalb von drei Monaten nach Kenntnisnahme einen Strafantrag stellen.
-
-## 3. Verleumdung
-
-**Definition:** Wissentliche Verbreitung falscher Tatsachenbehauptungen über jemanden.  
-**Erkennung:** Werden wissentlich falsche Tatsachenbehauptungen über jemanden verbreitet? Ist erkennbar, dass der Verfasser die Unwahrheit der Aussage kennt?  
-**Beispiele:**
-
-- "Ich weiß genau, dass der Bürgermeister Gelder unterschlagen hat. Er ist ein Betrüger!"
-- "Diese Politikerin nimmt Bestechungsgelder von der Industrie, das ist Fakt!"  
-  **Rechtliche Konsequenzen:** Verleumdung kann strafrechtlich verfolgt werden (§ 187 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Es handelt sich um ein Antragsdelikt. Nur die betroffene Person kann innerhalb von drei Monaten nach Kenntnisnahme einen Strafantrag stellen.
-
-## 4. Bedrohung
-
-**Definition:** Androhung eines Verbrechens gegen eine Person.  
-**Erkennung:** Enthält die Nachricht konkrete Gewaltandrohungen gegen eine Person? Werden schwere Straftaten wie Mord, Körperverletzung oder sexuelle Übergriffe angedroht?  
-**Beispiele:**
-
-- "Ich weiß, wo du wohnst. Pass auf, dass dir nichts passiert!"
-- "Wenn du nicht aufhörst, deine Meinung zu verbreiten, werde ich dafür sorgen, dass du deinen Job verlierst!"  
-  **Rechtliche Konsequenzen:** Bedrohungen können strafrechtlich verfolgt werden (§ 241 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Jeder kann Anzeige erstatten, nicht nur die bedrohte Person. Es handelt sich um ein Offizialdelikt, das von Amts wegen verfolgt wird.
-
-## 5. Volksverhetzung
-
-**Definition:** Aufstachelung zum Hass gegen bestimmte Gruppen.  
-**Erkennung:** Richtet sich der Inhalt gegen bestimmte Gruppen aufgrund von Herkunft, Religion, sexueller Orientierung etc.? Wird zu Hass oder Gewalt gegen diese Gruppen aufgerufen?  
-**Beispiele:**
-
-- "Die [ethnische Gruppe] sind alles Verbrecher und sollten abgeschoben werden!"
-- "Dieses [abwertender Begriff für eine Minderheit] muss weggesperrt werden!"  
-  **Rechtliche Konsequenzen:** Volksverhetzung kann strafrechtlich verfolgt werden (§ 130 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Jeder kann Anzeige erstatten. Es handelt sich um ein Offizialdelikt, das von Amts wegen verfolgt wird.
-
-## 6. Verbreitung persönlicher Daten (Doxxing)
-
-**Definition:** Veröffentlichung privater Informationen ohne Einwilligung.  
-**Erkennung:** Werden private Informationen wie Adressen, Telefonnummern etc. ohne Einwilligung veröffentlicht?  
-**Beispiele:**
-
-- "Hier ist die Privatadresse von [Name]. Zeigt diesem [Beleidigung], was wir von [seiner/ihrer] Meinung halten!"
-- Veröffentlichung von privaten Fotos oder Dokumenten ohne Zustimmung, z.B. "Schaut mal, was ich über [Name] gefunden habe! [Link zu privaten Daten]"  
-  **Rechtliche Konsequenzen:** Doxxing kann zivilrechtlich verfolgt werden. Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. In der Regel kann nur die betroffene Person Anzeige und Strafantrag erstatten. Es gibt keine spezifische Frist, aber es empfiehlt sich, zeitnah zu handeln.
-
-## 7. Cybermobbing
-
-**Definition:** Wiederholte, gezielte Angriffe gegen eine Person im digitalen Raum.  
-**Erkennung:** Gibt es wiederholte, gezielte Angriffe gegen eine bestimmte Person?  
-**Beispiele:**
-
-- Wiederholte Kommentare wie: "Niemand mag dich hier. Verschwinde endlich aus unserer Gruppe!"
-- Erstellung von Fake-Profilen, um jemanden zu imitieren und lächerlich zu machen.  
-  **Rechtliche Konsequenzen:** Cybermobbing kann sowohl strafrechtlich als auch zivilrechtlich verfolgt werden. Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Je nach konkretem Tatbestand kann es sich um ein Antrags- oder Offizialdelikt handeln. Bei Antragsdelikten muss die betroffene Person innerhalb von drei Monaten nach Kenntnisnahme Strafantrag stellen.
-
-## 8. Cyberstalking
-
-**Definition:** Wiederholte Belästigung und Verfolgung einer Person mittels digitaler Kommunikationsmittel.  
-**Erkennung:** Ständiges Senden unerwünschter Nachrichten trotz Aufforderung, dies zu unterlassen? Überwachung und Verfolgung der Online-Aktivitäten einer Person?  
-**Beispiele:**
-
-- Ständiges Senden von Nachrichten wie: "Ich sehe, du warst gerade online. Warum antwortest du nicht? Ich weiß, dass du das liest!"
-- "Ich habe dich gestern mit deinen Freunden in der Stadt gesehen. Das rote Kleid stand dir gut."  
-  **Rechtliche Konsequenzen:** Cyberstalking kann strafrechtlich verfolgt werden (§ 238 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Es handelt sich um ein Antragsdelikt. Nur die betroffene Person kann innerhalb von drei Monaten nach Kenntnisnahme einen Strafantrag stellen. In besonders schweren Fällen wird von Amts wegen ermittelt.
-
-## 9. Digitale Erpressung
-
-**Definition:** Androhung von Schaden oder Veröffentlichung von Informationen, um Geld oder andere Leistungen zu erpressen.  
-**Erkennung:** Drohung, intime Fotos zu veröffentlichen, wenn kein Geld gezahlt wird? Androhung von Cyberangriffen, falls Forderungen nicht erfüllt werden?  
-**Beispiele:**
-
-- "Wenn du nicht 1000€ zahlst, veröffentliche ich deine intimen Fotos online."
-- "Entweder du gibst mir Zugang zu deinem Firmen-Account, oder ich hacke alle deine persönlichen Geräte."  
-  **Rechtliche Konsequenzen:** Digitale Erpressung kann strafrechtlich verfolgt werden (§ 253 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Jeder kann Anzeige erstatten. Es handelt sich um ein Offizialdelikt, das von Amts wegen verfolgt wird.
-
-## 10. Nötigung
-
-**Definition:** Zwang zu einer Handlung durch Androhung eines empfindlichen Übels.  
-**Erkennung:** Drohung, rufschädigende Informationen zu verbreiten, wenn jemand nicht kooperiert? Erzwingen einer bestimmten Handlung durch Androhung von digitaler Gewalt?  
-**Beispiele:**
-
-- "Wenn du deine Anzeige nicht zurückziehst, sorge ich dafür, dass deine Familie es bereut."
-- "Lösch sofort deinen kritischen Kommentar, oder ich verbreite Lügen über dich in der ganzen Firma!"  
-  **Rechtliche Konsequenzen:** Nötigung kann strafrechtlich verfolgt werden (§ 240 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Jeder kann Anzeige erstatten. Es handelt sich um ein Offizialdelikt, das von Amts wegen verfolgt wird.
-
-## 11. Straftaten gegen die Ehre
-
-**Definition:** Handlungen, die die Würde und den Ruf einer Person angreifen.  
-**Erkennung:** Verbreitung falscher Tatsachen über jemandes berufliche Integrität? Öffentliche Herabwürdigung einer Person durch ehrverletzende Äußerungen?  
-**Beispiele:**
-
-- "Jeder weiß, dass du deinen Abschluss nur bekommen hast, weil du mit den Professoren geschlafen hast."
-- Verbreitung von Fotomontagen, die jemanden in kompromittierenden Situationen zeigen, mit Kommentaren wie: "Seht her, so sieht unser angeblich ehrenwerter Politiker in Wirklichkeit aus!"  
-  **Rechtliche Konsequenzen:** Straftaten gegen die Ehre können strafrechtlich verfolgt werden (§§ 185-187 StGB). Eine Anzeige kann bei der Polizei oder Staatsanwaltschaft erstattet werden. Es handelt sich um Antragsdelikte. Nur die betroffene Person kann innerhalb von drei Monaten nach Kenntnisnahme einen Strafantrag stellen.
-
-## Allgemeine Hinweise:
-
-- Je extremer und schädlicher ein Inhalt erscheint, desto wahrscheinlicher ist eine Strafbarkeit.
-- Bei Antragsdelikten gilt in der Regel eine Frist von drei Monaten ab Kenntnisnahme der Tat und des Täters für die Stellung eines Strafantrags.
-- Bei Offizialdelikten gibt es keine Frist für die Anzeigeerstattung, jedoch können Verjährungsfristen gelten.
-- In einigen Fällen kann die Staatsanwaltschaft auch bei Antragsdelikten ein besonderes öffentliches Interesse an der Strafverfolgung bejahen und von Amts wegen ermitteln.
-- Im Text der Anzeige ist zu beantworten:
-  - Was ist passiert?
-  - Wie, wo und wann ist es passiert?
-  - Wer wurde geschädigt?
-  - Bekannte Informationen zum potenziellen Täter
-
-## Beispiel Strafanzeige wegen Beleidigung
-
-  Sehr geehrte Damen und Herren,
-
-  hiermit erstatte ich Strafanzeige wegen Beleidigung (und stelle zugleich Strafantrag) gegen [Name].
-
-  [Sachverhalt]
-
-  Das Verhalten erfüllt nach meiner Auffassung den Tatbestand des § 185 StGB und ist als Beleidigung strafbar. Angelehnt an ein Urteil des Amtsgerichts Tempelhof-Kreuzberg vom März 2006, Az: (237 Cs) 131 Pls 3977/04 (1080/05).
-
-  [Nähere Angaben / Screenshot Beweise in der Anlage]
-
-  Ich bitte um Mitteilung über den Eingang und Stand der Bearbeitung meiner Strafanzeige.
-
-  Mit freundlichen Grüßen,  
-  [Vor- und Familienname]
-
-## Beispiel Strafanzeige wegen Volksverhetzung
-
-  Sehr geehrte Damen und Herren,
-
-  hiermit erstatte ich Strafanzeige wegen Volksverhetzung gegen [Name], [Anschrift], ggf. „unbekannt“.
-
-  [Sachverhalt]
-
-  Ich bitte um Mitteilung über den Eingang und Stand der Bearbeitung meiner Strafanzeige.
-
-  Mit freundlichen Grüßen,  
-  [Vor- und Familienname]  
-
-  **Anlagen:**  
-  [Aufzählung Anlagen / Screenshot Beweise]
-
-The Assistant must perform an evaluation for every single message in the messages provided. 
-The assistant must follow the given JSON format strictly for the response and avoid any statements outside of the JSON format. Answer in the following JSON FORMAT ONLY.
-
-{
-  "Posts": [
-    {
-      "ID": "UNIQUE_POST_ID",
-      "Post_URL": "postUrl",
-      "Username": "handle",
-      "Screenname": "screenname",
-      "User_Profil_URL": "userProfileUrl"
-      "Veröffentlichungszeitpunkt": "time",
-      "Inhalt": "ZITAT_ODER_BESCHREIBUNG_DES_POSTS",
-      "Straftatbestand": [
-        "BELEIDIGUNG",
-        "UEBLE_NACHREDE",
-        "VERLEUMDUNG",
-        "BEDROHUNG",
-        "VOLKSVERHETZUNG",
-        "DOXXING",
-        "CYBERMOBBING",
-        "CYBERSTALKING",
-        "DIGITALE_ERPRESSUNG",
-        "NOETIGUNG",
-        "EHRVERLETZUNG"
-      ],
-      "Schweregrad": [
-        "NIEDRIG",
-        "MITTEL",
-        "HOCH"
-      ],
-      "Verfolgungsart": [
-        "ANTRAGSDELIKT",
-        "OFFIZIALDELIKT"
-      ],
-      "Antragsfrist": [
-        "DREI_MONATE",
-        "KEINE_FRIST"
-      ],
-      "Antragsberechtigte": [
-        "NUR_BETROFFENER",
-        "JEDER"
-      ],
-      "Wiederholung": [
-        "EINMALIG",
-        "WIEDERHOLT",
-        "NICHT_BEKANNT"
-      ],
-      "Ziel": [
-        "PERSON",
-        "GRUPPE"
-      ],
-      "Inhaltliche_Merkmale": [
-        {
-          "Merkmal": "SCHIMPFWOERTER",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "HERABWUERDIGENDE_AUSDRUECKE",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "TATSACHENBEHAUPTUNG",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "GEWALTANDROHUNG",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "HASS_AUFRUF",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "PRIVATE_DATEN",
-          "Zitat": "RELEVANTES_ZITAT"
-        },
-        {
-          "Merkmal": "FALSCHE_TATSACHEN",
-          "Zitat": "RELEVANTES_ZITAT"
-        }
-      ],
-      "Vorsatz": [
-        "WISSENTLICH_FALSCH",
-        "NICHT_BEWEISBAR"
-      ],
-      "Potenzielle_Konsequenzen": [
-        "RUF_SCHAEDIGUNG",
-        "PSYCHISCHE_BELASTUNG",
-        "MATERIELLE_SCHAEDEN"
-      ],
-      "Reichweite": [
-        "INTERN",
-        "OEFFENTLICH",
-        "UNBEKANNT"
-      ],
-      "Plattformen": [
-        "Facebook",
-        "X_Twitter",
-        "Instagram",
-        "LinkedIn",
-        "TikTok",
-        "Telegram",
-        "WhatsApp",
-        "Signal",
-        "Threema",
-        "Reddit",
-        "YouTube",
-        "Snapchat",
-        "Pinterest",
-        "Tumblr",
-        "Mastodon",
-        "Clubhouse",
-        "Discord",
-        "Twitch",
-        "UNBEKANNT",
-        "OTHER"
-      ],
-      "Wahrscheinlichkeit_der_Strafbarkeit": [
-        "GERING",
-        "MITTEL",
-        "HOCH"
-      ],
-      "Schriftliche_Bewertung": "DETAILLIERTE_BEWERTUNG_DES_POSTS",
-      "Anzeige_Entwurf": "TEXTENTWURF_FUER_EINE_ANZEIGE"
-    }
-  ]
-}
-`
-
 // Function to create an OpenAI Assistant
 async function createAssistant(apiKey) {
   let backgroundInfo = ""
@@ -656,7 +367,7 @@ ${backgroundInfo}
     body: JSON.stringify({
       name: "D2X Evaluation Assistant",
       instructions: systemPromptWithContext,
-      model: "gpt-4o-mini", // TODO replace with "gpt-4o-mini" when openai api is back
+      model: "gpt-4o", // TODO replace with "gpt-4o-mini" when openai api is back
       tools: [{ type: "code_interpreter" }]
     })
   })
@@ -804,6 +515,32 @@ function parseAssistantResponse(response) {
   }
 }
 
+async function getAssistant(assistantId, apiKey) {
+  const url = `https://api.openai.com/v1/assistants/${assistantId}`
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "OpenAI-Beta": "assistants=v1"
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log("getassistantdata>>>>>>>>>>>>>>", data)
+    return data
+  } catch (error) {
+    console.error("Fetch request failed:", error)
+    //create assistant in case previous assistant dont exist
+  }
+}
+
 // Function to process content with batching and error handling
 async function processContent(messages) {
   try {
@@ -819,12 +556,35 @@ async function processContent(messages) {
 
     let assistant
     try {
-      assistant = await createAssistant(API_KEY)
-      console.log(
-        `Created assistant with ID: ${assistant.id}`,
-        "assistant>>>>>>>>",
-        assistant
-      )
+      // Check if assistant ID is already saved in chrome.storage.local
+      await new Promise((resolve, reject) => {
+        chrome.storage.local.get("Assistantid", async (result) => {
+          assistant = result
+
+          if (assistant.id) {
+            console.log(`Assistant already exists with ID: ${assistant.id}`)
+            //add logic for checking get assistant and also to get all the list assistants
+            await getAssistant(assistant.id, API_KEY)
+            resolve()
+            return // If assistantId exists, don't create a new one
+          }
+
+          // If assistantId doesn't exist, create a new assistant
+          assistant = await createAssistant(API_KEY)
+
+          console.log(
+            `Created new assistant with ID: ${assistant.id}`,
+            "assistant>>>>>>>>",
+            assistant
+          )
+
+          // Save the assistant ID in chrome.storage.local
+          chrome.storage.local.set({ Assistantid: assistant.id }, () => {
+            console.log(`Assistant ID saved: ${assistant.id}`)
+            resolve()
+          })
+        })
+      })
     } catch (error) {
       console.error("Error creating assistant:", error)
       throw error
@@ -936,18 +696,20 @@ async function processContent(messages) {
     console.log("Final processed results:", JSON.stringify(results, null, 2))
 
     // Identify reportable posts
+    // todo: improve the loggic to identify
     const reportablePosts = results.filter(
       (post) => post.Anzeige_Entwurf && post.Anzeige_Entwurf.trim() !== ""
     )
-    console.log("Reportable posts:", reportablePosts)
 
+    console.log("Reportable posts:", reportablePosts)
+    let finalreports
     // Capture screenshots for reportable posts and user profiles
     if (reportablePosts.length > 0) {
-      await captureReportablePostScreenshots(reportablePosts)
+      finalreports = await captureReportablePostScreenshots(reportablePosts)
     }
 
     updateAnalysisStatus(uid, "completed")
-    return { Posts: results, analysisId: uid }
+    return { Posts: results, analysisId: uid, Report: finalreports }
   } catch (error) {
     console.error("Error in content analysis:", error)
     chrome.runtime.sendMessage({
@@ -962,34 +724,76 @@ async function processContent(messages) {
 
 // Neue Funktion zur Verarbeitung erfasster Screenshots
 async function captureReportablePostScreenshots(reportablePosts) {
-  const capturedProfiles = new Set()
+  // const capturedProfiles = new Set()
   let originalTab
   let originalUrl
 
   try {
     // Get the current active tab and its URL
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-    originalTab = tabs[0]
-    originalUrl = originalTab.url
+    let attempts = 0
+    const maxRetries = 5
+    const delaytime = 1000 // 1 second
 
+    let tabs
+    while (attempts < maxRetries) {
+      tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+      if (tabs && tabs.length > 0) {
+        console.log("tabs>>>>>>>>>>>>>>", tabs)
+        originalTab = tabs[0]
+        console.log("originalTab>>>>", originalTab)
+        // Continue with further code here, such as accessing `originalTab.url`
+        break
+      }
+
+      attempts++
+      console.warn(`Attempt ${attempts} failed. Retrying in ${delaytime}ms...`)
+      await new Promise((resolve) => setTimeout(resolve, delaytime))
+    }
+
+    if (!tabs || tabs.length === 0) {
+      console.error("No active tab found after multiple retries.")
+      throw new Error("No active tab found")
+    }
+
+    console.log("tabs>>>>>>>>>>>>>>", tabs)
+    originalTab = tabs[0]
+    console.log("originalTab>>>>", originalTab)
+    originalUrl = originalTab.url
+    let reportablePostsArray = [] // Array to store all posts with screenshots
+    let capturedProfiles = new Map() // Map to store profile screenshots for each user by their profile URL
+    let capturedProfilesdata = new Map()
     for (const post of reportablePosts) {
+      //screenshoting the all reportable posts
+      //ss of the tweets + ss of their profile (exception:- if same people having multiple tweets only one )
+      // scraping the profile info section
+      console.log("eachreportablepost>>>>>>>>>>", post)
       try {
         // Navigate to post URL if necessary
         if (originalTab.url !== post.Post_URL) {
+          console.log("post url and originaltab are not equal")
           await chrome.tabs.update(originalTab.id, { url: post.Post_URL })
           await waitForTabToLoad(originalTab.id)
         }
 
         // Capture post screenshot
-        await requestScreenshotCapture(
+        //should be taken once the dom and assets fully loaded
+        const reportablepostscreenshots = await requestScreenshotCapture(
           post.Post_URL,
           `post_${post.ID}.png`,
           `${post.Username}/Post_${post.ID}`
         )
 
+        console.log(
+          "reportablescreenshots>>>>>>>>>>>",
+          reportablepostscreenshots
+        )
+
         // Optional delay
         await delay(2000)
 
+        // Initialize profileScreenshot as null for each post
+        let profileScreenshot = null
+        let scrapedData = null
         // Capture user profile screenshot if not already done
         if (!capturedProfiles.has(post.User_Profil_URL)) {
           if (originalTab.url !== post.User_Profil_URL) {
@@ -999,95 +803,158 @@ async function captureReportablePostScreenshots(reportablePosts) {
             await waitForTabToLoad(originalTab.id)
           }
 
-          await requestScreenshotCapture(
+          scrapedData = await new Promise((resolve, reject) => {
+            chrome.scripting.executeScript(
+              {
+                target:{ tabId: originalTab.id },
+                world: "MAIN", // Access the window object directly
+                func: profileScrape
+              },
+              (results) => {
+                if (chrome.runtime.lastError) {
+                  console.error(
+                    "Script injection failed:",
+                    chrome.runtime.lastError
+                  )
+                  reject(chrome.runtime.lastError)
+                } else if (results && results[0]?.result !== undefined) {
+                  console.log("Background script got callback after injection");
+                  resolve(results[0].result); // Access the returned data here
+              } else {
+                  console.error("No data returned from content script.");
+                  resolve(null);
+              }
+              }
+            )
+          })
+
+
+          profileScreenshot = await requestScreenshotCapture(
             post.User_Profil_URL,
             `profile_${post.Username}.png`,
             `${post.Username}`
           )
 
-          capturedProfiles.add(post.User_Profil_URL)
+          console.log("profilescreenshot>>>>>>>>>>>", profileScreenshot)
+
+          //scrape the profile of each user
+
+          // Store the profile screenshot in the map for reuse
+          capturedProfiles.set(post.User_Profil_URL, profileScreenshot)
+          capturedProfilesdata.set(post.User_Profil_URL, scrapedData)
           await delay(2000)
+        } else {
+          // Reuse the existing profile screenshot if already captured
+          profileScreenshot = capturedProfiles.get(post.User_Profil_URL)
+          scrapedData = capturedProfilesdata.get(post.User_Profil_URL)
+
         }
+
+        let postReport = null
+        // const perplexityresponse = await callPerplexity()
+        // if (perplexityresponse) {
+        //   postReport = {
+        //     ...post,
+        //     scrapedData: scrapedData,
+        //     perplexityresponse: perplexityresponse,
+        //     postScreenshot: postScreenshot, // Unique post screenshot for each post
+        //     profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+        //   }
+        // } else {
+          postReport = {
+            ...post,
+            scrapedData: scrapedData,
+            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
+            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+          }
+        // }
+        // Create a structured object for each post
+
+        //calling perplexity logic
+        // Add the structured post report to the array
+        reportablePostsArray.push(postReport)
       } catch (error) {
         console.error(`Error capturing screenshots for post ${post.ID}:`, error)
       }
     }
 
     // Navigate back to the original URL
-    if (originalTab.url !== originalUrl) {
+    // if (originalTab.url !== originalUrl) {
       await chrome.tabs.update(originalTab.id, { url: originalUrl })
-    }
+    // }
+    console.log("reportablePostsArray>>>>>>>>>>", reportablePostsArray)
+    return reportablePostsArray
   } catch (error) {
     console.error(`Error in captureReportablePostScreenshots:`, error)
   }
 }
 
-/*  TODO - delete if no longer needed
+//  TODO - delete if no longer needed
 // Neue Funktion zur Verarbeitung erfasster Screenshots
-async function captureScreenshot(url, filename) {
-  console.log(`Attempting to capture screenshot for URL: ${url}`);
 
-  try {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (!tab) {
-      throw new Error("No active tab found");
-    }
+// async function captureScreenshot(url, filename) {
+//   console.log(`Attempting to capture screenshot for URL: ${url}`)
 
-    // Navigate to the new URL
-    await chrome.tabs.update(tab.id, { url: url });
+//   try {
+//     const [tab] = await chrome.tabs.query({
+//       active: true,
+//       currentWindow: true
+//     })
+//     if (!tab) {
+//       throw new Error("No active tab found")
+//     }
 
-    // Wait for the page to load
-    await new Promise((resolve) => {
-      function listener(tabId, info) {
-        if (tabId === tab.id && info.status === "complete") {
-          chrome.tabs.onUpdated.removeListener(listener);
-          resolve();
-        }
-      }
-      chrome.tabs.onUpdated.addListener(listener);
-    });
+//     // Navigate to the new URL
+//     await chrome.tabs.update(tab.id, { url: url })
 
-    // Add a delay to ensure the page is fully rendered
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+//     // Wait for the page to load
+//     await new Promise((resolve) => {
+//       function listener(tabId, info) {
+//         if (tabId === tab.id && info.status === "complete") {
+//           chrome.tabs.onUpdated.removeListener(listener)
+//           resolve()
+//         }
+//       }
+//       chrome.tabs.onUpdated.addListener(listener)
+//     })
 
-    // Request screenshot capture from popup
-    const response = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "captureScreenshot",
-          analysisId: getActiveAnalysisId(),
-          tabId: tab.id,
-          url: url,
-          filename: filename,
-        },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(response);
-          }
-        }
-      );
-    });
+//     // Add a delay to ensure the page is fully rendered
+//     await new Promise((resolve) => setTimeout(resolve, 5000))
 
-    if (!response || !response.success) {
-      throw new Error(
-        response ? response.error : "Failed to capture screenshot"
-      );
-    }
+//     // Request screenshot capture from popup
+//     const response = await new Promise((resolve, reject) => {
+//       chrome.runtime.sendMessage(
+//         {
+//           action: "captureScreenshot",
+//           analysisId: getActiveAnalysisId(),
+//           tabId: tab.id,
+//           url: url,
+//           filename: filename
+//         },
+//         (response) => {
+//           if (chrome.runtime.lastError) {
+//             reject(new Error(chrome.runtime.lastError.message))
+//           } else {
+//             resolve(response)
+//           }
+//         }
+//       )
+//     })
 
-    return response.screenshotUrls;
-  } catch (error) {
-    console.error(`Error capturing screenshot for ${url}:`, error);
-    throw error;
-  }
-}
-*/
+//     if (!response || !response.success) {
+//       throw new Error(
+//         response ? response.error : "Failed to capture screenshot"
+//       )
+//     }
 
-function requestScreenshotCapture(url, filename, directory) {
+//     return response.screenshotUrls
+//   } catch (error) {
+//     console.error(`Error capturing screenshot for ${url}:`, error)
+//     throw error
+//   }
+// }
+
+function requestinitialScreenshotCapture(url, filename, directory) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
       {
@@ -1097,6 +964,7 @@ function requestScreenshotCapture(url, filename, directory) {
         filename: filename,
         directory: directory
       },
+
       (response) => {
         if (chrome.runtime.lastError || (response && response.error)) {
           reject(chrome.runtime.lastError || response.error)
@@ -1108,56 +976,136 @@ function requestScreenshotCapture(url, filename, directory) {
   })
 }
 
-// Neue Funktion zum Hinzufügen von Zeitstempeln zu Screenshots
-async function addTimestampToScreenshots(screenshotFiles, time, url) {
-  return Promise.all(
-    screenshotFiles.map((file, index) => {
-      return new Promise((resolve, reject) => {
-        const img = new Image()
-        img.onload = function () {
-          const canvas = document.createElement("canvas")
-          const ctx = canvas.getContext("2d")
+async function requestScreenshotCapture(url, filename, directory) {
+  return new Promise((resolve, reject) => {
+    const port = chrome.runtime.connect({ name: "reportablescreenshotPort" })
 
-          const bannerHeight = 80
-          canvas.width = img.width
-          canvas.height = img.height + bannerHeight
-
-          ctx.drawImage(img, 0, bannerHeight, img.width, img.height)
-
-          ctx.fillStyle = "#f0f0f0"
-          ctx.fillRect(0, 0, canvas.width, bannerHeight)
-          ctx.fillStyle = "#000000"
-          ctx.font = "14px Arial"
-          ctx.textAlign = "left"
-          ctx.textBaseline = "middle"
-
-          const timestamp = `Captured on: ${new Date(time).toUTCString()}`
-          const urlText = `URL: ${url}`
-          const idText = `Analysis ID: ${getActiveAnalysisId()}`
-          const partText = `Part ${index + 1} of ${screenshotFiles.length}`
-
-          ctx.fillText(timestamp, 10, bannerHeight / 5)
-          ctx.fillText(urlText, 10, (bannerHeight / 5) * 2)
-          ctx.fillText(idText, 10, (bannerHeight / 5) * 3)
-          ctx.fillText(partText, 10, (bannerHeight / 5) * 4)
-
-          canvas.toBlob(function (blob) {
-            const url = URL.createObjectURL(blob)
-            resolve(url)
-          }, "image/png")
-        }
-
-        img.onerror = function (error) {
-          reject(
-            new Error(`Fehler beim Laden des Screenshot-Bildes ${index + 1}`)
-          )
-        }
-
-        img.src = file
-      })
+    // Send the message through the port
+    port.postMessage({
+      action: "capturereportabletweetsScreenshot",
+      analysisId: getActiveAnalysisId(),
+      url: url,
+      filename: filename,
+      directory: directory
     })
-  )
+
+    port.onMessage.addListener((response) => {
+      if (response.success && response.modifiedscreenshots) {
+        resolve(response.modifiedscreenshots)
+      } else if (response.error) {
+        reject(response.error)
+      }
+
+      port.disconnect()
+    })
+
+    port.onDisconnect.addListener(() => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError) // Handle runtime errors
+      } else {
+        console.log("Port disconnected in background.")
+      }
+    })
+  })
+
+  // chrome.tabs.query(
+  //   { active: true, currentWindow: true },
+  //   async function (tabs) {
+  //     const currentTab = tabs[0]
+
+  //     if (!currentTab) {
+  //       reject(new Error("No active tab found"))
+  //       return
+  //     }
+
+  //     // Ensure we're on the correct page
+  //     if (currentTab.url !== url) {
+  //       reject(new Error("Current tab URL does not match target URL."))
+  //       return
+  //     }
+  //     console.log("currentTab>>>>>>>>>>", currentTab, "filename>>>>>", filename)
+
+  //     try {
+  //       let blobURLs = await new Promise((resolve, reject) => {
+  //         capturereportablessandchangetoURLs(
+  //           currentTab,
+  //           filename || getFilename(url, analysisId),
+  //           resolve,
+  //           reject,
+  //           (progress) => updateProgressBar(progress * 100) // Update the progress bar
+  //         )
+  //       })
+  //       console.log("blobreportable>>>>>>>>>>>>>", blob)
+  //       const time = await getCurrentTime()
+  //       const analysisId = getActiveAnalysisId()
+  //       const processedScreenshots = await addTimestampToScreenshots(
+  //         blobURLs,
+  //         time,
+  //         url,
+  //         analysisId
+  //       )
+  //     } catch(error) {
+  //       console.error("Error capturing and storing screenshot:", error)
+  //       reject(error)
+  //     }
+  //   }
+  // )
 }
+
+// // Neue Funktion zum Hinzufügen von Zeitstempeln zu Screenshots
+// async function addTimestampToScreenshots(
+//   screenshotFiles,
+//   time,
+//   url,
+//   analysisId
+// ) {
+//   return Promise.all(
+//     screenshotFiles.map((file, index) => {
+//       return new Promise((resolve, reject) => {
+//         const newUrl = modifyUrl(url)
+//         const img = new Image()
+//         img.onload = function () {
+//           const canvas = document.createElement("canvas")
+//           const ctx = canvas.getContext("2d")
+
+//           const bannerHeight = 80
+//           canvas.width = img.width
+//           canvas.height = img.height + bannerHeight
+
+//           ctx.drawImage(img, 0, bannerHeight, img.width, img.height)
+
+//           ctx.fillStyle = "#f0f0f0"
+//           ctx.fillRect(0, 0, canvas.width, bannerHeight)
+//           ctx.fillStyle = "#000000"
+//           ctx.font = "14px Arial"
+//           ctx.textAlign = "left"
+//           ctx.textBaseline = "middle"
+
+//           const timestamp = `Captured on: ${new Date(time).toUTCString()}`
+//           const urlText = `URL: ${newUrl}`
+//           const idText = `Analysis ID: ${analysisId}`
+//           const partText = `Part ${index + 1} of ${screenshotFiles.length}`
+
+//           ctx.fillText(timestamp, 10, bannerHeight / 5)
+//           ctx.fillText(urlText, 10, (bannerHeight / 5) * 2)
+//           ctx.fillText(idText, 10, (bannerHeight / 5) * 3)
+//           ctx.fillText(partText, 10, (bannerHeight / 5) * 4)
+
+//           canvas.toBlob(function (blob) {
+//             const url = URL.createObjectURL(blob)
+//             resolve(url)
+//           }, "image/png")
+//         }
+
+//         img.onerror = function (error) {
+//           reject(new Error(`Failed to load the screenshot image ${index + 1}`))
+//         }
+
+//         img.src = file
+//       })
+//     })
+//   )
+// }
 
 // # Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

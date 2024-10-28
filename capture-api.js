@@ -335,7 +335,7 @@ export const CaptureAPI = (function () {
 
       if (chrome.scripting) {
         chrome.scripting.executeScript(
-          { target: { tabId: tab.id }, files: ["contents/capture-page.js"] },
+          { target: { tabId: tab.id }, files: ["capture-page.js"] },
           function () {
             if (timedOut) {
               console.error(

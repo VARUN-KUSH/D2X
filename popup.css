@@ -265,3 +265,19 @@ details div {
 #twitterheaderdisablelabel{
     margin-bottom: 20;
 }
+
+#perplexityuse {
+    display: flex;
+    align-items: center;
+    justify-items: center;
+
+    font-size: 14px;
+    font-weight: normal;
+    color: #555555;
+    border-bottom: 1px solid #e6e6e6;
+   
+}
+
+#perplexitylabel{
+    margin-bottom: 20;
+}
