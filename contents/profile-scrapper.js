@@ -1,56 +1,93 @@
-export default function profileScrape() {
-    console.log("running the prifle page scrapper")
-    const mainElement = document.querySelector('main[role="main"]');
-    if (!mainElement) {
-        console.error('Main element not found');
-        return;
+export async function profileScrape() {
+    console.log("Running the profile page scraper");
+  
+    const getElementTextByXPath = (xpath) => {
+      const result = document.evaluate(
+        xpath,
+        document,
+        null,
+        XPathResult.FIRST_ORDERED_NODE_TYPE,
+        null
+      );
+      return result.singleNodeValue ? result.singleNodeValue.innerText : "Data not found";
+    };
+  
+    // Define the XPath expressions
+    const xpathofProfileBio =
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[3]/div/div[1]/span[1]";
+    const xpathofJoiningDate =
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[4]/div/span/span";
+    const xpathofFollowersCount =
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[2]/a/span[1]/span";
+    const xpathofFollowingCount =
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[1]/a/span[1]/span";
+  
+    const scrapeData = () => {
+      return new Promise((resolve) => {
+        const maxAttempts = 5;
+        let attempts = 0;
+  
+        const attemptScraping = () => {
+          attempts++;
+          console.log(`Attempt ${attempts}: Checking for elements...`);
+  
+          // Check if the elements are present
+          const profileBio = getElementTextByXPath(xpathofProfileBio);
+          const joiningDate = getElementTextByXPath(xpathofJoiningDate);
+          const followersCount = getElementTextByXPath(xpathofFollowersCount);
+          const followingCount = getElementTextByXPath(xpathofFollowingCount);
+  
+          // Check if we found all necessary data
+          if (
+            profileBio !== "Data not found" &&
+            joiningDate !== "Data not found" &&
+            followersCount !== "Data not found" &&
+            followingCount !== "Data not found"
+          ) {
+            const scrapedData = {
+              profileBio,
+              joiningDate,
+              followersCount,
+              followingCount
+            };
+            console.log("Scraped data:", scrapedData);
+            resolve(scrapedData);
+            return;
+          }
+  
+          // Stop checking after the maximum number of attempts
+          if (attempts >= maxAttempts) {
+            const scrapedData = {
+              profileBio: "Data not found",
+              joiningDate: "Data not found",
+              followersCount: "Data not found",
+              followingCount: "Data not found"
+            };
+            console.log("Max attempts reached. Scraped data:", scrapedData);
+            resolve(scrapedData);
+            return;
+          }
+  
+          // Try again after 1 second
+          setTimeout(attemptScraping, 1000);
+        };
+  
+        attemptScraping();
+      });
+    };
+  
+    // Wait until the page is fully loaded, then start scraping
+    if (document.readyState === 'complete') {
+      return await scrapeData();
+    } else {
+      return new Promise((resolve) => {
+        window.addEventListener('load', async () => {
+          resolve(await scrapeData());
+        });
+      });
     }
-
-    const primaryColumn = mainElement.querySelector('div[data-testid="primaryColumn"]');
-    if (!primaryColumn) {
-        console.error('Primary column not found');
-        return;
-    }
-
-    // Add your scraping logic here
-    console.log('Scraping started:', primaryColumn);
-
-     // Select the div with aria-label="Home timeline" inside primaryColumn
-     const homeTimeline = primaryColumn.querySelector('div[aria-label="Home timeline"]');
-     if (!homeTimeline) {
-         console.error('Home timeline not found');
-         return;
-     }
- 
-     // Select the last div element inside homeTimeline
-     const lastDiv = homeTimeline.querySelector('div:last-child');
-     if (!lastDiv) {
-         console.error('Last div not found in Home timeline');
-         return;
-     }
-    
-       // Select the div inside lastDiv
-    const innerDiv = lastDiv.querySelector('div');
-    if (!innerDiv) {
-        console.error('Inner div not found in last div');
-        return;
-    }
-
-    // Select the first div element inside the innerDiv
-    const targetDiv = innerDiv.querySelector('div > div > div:first-child > div');
-    if (!targetDiv) {
-        console.error('Target div not found');
-        return;
-    }
-    // Add your scraping logic here
-    console.log('Scraping target div:', targetDiv);
-
-    const scrapedData = targetDiv.innerText || "Data not found"; // Modify as needed to retrieve different data
-    console.log("Scraping target div:", scrapedData);
-
-    return scrapedData;
-
-}
-
-// Run profileScrape only after the page is fully loaded
-// window.addEventListener('load', profileScrape);
+  }
+  
+  // Usage example:
+  // await profileScrape();
+  

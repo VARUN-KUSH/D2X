@@ -9,8 +9,8 @@
 //    - evaluate if post can be reported to authorities
 //  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
 
-import profileScrape from "./contents/profile-scrapper.js"
-import { callPerplexity, createFinalReport } from "./utility.js"
+import {profileScrape} from "./contents/profile-scrapper.js"
+import { callPerplexity, createFinalReport, downloadZip } from "./utility.js"
 import { evaluatorSystemPrompt } from "./utils.js"
 
 // ## Global variables
@@ -239,6 +239,23 @@ async function handlePostURLScrape(analysisId, url) {
   }
 }
 
+async function initiateDownload() {
+  try {
+    const zipBlob = await downloadZip();
+
+    // Convert the Blob to a base64 string to send to the content script or popup
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64data = reader.result.split(',')[1]; // Extract base64 part
+      chrome.runtime.sendMessage({ action: "downloadZip", base64data });
+    };
+    reader.readAsDataURL(zipBlob);
+
+  } catch (error) {
+    console.error("Error during download:", error);
+  }
+}
+
 // ## Main analysis functions
 async function startFullAnalysis() {
   try {
@@ -265,7 +282,8 @@ async function startFullAnalysis() {
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     // After processing, add analysis results to the ZIP Folder
-    await createFinalReport(results.Report)
+    await createFinalReport(results.Report.reportablePostsArray, results.Report.originalUrl)
+    await initiateDownload();
 
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
@@ -806,7 +824,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
           scrapedData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
               {
-                target:{ tabId: originalTab.id },
+                target: { tabId: originalTab.id },
                 world: "MAIN", // Access the window object directly
                 func: profileScrape
               },
@@ -818,17 +836,17 @@ async function captureReportablePostScreenshots(reportablePosts) {
                   )
                   reject(chrome.runtime.lastError)
                 } else if (results && results[0]?.result !== undefined) {
-                  console.log("Background script got callback after injection");
-                  resolve(results[0].result); // Access the returned data here
-              } else {
-                  console.error("No data returned from content script.");
-                  resolve(null);
-              }
+                  console.log("Background script got callback after injection")
+                  resolve(results[0].result) // Access the returned data here
+                } else {
+                  console.error("No data returned from content script.")
+                  resolve(null)
+                }
               }
             )
           })
 
-
+          console.log("scrapedprofileData", scrapedData)
           profileScreenshot = await requestScreenshotCapture(
             post.User_Profil_URL,
             `profile_${post.Username}.png`,
@@ -847,7 +865,6 @@ async function captureReportablePostScreenshots(reportablePosts) {
           // Reuse the existing profile screenshot if already captured
           profileScreenshot = capturedProfiles.get(post.User_Profil_URL)
           scrapedData = capturedProfilesdata.get(post.User_Profil_URL)
-
         }
 
         let postReport = null
@@ -861,12 +878,12 @@ async function captureReportablePostScreenshots(reportablePosts) {
         //     profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
         //   }
         // } else {
-          postReport = {
-            ...post,
-            scrapedData: scrapedData,
-            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
-            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
-          }
+        postReport = {
+          ...post,
+          scrapedData: scrapedData,
+          postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
+          profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+        }
         // }
         // Create a structured object for each post
 
@@ -880,10 +897,10 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
     // Navigate back to the original URL
     // if (originalTab.url !== originalUrl) {
-      await chrome.tabs.update(originalTab.id, { url: originalUrl })
+    await chrome.tabs.update(originalTab.id, { url: originalUrl })
     // }
     console.log("reportablePostsArray>>>>>>>>>>", reportablePostsArray)
-    return reportablePostsArray
+    return {reportablePostsArray, originalUrl}
   } catch (error) {
     console.error(`Error in captureReportablePostScreenshots:`, error)
   }
@@ -1161,6 +1178,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         //        case "screenshotCaptured":
         //          await handleCapturedScreenshot(request);
         //          break;
+
+        // case "toggleDownloadSection":
+        //   const zipBlob = await downloadZip()
+        //   // Create a URL for the Blob and download it
+        //   const url = URL.createObjectURL(zipBlob)
+        //   const downloadName = "D2X_Report.zip"
+
+        //   chrome.downloads.download({
+        //     url: url,
+        //     filename: downloadName,
+        //     saveAs: true
+        //   })
+
+        //   // Clean up the URL object after download
+        //   URL.revokeObjectURL(url)
+
+        //   sendResponse({ status: "Download section toggled" })
+        //   break
 
         case "screenshotError":
           console.error("Fehler bei der Screenshot-Erfassung:", request.error)

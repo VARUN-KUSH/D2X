@@ -10,10 +10,11 @@ import {
 import "./popup.css"
 
 function Popup() {
+  const [base64data, setBase64Data] = useState(null);
   const [formData, setFormData] = useState({
     senderAddress: "",
     recipientAddress: "",
-    recipientContactdetails: "",
+    senderContactdetails: "",
     city: "",
     fullName: ""
   })
@@ -72,6 +73,31 @@ function Popup() {
     setShowHelpSection(!showHelpSection)
   }
 
+  const toggledownloadSection = () => {
+    if (!base64data) return;
+
+    // Decode base64 data and create a Blob
+    const byteCharacters = atob(base64data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const zipBlob = new Blob([byteArray], { type: "application/zip" });
+
+    // Create a URL for the Blob and download it
+    const url = URL.createObjectURL(zipBlob);
+    const downloadName = "D2X_Report.zip";
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = downloadName;
+    a.click();
+
+    // Clean up the URL after download
+    URL.revokeObjectURL(url);
+  }
+
   const toggleSettingsSection = () => {
     setShowHelpSection(false)
     setOpenSection(null)
@@ -111,8 +137,8 @@ function Popup() {
     setIsPerplexityDisabled(isChecked)
 
     // Send message to background script
-     // Store usePerplexity value locally in chrome storage
-    chrome.storage.local.set({ usePerplexity: isChecked });
+    // Store usePerplexity value locally in chrome storage
+    chrome.storage.local.set({ usePerplexity: isChecked })
   }
 
   useEffect(() => {
@@ -194,7 +220,6 @@ function Popup() {
       alert("Hintergrundinformationen erfolgreich gespeichert!")
       setbackgroundInfopresent(true)
     })
-    
   }
 
   useEffect(() => {
@@ -204,17 +229,17 @@ function Popup() {
   }, [])
 
   const deleteBackgroundInfo = () => {
-     // Remove the assistant ID from chrome.storage.local
+    // Remove the assistant ID from chrome.storage.local
     chrome.storage.local.remove("Assistantid", function () {
       console.log("Assistant ID removed from local storage.")
     })
 
     chrome.storage.local.remove("backgroundInfo", () => {
-      console.log("Background info removed.");
-      setbackgroundInfo("");
+      console.log("Background info removed.")
+      setbackgroundInfo("")
       setbackgroundInfopresent(false)
-    });
-  };
+    })
+  }
 
   const triggerFullAnalysis = () => {
     setShowProgressBar(true)
@@ -302,7 +327,7 @@ function Popup() {
                     (progress) => updateProgressBar(progress * 100)
                   )
                 })
-  
+
                 console.log("Blobsul>>>>>>>>>>>>>>", blobURLs)
                 const timeResponse = await chrome.runtime.sendMessage({
                   action: "getCurrentTime"
@@ -313,7 +338,7 @@ function Popup() {
                   url,
                   analysisId
                 )
-  
+
                 console.log(
                   "processedScreenshots>>>>>>>>>>>>>>>>>",
                   processedScreenshots
@@ -325,10 +350,9 @@ function Popup() {
                   const fileName = filename || `screenshot_${i + 1}.png`
                   addToZip(blob, fileName, directory)
                 }
-  
+
                 resolve()
               }
-             
             } catch (error) {
               console.error("Error capturing and storing screenshot:", error)
               reject(error)
@@ -346,14 +370,18 @@ function Popup() {
         port.onMessage.addListener(async (request) => {
           if (request.action === "capturereportabletweetsScreenshot") {
             try {
-              const modifiedscreenshots = await screenshot.captureAndStoreScreenshot(
-                request.analysisId,
-                request.url,
-                request.filename,
-                request.directory,
-                port.name
-              )
-              port.postMessage({ success: true , modifiedscreenshots: modifiedscreenshots})
+              const modifiedscreenshots =
+                await screenshot.captureAndStoreScreenshot(
+                  request.analysisId,
+                  request.url,
+                  request.filename,
+                  request.directory,
+                  port.name
+                )
+              port.postMessage({
+                success: true,
+                modifiedscreenshots: modifiedscreenshots
+              })
             } catch (error) {
               port.postMessage({ error: error.message })
             } finally {
@@ -407,6 +435,12 @@ function Popup() {
             case "processingUpdate":
               setResults("Verarbeitung: " + request.message)
               break
+
+            case "downloadZip":
+              const base64data = request.base64data;
+              console.log("base64data>>>>>>>>>>>", base64data)
+              setBase64Data(base64data);
+              break
             default:
               console.log("Unhandled message action:", request.action)
               break
@@ -425,6 +459,20 @@ function Popup() {
       <header>
         <h1>D2X</h1>
         <div className="header-icons">
+        {base64data && (
+          <span
+            onClick={toggledownloadSection}
+            style={{
+              cursor: "pointer",
+              transition: "transform 0.1s ease-in-out"
+            }}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.9)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+            ⬇️
+          </span>
+          )}
           <span
             id="mainHelpIcon"
             className="main-icon"
@@ -595,7 +643,7 @@ function Popup() {
                       onChange={handleChange}
                     />
 
-                    <label htmlFor="recipientContact">
+                    <label htmlFor="senderContact">
                       Meine Kontakdaten:
                       <span
                         className="help-icon"
@@ -604,9 +652,9 @@ function Popup() {
                       </span>
                     </label>
                     <textarea
-                      id="recipientContact"
-                      name="recipientContact"
-                      value={formData.recipientContactdetails}
+                      id="senderContact"
+                      name="senderContactdetails"
+                      value={formData.senderContactdetails}
                       placeholder="+49 123 45678, Me@example.com"
                       onChange={handleChange}
                     />
@@ -671,9 +719,28 @@ function Popup() {
                     placeholder=""
                     onChange={handleBackgroundInfo}></textarea>
                   {backgroundInfopresent ? (
-                    <button onClick={deleteBackgroundInfo}  style={{ backgroundColor: "red", color: "white", border: "none", padding: "8px 12px", cursor: "pointer" }}>Löschen</button>
+                    <button
+                      onClick={deleteBackgroundInfo}
+                      style={{
+                        backgroundColor: "red",
+                        color: "white",
+                        border: "none",
+                        padding: "8px 12px",
+                        cursor: "pointer"
+                      }}>
+                      Löschen
+                    </button>
                   ) : (
-                    <button onClick={saveBackgroundInfo}  style={{ color: "white", border: "none", padding: "8px 12px", cursor: "pointer" }}>Speichern</button>
+                    <button
+                      onClick={saveBackgroundInfo}
+                      style={{
+                        color: "white",
+                        border: "none",
+                        padding: "8px 12px",
+                        cursor: "pointer"
+                      }}>
+                      Speichern
+                    </button>
                   )}
                 </div>
               </details>

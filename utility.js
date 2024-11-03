@@ -27,53 +27,56 @@ async function getCurrentTime() {
   }
 }
 
-export async function capturereportablessandchangetoURLs(currentTab, filename, resolve, reject, progressCallback, directory, analysisId) {
+export async function capturereportablessandchangetoURLs(
+  currentTab,
+  filename,
+  resolve,
+  reject,
+  progressCallback,
+  directory,
+  analysisId
+) {
   try {
-    
     // Step 1: Capture the screenshot of the current tab and convert it into a Promise
     const dataUrl = await new Promise((resolve, reject) => {
-      chrome.tabs.captureVisibleTab(null, { format: "png" }, function (dataUrl) {
-        if (chrome.runtime.lastError) {
-          return reject(chrome.runtime.lastError); // Reject if there's an error
+      chrome.tabs.captureVisibleTab(
+        null,
+        { format: "png" },
+        function (dataUrl) {
+          if (chrome.runtime.lastError) {
+            return reject(chrome.runtime.lastError) // Reject if there's an error
+          }
+          resolve(dataUrl) // Resolve with the captured screenshot's data URL
         }
-        resolve(dataUrl); // Resolve with the captured screenshot's data URL
-      });
-    });
+      )
+    })
 
-    
+    // Step 2: Convert the captured screenshot to Blob format
+    const blob = await (await fetch(dataUrl)).blob()
 
-      // Step 2: Convert the captured screenshot to Blob format
-      const blob = await (await fetch(dataUrl)).blob();
+    // Step 3: Create a Blob URL for the captured screenshot
+    const screenshotBlobUrl = URL.createObjectURL(blob)
 
-      // Step 3: Create a Blob URL for the captured screenshot
-      const screenshotBlobUrl = URL.createObjectURL(blob);
-      
-      // Step 4: Get the current time from the background script
-      const timeResponse = getCurrentTime()
-    
-      
-      // Step 5: Process the screenshot and add timestamps using addTimestampToScreenshots
-      const processedScreenshot = await addTimestampToScreenshots(
-        [screenshotBlobUrl], // Screenshot file array (only 1 in this case)
-        timeResponse,    // Timestamp
-        currentTab.url,       // Tab URL
-        analysisId            // Filename or analysisId
-      );
+    // Step 4: Get the current time from the background script
+    const timeResponse = getCurrentTime()
 
-      console.log("processedss>>>>>>>>>", processedScreenshot)
+    // Step 5: Process the screenshot and add timestamps using addTimestampToScreenshots
+    const processedScreenshot = await addTimestampToScreenshots(
+      [screenshotBlobUrl], // Screenshot file array (only 1 in this case)
+      timeResponse, // Timestamp
+      currentTab.url, // Tab URL
+      analysisId // Filename or analysisId
+    )
 
-      // Step 6: Resolve with the processed Blob URL
-      resolve(processedScreenshot)
-      // Optionally clean up the original blob URL to avoid memory leaks
-      URL.revokeObjectURL(screenshotBlobUrl);
-      
-     
-    
-     
+    console.log("processedss>>>>>>>>>", processedScreenshot)
+
+    // Step 6: Resolve with the processed Blob URL
+    resolve(processedScreenshot)
+    // Optionally clean up the original blob URL to avoid memory leaks
+    URL.revokeObjectURL(screenshotBlobUrl)
   } catch (error) {
-    reject(error); // Catch any errors and reject the promise
+    reject(error) // Catch any errors and reject the promise
   }
-
 }
 
 export async function addTimestampToScreenshots(
@@ -141,9 +144,9 @@ export async function addToZip(fileData, filename, directory) {
     directory
   )
 
-   // Fetch the Blob data from the Blob URL
-   const response = await fetch(fileData)
-   const blobData = await response.blob()
+  // Fetch the Blob data from the Blob URL
+  const response = await fetch(fileData)
+  const blobData = await response.blob()
 
   if (directory) {
     zip.folder(directory).file(filename, blobData, { binary: true })
@@ -153,8 +156,6 @@ export async function addToZip(fileData, filename, directory) {
 
   downloadZip()
 }
-
-
 
 // function _initScreenshots(totalWidth, totalHeight) {
 //   // Create and return an array of screenshot objects based
@@ -216,17 +217,17 @@ export async function addToZip(fileData, filename, directory) {
 
 async function getFormData() {
   return new Promise((resolve, reject) => {
-      chrome.storage.local.get("formData", (result) => {
-          if (chrome.runtime.lastError) {
-              reject(chrome.runtime.lastError);
-          } else {
-              resolve(result.formData);
-          }
-      });
-  });
+    chrome.storage.local.get("formData", (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError)
+      } else {
+        resolve(result.formData)
+      }
+    })
+  })
 }
 
-export async function createFinalReport(results) {
+export async function createFinalReport(results, originalUrl) {
   // First subfolder: "Anschreiben_Basis_Daten"
   let now = new Date()
   let year = now.getFullYear()
@@ -239,92 +240,99 @@ export async function createFinalReport(results) {
   // Create folder name in format D2X_Report_year.month.date.time
   let folderName = `D2X_Report_${year}.${month}.${date}.${hours}${minutes}${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
-  mainFolder.file("AnalyseZeitpunkt.txt", )
-  const formData = await getFormData();
-  console.log("Retrieved formData:", formData);
-  const { senderAddress, recipientAddress, recipientContactdetails, city, fullName } = formData;
+  mainFolder.file("AnalyseZeitpunkt.txt")
+  const formData = await getFormData()
+  console.log("Retrieved formData:", formData)
+  const {
+  senderAddress = "",
+  recipientAddress = "",
+  senderContactdetails = "",
+  city = "",
+  fullName = ""
+  } = formData
 
- // Helper function to format data with new lines
+  // Helper function to format data with new lines
   function formatText(text) {
-    return text.split(",").map(item => item.trim()).join("\n");
+    return text
+      .split(",")
+      .map((item) => item.trim())
+      .join("\n")
   }
 
-  mainFolder.file("initialPostUrl.txt", )
+  //Timestamp to add in this text file AnalyseZeitpunkt.txt
+  mainFolder.file("initialPostUrl.txt", `${originalUrl}`)
+  mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
+
+  //extract from formDataValue
 
   // Add 7 files with different names to this folder (text content)
   folder1.file("Abs.Adresse.txt", `${formatText(senderAddress)}`)
-  folder1.file("Abs.Kontakt.txt", "Name: John Doe")
-  folder1.file("Abs.UnterzeichnendePerson.txt", "Contact: johndoe@example.com")
-  folder1.file("Anglagen.txt", "Phone: 123-456-7890")
-  folder1.file("Betreff.txt", "Position: Developer")
-  folder1.file("Datumszeile.txt", "Company: Example Corp.")
-  folder1.file("Empf.Adresse.txt", "Notes: Additional details...")
+  folder1.file("Abs.Kontakt.txt", `${formatText(senderContactdetails)}`)
+  folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
+  folder1.file(
+    "Anglagen.txt",
+    `Anlage: Sachverhalt
+        Informationen aus dem Profil Tatverdächtige*r:
+        Screenshot Nutzerprofil auf X/Twitter
+        Screenshot des Kommentars und Kontext:`
+  )
+  folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
+  folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
+  folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
 
-  // number of folders depends on uniques username 
-  //run a loop 
+  // number of folders depends on uniques username
+  //run a loop
 
   // Create folders for each unique username in results array
-  let uniqueUsernames = [...new Set(results.map(item => item.Username))];
+  let uniqueUsernames = [...new Set(results.map((item) => item.Username))]
   for (let username of uniqueUsernames) {
-    let userFolder = mainFolder.folder(username);
-    let post = results.find(item => item.Username === username);
-    userFolder.file(`ExtraUserInfo_${post.Username}_${year}.${month}.${date}.txt`, )
-    userFolder.file(`profilUrl.txt`, post.User_Profil_URL)
-    userFolder.file(`UserInfo_${post.Username}_${year}.${month}.${date}.txt`, )
-    userFolder.file(`userHandle.txt`,)
-    userFolder.file(`screenname.txt`,)
-    userFolder.file(`screenshot_${post.Username}_${year}.${month}.${date}.png`,)
+    let userFolder = mainFolder.folder(username)
+    let post = results.find((item) => item.Username === username)
+    userFolder.file(
+      `ExtraUserInfo_${post.Username}_${year}.${month}.${date}.txt`,
+      ``
+    )
+    userFolder.file(
+      `profilUrl.txt`,
+      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`
+    )
+    userFolder.file(
+      `UserInfo_${post.Username}_${year}.${month}.${date}.txt`,
+      // `Biografie: „Das ist halt Hippie von rechts.“ #Krah 
+      // Seit August 2023 bei Twitter 
+      // Folgt: ${following}
+      // Follower: ${follower} `
+    )
+    userFolder.file(`userHandle.txt`, )
+    userFolder.file(`screenname.txt`, `Anzeigename (Screenname) im Profil Tatverdächtige*r:`)
+    userFolder.file(`screenshot_${post.Username}_${year}.${month}.${date}.png`, )
 
     // Filter results for the current username
-    let userPosts = results.filter(item => item.Username === username);
+    let userPosts = results.filter((item) => item.Username === username)
     userPosts.forEach((post, index) => {
       // Add post information as text files
       // userFolder.file(`post_${index + 1}.txt`, `Post URL: ${post.Post_URL}\nContent: ${post.Inhalt}\nExplanation: ${post.Erklärung}`);
       // userFolder.file(`screenshot_profile_${post.Username}_${year}.${month}.${date}.png`, post.profileScreenshot[0], { binary: true });
-      const tweetID = post.Post_URL.split("/").pop(); 
+      const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
-      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}.txt`, )
-      folder2.file(`Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`, )
+      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}.txt`)
+      folder2.file(
+        `Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`
+      )
       folder2.file(`postUrl.txt`)
-      folder2.file(`screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`, )
-      folder2.file(`unser_Zeichen.txt`,)
-      folder2.file(`Verfolgungsart.txt`,)
-      folder2.file(`Zeitpunkt.txt`,)
-
-     
-      
-    });
-
-   
-   
+      folder2.file(
+        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`
+      )
+      folder2.file(`unser_Zeichen.txt`)
+      folder2.file(`Verfolgungsart.txt`)
+      folder2.file(`Zeitpunkt.txt`)
+    })
   }
-
 }
 
-// Function to generate the zip, but no download yet
-function prepareZip() {
-  return zip.generateAsync({ type: "blob" }).then(function (content) {
-    return {
-      zipContent: content, // Return the generated zip content
-      folderName: folderName
-    }
-  })
-}
 
-// Generate the zip file and save it
-// zip.generateAsync({ type: "blob" }).then(function (content) {
-//   // Save the zip file (using FileSaver.js to trigger download)
-//   saveAs(content, "output.zip")
-// })
 
-// async function downloadZip() {
-//   // Generate the zip file
-//   const zipBlob = await zip.generateAsync({ type: 'blob' })
-  
-//   // Use FileSaver.js to download the zip
-//   saveAs(zipBlob, 'screenshots.zip')
-// }
 
 export function getFilename(contentURL, uid) {
   if (!contentURL) {
@@ -350,97 +358,84 @@ export function getFilename(contentURL, uid) {
   return `screenshot-${shortUID}-${name}-${Date.now()}.png`
 }
 
-function downloadZip() {
-  zip.generateAsync({ type: "blob" }).then(function (content) {
-    // Create a link element
-    let a = document.createElement("a")
-    a.href = URL.createObjectURL(content)
-    a.download = "archive.zip" // Set the name of the downloaded ZIP file
-
-    // Append the link to the body (it won't be visible)
-    document.body.appendChild(a)
-
-    // Trigger the download by simulating a click
-    a.click()
-
-    // Clean up the link after downloading
-    document.body.removeChild(a)
-  })
+export async function downloadZip() {
+ // Generate the zip Blob
+ // Generate the zip Blob
+ return await zip.generateAsync({ type: "blob" });
 }
 
 // Set up the API details
-const API_URL = "https://api.perplexity.ai/chat/completions";
-const MODEL = "llama-3.1-70b-instruct";
+const API_URL = "https://api.perplexity.ai/chat/completions"
+const MODEL = "llama-3.1-70b-instruct"
 
 // Function to get the API key and run the query
 
 export async function callPerplexity() {
-   const usePerplexity = await new Promise((resolve) => {
-        chrome.storage.local.get("usePerplexity", (result) => {
-            resolve(result.usePerplexity);
-        });
-    });
+  const usePerplexity = await new Promise((resolve) => {
+    chrome.storage.local.get("usePerplexity", (result) => {
+      resolve(result.usePerplexity)
+    })
+  })
 
-    if (usePerplexity) {
-      runPerplexityQuery()
-    } else {
-      return
-    }
-
+  if (usePerplexity) {
+    runPerplexityQuery()
+  } else {
+    return
+  }
 }
 
 function runPerplexityQuery(query) {
   return new Promise((resolve, reject) => {
     // Fetch the API key from storage
     chrome.storage.local.get("PERPLEXITY_API_KEY", (result) => {
-      const apiKey = result.PERPLEXITY_API_KEY;
+      const apiKey = result.PERPLEXITY_API_KEY
 
       if (!apiKey) {
-        console.error("API Key is not set in Chrome storage.");
-        reject("API Key missing");
-        return;
+        console.error("API Key is not set in Chrome storage.")
+        reject("API Key missing")
+        return
       }
 
       // Set up request headers and body
       const headers = {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      };
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      }
 
       const data = {
         model: MODEL,
         messages: [
           { role: "system", content: "Be precise and concise." },
-          { role: "user", content: query },
+          { role: "user", content: query }
         ],
         max_tokens: 1024,
         temperature: 0,
-        top_p: 0.9,
-      };
+        top_p: 0.9
+      }
 
       // Make the POST request to the API
       fetch(API_URL, {
         method: "POST",
         headers: headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       })
         .then((response) => {
-          if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-          return response.json();
+          if (!response.ok)
+            throw new Error(`HTTP error! Status: ${response.status}`)
+          return response.json()
         })
         .then((json) => {
-          const content = json.choices?.[0]?.message?.content;
+          const content = json.choices?.[0]?.message?.content
           if (content) {
-            resolve(content);
+            resolve(content)
           } else {
-            reject("No content received");
+            reject("No content received")
           }
         })
         .catch((error) => {
-          console.error("Error:", error);
-          reject(error);
-        });
-    });
-  });
+          console.error("Error:", error)
+          reject(error)
+        })
+    })
+  })
 }
-
