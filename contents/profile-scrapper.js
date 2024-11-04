@@ -14,13 +14,13 @@ export async function profileScrape() {
   
     // Define the XPath expressions
     const xpathofProfileBio =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[3]/div/div[1]/span[1]";
-    const xpathofJoiningDate =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[4]/div/span/span";
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[3]";
+    const xpathofotherdetails =
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[4]";
     const xpathofFollowersCount =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[2]/a/span[1]/span";
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[2]";
     const xpathofFollowingCount =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[1]/a/span[1]/span";
+      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[1]";
   
     const scrapeData = () => {
       return new Promise((resolve) => {
@@ -33,7 +33,7 @@ export async function profileScrape() {
   
           // Check if the elements are present
           const profileBio = getElementTextByXPath(xpathofProfileBio);
-          const joiningDate = getElementTextByXPath(xpathofJoiningDate);
+          const joiningDate = getElementTextByXPath(xpathofotherdetails);
           const followersCount = getElementTextByXPath(xpathofFollowersCount);
           const followingCount = getElementTextByXPath(xpathofFollowingCount);
   
@@ -88,6 +88,4 @@ export async function profileScrape() {
     }
   }
   
-  // Usage example:
-  // await profileScrape();
   

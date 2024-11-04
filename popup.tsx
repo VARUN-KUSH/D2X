@@ -10,7 +10,7 @@ import {
 import "./popup.css"
 
 function Popup() {
-  const [base64data, setBase64Data] = useState(null);
+  const [base64data, setBase64Data] = useState(null)
   const [formData, setFormData] = useState({
     senderAddress: "",
     recipientAddress: "",
@@ -74,28 +74,28 @@ function Popup() {
   }
 
   const toggledownloadSection = () => {
-    if (!base64data) return;
+    if (!base64data) return
 
     // Decode base64 data and create a Blob
-    const byteCharacters = atob(base64data);
-    const byteNumbers = new Array(byteCharacters.length);
+    const byteCharacters = atob(base64data)
+    const byteNumbers = new Array(byteCharacters.length)
     for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+      byteNumbers[i] = byteCharacters.charCodeAt(i)
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    const zipBlob = new Blob([byteArray], { type: "application/zip" });
+    const byteArray = new Uint8Array(byteNumbers)
+    const zipBlob = new Blob([byteArray], { type: "application/zip" })
 
     // Create a URL for the Blob and download it
-    const url = URL.createObjectURL(zipBlob);
-    const downloadName = "D2X_Report.zip";
+    const url = URL.createObjectURL(zipBlob)
+    const downloadName = "D2X_Report.zip"
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = downloadName;
-    a.click();
+    const a = document.createElement("a")
+    a.href = url
+    a.download = downloadName
+    a.click()
 
     // Clean up the URL after download
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(url)
   }
 
   const toggleSettingsSection = () => {
@@ -278,7 +278,7 @@ function Popup() {
         "directory>>>",
         directory
       )
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<ArrayBuffer | void>((resolve, reject) => {
         chrome.tabs.query(
           { active: true, currentWindow: true },
           async function (tabs) {
@@ -316,7 +316,14 @@ function Popup() {
                     analysisId
                   )
                 })
-                resolve(blobURLs)
+                // Fetch the blob data from the blob URL
+                const response = await fetch(blobURLs)
+                const blob = await response.blob()
+
+                // Convert blob to ArrayBuffer for JSZip compatibility
+                const arrayBuffer = await blob.arrayBuffer()
+
+                resolve(arrayBuffer)
               } else {
                 blobURLs = await new Promise((resolve, reject) => {
                   CaptureAPI.captureToFiles(
@@ -437,9 +444,9 @@ function Popup() {
               break
 
             case "downloadZip":
-              const base64data = request.base64data;
+              const base64data = request.base64data
               console.log("base64data>>>>>>>>>>>", base64data)
-              setBase64Data(base64data);
+              setBase64Data(base64data)
               break
             default:
               console.log("Unhandled message action:", request.action)
@@ -459,19 +466,19 @@ function Popup() {
       <header>
         <h1>D2X</h1>
         <div className="header-icons">
-        {base64data && (
-          <span
-            onClick={toggledownloadSection}
-            style={{
-              cursor: "pointer",
-              transition: "transform 0.1s ease-in-out"
-            }}
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = "scale(0.9)")
-            }
-            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-            ⬇️
-          </span>
+          {base64data && (
+            <span
+              onClick={toggledownloadSection}
+              style={{
+                cursor: "pointer",
+                transition: "transform 0.1s ease-in-out"
+              }}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.9)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+              ⬇️
+            </span>
           )}
           <span
             id="mainHelpIcon"

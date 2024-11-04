@@ -238,17 +238,17 @@ export async function createFinalReport(results, originalUrl) {
   let seconds = String(now.getSeconds()).padStart(2, "0")
 
   // Create folder name in format D2X_Report_year.month.date.time
-  let folderName = `D2X_Report_${year}.${month}.${date}.${hours}${minutes}${seconds}`
+  let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
   mainFolder.file("AnalyseZeitpunkt.txt")
   const formData = await getFormData()
   console.log("Retrieved formData:", formData)
   const {
-  senderAddress = "",
-  recipientAddress = "",
-  senderContactdetails = "",
-  city = "",
-  fullName = ""
+    senderAddress = "",
+    recipientAddress = "",
+    senderContactdetails = "",
+    city = "",
+    fullName = ""
   } = formData
 
   // Helper function to format data with new lines
@@ -299,14 +299,27 @@ export async function createFinalReport(results, originalUrl) {
     )
     userFolder.file(
       `UserInfo_${post.Username}_${year}.${month}.${date}.txt`,
-      // `Biografie: „Das ist halt Hippie von rechts.“ #Krah 
-      // Seit August 2023 bei Twitter 
-      // Folgt: ${following}
-      // Follower: ${follower} `
+      `Biografie: ${post.scrapedData.profileBio}
+      ${post.scrapedData.joiningDate}
+      Folgt: ${post.scrapedData.followingCount}
+      Follower: ${post.scrapedData.followersCount} `
     )
-    userFolder.file(`userHandle.txt`, )
-    userFolder.file(`screenname.txt`, `Anzeigename (Screenname) im Profil Tatverdächtige*r:`)
-    userFolder.file(`screenshot_${post.Username}_${year}.${month}.${date}.png`, )
+    userFolder.file(
+      `userHandle.txt`,
+      `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`
+    )
+    userFolder.file(
+      `screenname.txt`,
+      `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
+    )
+
+    // profileScreenshot: [
+    //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
+    // ]
+    userFolder.file(
+      `screenshot_${post.Username}_${year}.${month}.${date}.png`,
+      `${post.profileScreenshot}`
+    )
 
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
@@ -316,23 +329,28 @@ export async function createFinalReport(results, originalUrl) {
       // userFolder.file(`screenshot_profile_${post.Username}_${year}.${month}.${date}.png`, post.profileScreenshot[0], { binary: true });
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
-      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}.txt`)
       folder2.file(
-        `Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`
+        `AnzeigenEntwurf_${post.Username}_${tweetID}.txt`,
+        `${post.Anzeige_Entwurf}`
       )
-      folder2.file(`postUrl.txt`)
       folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`
+        `Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`,
+        `${post.Inhalt}`
       )
-      folder2.file(`unser_Zeichen.txt`)
-      folder2.file(`Verfolgungsart.txt`)
-      folder2.file(`Zeitpunkt.txt`)
+      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
+
+      // postScreenshot: [
+      //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
+      // ]
+      folder2.file(
+        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`, `${post.postScreenshot}`
+      )
+      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
+      folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)
+      folder2.file(`Zeitpunkt.txt`, `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `)
     })
   }
 }
-
-
-
 
 export function getFilename(contentURL, uid) {
   if (!contentURL) {
@@ -359,9 +377,9 @@ export function getFilename(contentURL, uid) {
 }
 
 export async function downloadZip() {
- // Generate the zip Blob
- // Generate the zip Blob
- return await zip.generateAsync({ type: "blob" });
+  // Generate the zip Blob
+  // Generate the zip Blob
+  return await zip.generateAsync({ type: "blob" })
 }
 
 // Set up the API details
