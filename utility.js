@@ -260,7 +260,7 @@ export async function createFinalReport(results, originalUrl) {
   }
 
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
-  mainFolder.file("initialPostUrl.txt", `${originalUrl}`)
+  mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${originalUrl}`)
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
 
@@ -316,14 +316,16 @@ export async function createFinalReport(results, originalUrl) {
     // profileScreenshot: [
     //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
     // ]
+    const response = await fetch(post.profileScreenshot[0]);
+    const blobData = await response.blob()
     userFolder.file(
       `screenshot_${post.Username}_${year}.${month}.${date}.png`,
-      `${post.profileScreenshot}`
+      blobData, { binary: true }
     )
 
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
-    userPosts.forEach((post, index) => {
+    userPosts.forEach(async (post, index) => {
       // Add post information as text files
       // userFolder.file(`post_${index + 1}.txt`, `Post URL: ${post.Post_URL}\nContent: ${post.Inhalt}\nExplanation: ${post.Erklärung}`);
       // userFolder.file(`screenshot_profile_${post.Username}_${year}.${month}.${date}.png`, post.profileScreenshot[0], { binary: true });
@@ -342,8 +344,11 @@ export async function createFinalReport(results, originalUrl) {
       // postScreenshot: [
       //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
       // ]
+      const response = await fetch(post.postScreenshot[0]);
+      const blobData = await response.blob()
+
       folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`, `${post.postScreenshot}`
+        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`, blobData, { binary: true }
       )
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
       folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)

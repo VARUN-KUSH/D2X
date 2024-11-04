@@ -24,7 +24,7 @@ export async function profileScrape() {
   
     const scrapeData = () => {
       return new Promise((resolve) => {
-        const maxAttempts = 5;
+        const maxAttempts = 15;
         let attempts = 0;
   
         const attemptScraping = () => {
