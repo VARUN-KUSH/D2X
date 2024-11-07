@@ -317,7 +317,7 @@ export async function createFinalReport(results, originalUrl) {
     //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
     // ]
     userFolder.file(
-      `screenshot_${post.Username}_${year}.${month}.${date}.png`,
+      `screenshot_profile_${post.Username}_${date}.${month}.${year}.png`,
       `${post.profileScreenshot}`
     )
 
@@ -330,7 +330,7 @@ export async function createFinalReport(results, originalUrl) {
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
       folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}.txt`,
+        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Anzeige_Entwurf}`
       )
       folder2.file(
@@ -343,7 +343,7 @@ export async function createFinalReport(results, originalUrl) {
       //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
       // ]
       folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`,
+        `screenshot_${post.Username}_${tweetID}_${date}.${month}.${year}.png`,
         `${post.postScreenshot}`
       )
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
