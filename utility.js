@@ -347,7 +347,7 @@ export async function createFinalReport(results, originalUrl) {
         `${post.postScreenshot}`
       )
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
-      folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)
+      folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
         `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `
