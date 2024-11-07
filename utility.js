@@ -271,7 +271,7 @@ export async function createFinalReport(results, originalUrl) {
   folder1.file("Abs.Kontakt.txt", `${formatText(senderContactdetails)}`)
   folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
   folder1.file(
-    "Anglagen.txt",
+    "Anlagen.txt",
     `Anlage: Sachverhalt
         Informationen aus dem Profil Tatverdächtige*r:
         Screenshot Nutzerprofil auf X/Twitter
