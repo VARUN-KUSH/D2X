@@ -156,27 +156,38 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 })
  // to disable twitter header every time tab updates
-function checkTwitterHeaderVisibility() {
-  chrome.storage.local.get("disableTwitterHeader", (result) => {
-    console.log("inside the headervisibility function")
-    const disableTwitterHeader = result.disableTwitterHeader || false;
-    console.log("disableTwitterHeader>>>>>>>>>>>", disableTwitterHeader)
+ function checkTwitterHeaderVisibility() {
+  // Function to recursively wait for the header element to load
+  function waitForHeader() {
     const headerElement = document.querySelector('header[role="banner"]');
-    console.log("headerElement>>>>>>>>>>>>", headerElement)
     if (headerElement) {
-      if (disableTwitterHeader) {
-        headerElement.style.display = "none"; // Hide the header
-        console.log("Twitter header is hidden (based on chrome.storage)");
-      } else {
-        headerElement.style.display = ""; // Show the header
-        console.log("Twitter header is visible (based on chrome.storage)");
-      }
+      chrome.storage.local.get("disableTwitterHeader", (result) => {
+        console.log("Inside the header visibility function");
+        const disableTwitterHeader = result.disableTwitterHeader || false;
+        console.log("disableTwitterHeader:", disableTwitterHeader);
+        console.log("headerElement found:", headerElement);
+        if (disableTwitterHeader) {
+          headerElement.style.display = "none"; // Hide the header
+          console.log("Twitter header is hidden (based on chrome.storage)");
+        } else {
+          headerElement.style.display = ""; // Show the header
+          console.log("Twitter header is visible (based on chrome.storage)");
+        }
+      });
+    } else {
+      // If headerElement is not found, wait a little and try again
+      console.log("Waiting for headerElement to be available...");
+      setTimeout(waitForHeader, 100); // Check every 100 milliseconds
     }
-  });
+  }
+
+  // Run the wait function on page load or reload
+  waitForHeader();
 }
 
 // Run the function to check header visibility on page load
 checkTwitterHeaderVisibility();
+
 
 chrome.runtime.onConnect.addListener(function (port) {
   if (port.name === "scrapingChannel") {

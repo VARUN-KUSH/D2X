@@ -1,91 +1,122 @@
+export{}
+
 export async function profileScrape() {
-    console.log("Running the profile page scraper");
-  
-    const getElementTextByXPath = (xpath) => {
-      const result = document.evaluate(
-        xpath,
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
-      );
-      return result.singleNodeValue ? result.singleNodeValue.innerText : "Data not found";
-    };
-  
-    // Define the XPath expressions
-    const xpathofProfileBio =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div/div/div[3]";
-    const xpathofotherdetails =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[4]";
-    const xpathofFollowersCount =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[2]";
-    const xpathofFollowingCount =
-      "/html/body/div[1]/div/div/div[2]/main/div/div/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div[5]/div[1]";
-  
-    const scrapeData = () => {
-      return new Promise((resolve) => {
-        const maxAttempts = 15;
-        let attempts = 0;
-  
-        const attemptScraping = () => {
-          attempts++;
-          console.log(`Attempt ${attempts}: Checking for elements...`);
-  
-          // Check if the elements are present
-          const profileBio = getElementTextByXPath(xpathofProfileBio);
-          const joiningDate = getElementTextByXPath(xpathofotherdetails);
-          const followersCount = getElementTextByXPath(xpathofFollowersCount);
-          const followingCount = getElementTextByXPath(xpathofFollowingCount);
-  
-          // Check if we found all necessary data
-          if (
-            profileBio !== "Data not found" &&
-            joiningDate !== "Data not found" &&
-            followersCount !== "Data not found" &&
-            followingCount !== "Data not found"
-          ) {
-            const scrapedData = {
-              profileBio,
-              joiningDate,
-              followersCount,
-              followingCount
-            };
-            console.log("Scraped data:", scrapedData);
-            resolve(scrapedData);
-            return;
-          }
-  
-          // Stop checking after the maximum number of attempts
-          if (attempts >= maxAttempts) {
-            const scrapedData = {
-              profileBio: "Data not found",
-              joiningDate: "Data not found",
-              followersCount: "Data not found",
-              followingCount: "Data not found"
-            };
-            console.log("Max attempts reached. Scraped data:", scrapedData);
-            resolve(scrapedData);
-            return;
-          }
-  
-          // Try again after 1 second
+  console.log("Running the profile page scraper");
+
+  const scrapeData = () => {
+    return new Promise((resolve) => {
+      const maxAttempts = 10;
+      let attempts = 0;
+
+      const attemptScraping = () => {
+        attempts++;
+        console.log(`Attempt ${attempts}: Checking for elements...`);
+
+        // Check if the main element is present
+        const main = document.querySelector('main[role="main"]');
+        if (!main) {
+          console.log("Main element not found, retrying...");
+          retryOrResolve();
+          return;
+        }
+
+        console.log("main>>>>>>>>>>", main)
+        // Check if the profileBio element is present
+        const profileBio = main.querySelector('div[data-testid="primaryColumn"] > div[aria-label="Home timeline"] > div:nth-child(3) > div > div > div:nth-child(2) > div > div > div > div');
+        if (!profileBio) {
+          console.log("Profile bio not found, retrying...");
+          retryOrResolve();
+          return;
+        }
+
+        console.log("profileBio>>>>>", profileBio)
+        // Select additional elements conditionally
+        const thirddivbio = profileBio.querySelector(":scope > div:nth-child(3)");
+        console.log("thirddivbio:", thirddivbio);
+        
+        const otherbiodetails = profileBio.querySelector(":scope > div:nth-child(4)");
+        console.log("otherbiodetails:", otherbiodetails);
+        
+        const following_followercount = profileBio.querySelector(":scope > div:nth-child(5)");
+        console.log("following_followercount:", following_followercount);
+        
+        const followingCount = following_followercount?.querySelector('div > a[href*="following"]')?.innerText || "Data not found";
+        console.log("followingCount:", followingCount);
+        
+        const followersCount = following_followercount?.querySelector('div > a[href*="verified_followers"]')?.innerText || "Data not found";
+        console.log("followersCount:", followersCount);
+        
+        let profilebiodata
+        const profileBioofUser = thirddivbio?.querySelector(':scope > div > div[data-testid="UserDescription"]')
+        console.log("profileBioofUser:", profileBioofUser);
+        if (profileBioofUser) {
+          const profiledata = profileBioofUser.querySelectorAll(':scope > span');
+          profilebiodata = Array.from(profiledata)
+              .map(span => span.textContent.trim())
+              .join(" ") || "Data not found";
+          console.log("profilebiodata:", profilebiodata);
+      } else {
+          console.log("profilebiodata: Data not found");
+      }
+        
+        const userlocation = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]')?.innerText || "Data not found";
+        console.log("userlocation:", userlocation);
+
+        const userBirthdate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]')?.innerText || "Data not found";
+        console.log("userBirthdate:", userBirthdate);
+        
+        const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "Data not found";
+        console.log("userJoindate:", userJoindate);
+        
+        // Check if necessary data has been found
+        if (
+          followersCount !== "Data not found" &&
+          followingCount !== "Data not found"
+        ) {
+          const scrapedData = {
+            profilebiodata,
+            userJoindate,
+            followersCount,
+            followingCount,
+            userlocation,
+            userBirthdate
+          };
+          console.log("Scraped data:", scrapedData);
+          resolve(scrapedData);
+          return;
+        }
+
+        retryOrResolve();
+      };
+
+      const retryOrResolve = () => {
+        if (attempts >= maxAttempts) {
+          console.log("Max attempts reached without finding all data.");
+          resolve({
+            profileBioofUser: "Data not found",
+            userJoindate: "Data not found",
+            followersCount: "Data not found",
+            followingCount: "Data not found",
+            userlocation: "Data not found",
+            userBirthdate: "Data not found"
+          });
+        } else {
           setTimeout(attemptScraping, 1000);
-        };
-  
-        attemptScraping();
+        }
+      };
+
+      attemptScraping();
+    });
+  };
+
+  if (document.readyState === "complete") {
+    return await scrapeData();
+  } else {
+    return new Promise((resolve) => {
+      window.addEventListener("load", async () => {
+        resolve(await scrapeData());
       });
-    };
-  
-    // Wait until the page is fully loaded, then start scraping
-    if (document.readyState === 'complete') {
-      return await scrapeData();
-    } else {
-      return new Promise((resolve) => {
-        window.addEventListener('load', async () => {
-          resolve(await scrapeData());
-        });
-      });
-    }
+    });
   }
-  
-  
+}
+
