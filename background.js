@@ -9,9 +9,9 @@
 //    - evaluate if post can be reported to authorities
 //  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
 
-import {profileScrape} from "./contents/profile-scrapper.js"
+import { profileScrape } from "./contents/profile-scrapper.js"
 import { callPerplexity, createFinalReport, downloadZip } from "./utility.js"
-import { evaluatorSystemPrompt } from "./utils.js"
+import { evaluatorSystemPrompt, perplexityPrompt } from "./utils.js"
 
 // ## Global variables
 let currentAnalysisId = null
@@ -241,18 +241,17 @@ async function handlePostURLScrape(analysisId, url) {
 
 async function initiateDownload() {
   try {
-    const zipBlob = await downloadZip();
+    const zipBlob = await downloadZip()
 
     // Convert the Blob to a base64 string to send to the content script or popup
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onloadend = () => {
-      const base64data = reader.result.split(',')[1]; // Extract base64 part
-      chrome.runtime.sendMessage({ action: "downloadZip", base64data });
-    };
-    reader.readAsDataURL(zipBlob);
-
+      const base64data = reader.result.split(",")[1] // Extract base64 part
+      chrome.runtime.sendMessage({ action: "downloadZip", base64data })
+    }
+    reader.readAsDataURL(zipBlob)
   } catch (error) {
-    console.error("Error during download:", error);
+    console.error("Error during download:", error)
   }
 }
 
@@ -282,8 +281,8 @@ async function startFullAnalysis() {
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     // After processing, add analysis results to the ZIP Folder
-    await createFinalReport(results.Report.reportablePostsArray, results.Report.originalUrl)
-    await initiateDownload();
+    // await createFinalReport(results.Report.reportablePostsArray, results.Report.originalUrl)
+    // await initiateDownload();
 
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
@@ -868,23 +867,28 @@ async function captureReportablePostScreenshots(reportablePosts) {
         }
 
         let postReport = null
-        // const perplexityresponse = await callPerplexity()
-        // if (perplexityresponse) {
-        //   postReport = {
-        //     ...post,
-        //     scrapedData: scrapedData,
-        //     perplexityresponse: perplexityresponse,
-        //     postScreenshot: postScreenshot, // Unique post screenshot for each post
-        //     profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
-        //   }
-        // } else {
-        postReport = {
-          ...post,
-          scrapedData: scrapedData,
-          postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
-          profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+        const perplexityresponse = await callPerplexity(
+          { ...scrapedData, Username: post.Username },
+          perplexityPrompt
+        )
+        console.log("perplexityresponse", perplexityresponse)
+        if (perplexityresponse) {
+          postReport = {
+            ...post,
+            // post.anteige_entwurf: perplexityresponse
+            scrapedData: scrapedData,
+            perplexityresponse: perplexityresponse,
+            postScreenshot: postScreenshot, // Unique post screenshot for each post
+            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+          }
+        } else {
+          postReport = {
+            ...post,
+            scrapedData: scrapedData,
+            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
+            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+          }
         }
-        // }
         // Create a structured object for each post
 
         //calling perplexity logic
@@ -900,7 +904,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
     await chrome.tabs.update(originalTab.id, { url: originalUrl })
     // }
     console.log("reportablePostsArray>>>>>>>>>>", reportablePostsArray)
-    return {reportablePostsArray, originalUrl}
+    return { reportablePostsArray, originalUrl }
   } catch (error) {
     console.error(`Error in captureReportablePostScreenshots:`, error)
   }

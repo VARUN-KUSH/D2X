@@ -278,7 +278,7 @@ function Popup() {
         "directory>>>",
         directory
       )
-      return new Promise<ArrayBuffer | void>((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         chrome.tabs.query(
           { active: true, currentWindow: true },
           async function (tabs) {
@@ -316,14 +316,8 @@ function Popup() {
                     analysisId
                   )
                 })
-                // Fetch the blob data from the blob URL
-                const response = await fetch(blobURLs)
-                const blob = await response.blob()
-
-                // Convert blob to ArrayBuffer for JSZip compatibility
-                const arrayBuffer = await blob.arrayBuffer()
-
-                resolve(arrayBuffer)
+                
+                resolve(blobURLs)
               } else {
                 blobURLs = await new Promise((resolve, reject) => {
                   CaptureAPI.captureToFiles(
