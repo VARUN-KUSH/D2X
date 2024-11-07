@@ -290,7 +290,7 @@ export async function createFinalReport(results, originalUrl) {
     let userFolder = mainFolder.folder(username)
     let post = results.find((item) => item.Username === username)
     userFolder.file(
-      `ExtraUserInfo_${post.Username}_${year}.${month}.${date}.txt`,
+      `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
       ``
     )
     userFolder.file(
@@ -298,7 +298,7 @@ export async function createFinalReport(results, originalUrl) {
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`
     )
     userFolder.file(
-      `UserInfo_${post.Username}_${year}.${month}.${date}.txt`,
+      `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
       `Biografie: ${post.scrapedData.profileBio}
       ${post.scrapedData.joiningDate}
       Folgt: ${post.scrapedData.followingCount}
@@ -334,7 +334,7 @@ export async function createFinalReport(results, originalUrl) {
         `${post.Anzeige_Entwurf}`
       )
       folder2.file(
-        `Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`,
+        `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
@@ -343,11 +343,15 @@ export async function createFinalReport(results, originalUrl) {
       //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
       // ]
       folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`, `${post.postScreenshot}`
+        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`,
+        `${post.postScreenshot}`
       )
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
       folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)
-      folder2.file(`Zeitpunkt.txt`, `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `)
+      folder2.file(
+        `Zeitpunkt.txt`,
+        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `
+      )
     })
   }
 }
