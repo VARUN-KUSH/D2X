@@ -79,17 +79,18 @@ function waitForTabToLoad(tabId) {
   })
 }
 
-function setAPIKey(apiKey) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ apiKey: apiKey }, function () {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError)
-      } else {
-        resolve()
-      }
-    })
-  })
-}
+//remove this function in future
+// function setAPIKey(apiKey) {
+//   return new Promise((resolve, reject) => {
+//     chrome.storage.local.set({ apiKey: apiKey }, function () {
+//       if (chrome.runtime.lastError) {
+//         reject(chrome.runtime.lastError)
+//       } else {
+//         resolve()
+//       }
+//     })
+//   })
+// }
 
 async function getCurrentTime() {
   const url = "http://worldtimeapi.org/api/ip"
@@ -281,8 +282,8 @@ async function startFullAnalysis() {
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     // After processing, add analysis results to the ZIP Folder
-    // await createFinalReport(results.Report.reportablePostsArray, results.Report.originalUrl)
-    // await initiateDownload();
+    await createFinalReport(results.Report.reportablePostsArray, results.Report.originalUrl)
+    await initiateDownload();
 
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
@@ -323,10 +324,10 @@ async function addAnalysisResultsToZip(results) {
 // Function to load API key storage
 async function getAPIKey() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(["apiKey"], function (result) {
-      if (result.apiKey) {
+    chrome.storage.local.get(["openaiApiKey"], function (result) {
+      if (result.openaiApiKey) {
         console.log("API key found in storage")
-        resolve(result.apiKey)
+        resolve(result.openaiApiKey)
       } else {
         console.log("API key not found in storage or config")
         chrome.runtime.sendMessage({ action: "requestAPIKey" })
@@ -1174,10 +1175,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse(scrapedPost)
           break
 
-        case "setAPIKey":
-          await setAPIKey(request.apiKey)
-          sendResponse({ status: "API Key set successfully" })
-          break
+        // case "setAPIKey":
+        //   await setAPIKey(request.apiKey)
+        //   sendResponse({ status: "API Key set successfully" })
+        //   break
 
         //        case "screenshotCaptured":
         //          await handleCapturedScreenshot(request);

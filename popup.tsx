@@ -21,6 +21,7 @@ function Popup() {
   const [openSection, setOpenSection] = useState<string | null>(
     "evaluateSection"
   )
+  //state save locally
   const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
   const [backgroundInfo, setbackgroundInfo] = useState("")
   const [analysisId, setAnalysisId] = useState("")
@@ -38,6 +39,12 @@ function Popup() {
     openaiApiKey: "",
     perplexityApiKey: ""
   })
+
+ // Track saved status for each API key and also save it locally
+  const [savedKeys, setSavedKeys] = useState({
+    openaiApiKey: false,
+    perplexityApiKey: false
+  });
   const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(true) // Default is on (header visible)
   const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(true)
 
@@ -170,29 +177,29 @@ function Popup() {
     })
   }
 
-  //API KEY SAVING LOGIC CHANGE
-  const saveAPIKey = (param) => {
-    let apiKey
-    param == "openai"
-      ? (apiKey = apiKeys.openaiApiKey)
-      : (apiKey = apiKeys.perplexityApiKey)
+  //API KEY SAVING LOGIC CHANGE directly save to locally and get in background
+  // const saveAPIKey = (param) => {
+  //   let apiKey
+  //   param == "openai"
+  //     ? (apiKey = apiKeys.openaiApiKey)
+  //     : (apiKey = apiKeys.perplexityApiKey)
 
-    chrome.runtime.sendMessage(
-      { action: "setAPIKey", apiKey: apiKey, keyType: param },
-      function (response) {
-        if (response && response.status === "API Key set successfully") {
-          alert(
-            `${param.charAt(0).toUpperCase() + param.slice(1)} API-Schlüssel erfolgreich gespeichert!`
-          )
-        } else {
-          alert(
-            `Fehler beim Speichern des ${param} API-Schlüssels: ` +
-              (response ? response.message : "Unbekannter Fehler")
-          )
-        }
-      }
-    )
-  }
+  //   chrome.runtime.sendMessage(
+  //     { action: "setAPIKey", apiKey: apiKey, keyType: param },
+  //     function (response) {
+  //       if (response && response.status === "API Key set successfully") {
+  //         alert(
+  //           `${param.charAt(0).toUpperCase() + param.slice(1)} API-Schlüssel erfolgreich gespeichert!`
+  //         )
+  //       } else {
+  //         alert(
+  //           `Fehler beim Speichern des ${param} API-Schlüssels: ` +
+  //             (response ? response.message : "Unbekannter Fehler")
+  //         )
+  //       }
+  //     }
+  //   )
+  // }
 
   // const saveAddress = (type) => {
   //   const address = document.getElementById(`${type}Address`)
@@ -202,7 +209,28 @@ function Popup() {
   //     )
   //   })
   // }
-
+  
+  const saveAPIKey = (keyType) => {
+    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey";
+    const apiKey = apiKeys[keyName];
+  
+    chrome.storage.local.set({ [keyName]: apiKey }, () => {
+      if (chrome.runtime.lastError) {
+        alert(
+          `Fehler beim Speichern des ${keyType} API-Schlüssels: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        alert(
+          `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API-Schlüssel erfolgreich gespeichert!`
+        );
+  
+        // Mark the key as saved
+        setSavedKeys((prev) => ({ ...prev, [keyName]: true }));
+      }
+    });
+  };
+  
+  
   const saveBackgroundInfo = () => {
     // Trim and validate the backgroundInfo string
     const trimmedBackgroundInfo = backgroundInfo.trim()
@@ -223,8 +251,24 @@ function Popup() {
   }
 
   useEffect(() => {
-    chrome.storage.local.get(["backgroundInfo"], function (result) {
-      setbackgroundInfo(result.backgroundInfo)
+    chrome.storage.local.get(["backgroundInfo", "openaiApiKey", "perplexityApiKey"], function (result) {
+      const backgroundinfo = result.backgroundInfo || "";
+      setbackgroundInfo(backgroundinfo)
+       // Set backgroundInfopresent to true if backgroundInfo is found
+      setbackgroundInfopresent(!!backgroundinfo);
+      const openaiKey = result.openaiApiKey || "";
+      const perplexityKey = result.perplexityApiKey || "";
+      
+      setApiKeys({
+        openaiApiKey: openaiKey,
+        perplexityApiKey: perplexityKey
+      });
+
+       // Update savedKeys based on whether the API keys exist
+       setSavedKeys({
+        openaiApiKey: !!openaiKey, // Set to true if openaiApiKey exists
+        perplexityApiKey: !!perplexityKey // Set to true if perplexityApiKey exists
+      });
     })
   }, [])
 
@@ -240,6 +284,30 @@ function Popup() {
       setbackgroundInfopresent(false)
     })
   }
+
+  const deleteAPIKey = (keyType) => {
+    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey";
+
+    // Remove the key from chrome.storage.local
+    chrome.storage.local.remove(keyName, () => {
+      if (chrome.runtime.lastError) {
+        alert(
+          `Error deleting ${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key: ${chrome.runtime.lastError.message}`
+        );
+      } else {
+        alert(
+          `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key deleted successfully!`
+        );
+
+        // Clear the key from state
+        setApiKeys((prevKeys) => ({
+          ...prevKeys,
+          [keyName]: ""
+        }));
+        setSavedKeys((prev) => ({ ...prev, [keyName]: false }));
+      }
+    });
+  };
 
   const triggerFullAnalysis = () => {
     setShowProgressBar(true)
@@ -560,8 +628,12 @@ function Popup() {
             </div>
             <section id="settingsSection">
               <h2>Einstellungen</h2>
-              <details id="apiKeysSection">
-                <summary onClick={() => toggleSubSection("apiKeysSection")}>
+              <details id="apiKeysSection" open={openSubSections.apiKeysSection}>
+                <summary onClick={() => {
+                    event.preventDefault(); // Prevent default toggle behavior
+                    toggleSubSection("apiKeysSection")}
+                }
+                >
                   API Keys
                 </summary>
                 {openSubSections.apiKeysSection && (
@@ -580,10 +652,18 @@ function Popup() {
                       name="openaiApiKey"
                       value={apiKeys.openaiApiKey}
                       onChange={handleInputChange}
+                      disabled={savedKeys.openaiApiKey} // Disable input if key is saved
                     />
-                    <button onClick={() => saveAPIKey("openai")}>
-                      API-Schlüssel speichern
-                    </button>
+                   {savedKeys.openaiApiKey ? (
+                      <button onClick={() => deleteAPIKey("openai")}
+                      style={{ backgroundColor: "red", color: "white" }}>
+                        OpenAI-Schlüssel löschen
+                      </button>
+                    ) : (
+                      <button onClick={() => saveAPIKey("openai")}>
+                       API-Schlüssel speichern
+                      </button>
+                    )}
 
                     <label htmlFor="perplexityApiKey">
                       Perplexity API-Schlüssel:
@@ -599,11 +679,20 @@ function Popup() {
                       name="perplexityApiKey"
                       value={apiKeys.perplexityApiKey}
                       onChange={handleInputChange}
+                      disabled={savedKeys.perplexityApiKey}
                     />
-                    <button onClick={() => saveAPIKey("perplexity")}>
-                      API-Schlüssel speichern
-                    </button>
-                  </div>
+                   {savedKeys.perplexityApiKey ? (
+                      <button onClick={() => deleteAPIKey("perplexity")}
+                      style={{ backgroundColor: "red", color: "white" }}
+                      >
+                        Perplexity-Schlüssel löschen
+                      </button>
+                    ) : (
+                      <button onClick={() => saveAPIKey("perplexity")}>
+                       API-Schlüssel speichern
+                      </button>
+                    )}
+                    </div>
                 )}
               </details>
 
@@ -718,7 +807,9 @@ function Popup() {
                     name="backgroundInfo"
                     value={backgroundInfo}
                     placeholder=""
-                    onChange={handleBackgroundInfo}></textarea>
+                    onChange={handleBackgroundInfo}
+                    disabled={backgroundInfopresent}
+                    ></textarea>
                   {backgroundInfopresent ? (
                     <button
                       onClick={deleteBackgroundInfo}
