@@ -420,8 +420,8 @@ export async function callPerplexity(userprofileData, instruction) {
 async function runPerplexityQuery(userprofileData, instruction) {
   return await new Promise((resolve, reject) => {
     // Fetch the API key from storage
-    chrome.storage.local.get("PERPLEXITY_API_KEY", (result) => {
-      const apiKey = result.PERPLEXITY_API_KEY
+    chrome.storage.local.get("perplexityApiKey", (result) => {
+      const apiKey = result.perplexityApiKey
 
       if (!apiKey) {
         console.error("API Key is not set in Chrome storage.")

@@ -530,6 +530,7 @@ function Popup() {
         <div className="header-icons">
           {base64data && (
             <span
+              className="main-icon"
               onClick={toggledownloadSection}
               style={{
                 cursor: "pointer",
