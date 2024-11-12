@@ -22,7 +22,15 @@ export async function profileScrape() {
 
         console.log("main>>>>>>>>>>", main)
         // Check if the profileBio element is present
-        const profileBio = main.querySelector('div[data-testid="primaryColumn"] > div[aria-label="Home timeline"] > div:nth-child(3) > div > div > div:nth-child(2) > div > div > div > div');
+        const primaryColoumn = main.querySelector(':scope > div > div > div > div[data-testid="primaryColumn"] > div[aria-label="Home timeline"] > div:nth-child(3)');
+        console.log("primaryColoumn", primaryColoumn)
+        if (!primaryColoumn) {
+          console.log("Main element not found, retrying...");
+          retryOrResolve();
+          return;
+        }
+
+        const profileBio = primaryColoumn.querySelector(':scope > div > div > div > div')
         if (!profileBio) {
           console.log("Profile bio not found, retrying...");
           retryOrResolve();
@@ -59,13 +67,13 @@ export async function profileScrape() {
           console.log("profilebiodata: Data not found");
       }
         
-        const userlocation = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]')?.innerText || "Data not found";
+        const userlocation = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]')?.innerText || "";
         console.log("userlocation:", userlocation);
 
-        const userBirthdate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]')?.innerText || "Data not found";
+        const userBirthdate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]')?.innerText || "";
         console.log("userBirthdate:", userBirthdate);
         
-        const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "Data not found";
+        const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "";
         console.log("userJoindate:", userJoindate);
         
         // Check if necessary data has been found

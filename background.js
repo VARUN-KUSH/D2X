@@ -10,8 +10,8 @@
 //  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
 
 import { profileScrape } from "./contents/profile-scrapper.js"
-import { callPerplexity, createFinalReport, downloadZip } from "./utility.js"
-import { evaluatorSystemPrompt, perplexityPrompt } from "./utils.js"
+import { callPerplexity, createFinalReport, downloadZip,  addToZip } from "./utility.js"
+import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils.js"
 
 // ## Global variables
 let currentAnalysisId = null
@@ -868,18 +868,17 @@ async function captureReportablePostScreenshots(reportablePosts) {
         }
 
         let postReport = null
-        const perplexityresponse = await callPerplexity(
-          { ...scrapedData, Username: post.Username },
-          perplexityPrompt
-        )
+        const perplexityQuery = generatePerplexityPrompt(post.Username, scrapedData)
+        const perplexityresponse = await callPerplexity(perplexityQuery)
         console.log("perplexityresponse", perplexityresponse)
         if (perplexityresponse) {
+          const response = JSON.parse(perplexityresponse); 
           postReport = {
             ...post,
             // post.anteige_entwurf: perplexityresponse
             scrapedData: scrapedData,
-            perplexityresponse: perplexityresponse,
-            postScreenshot: postScreenshot, // Unique post screenshot for each post
+            perplexityresponse: response,
+            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
             profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
           }
         } else {
@@ -1129,6 +1128,40 @@ async function requestScreenshotCapture(url, filename, directory) {
 //   )
 // }
 
+// Utility function to get the current date in DD.MM.YYYY format
+function getCurrentDate() {
+  const now = new Date();
+  return `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+}
+
+// Function to generate the appropriate filename based on the URL format
+function generateFilename(url) {
+  const date = getCurrentDate();
+  const urlObj = new URL(url);
+  
+  // Check if it's a Twitter profile or tweet URL on x.com
+  if (urlObj.hostname === 'x.com') {
+    const pathSegments = urlObj.pathname.split('/').filter(Boolean); // Split and remove empty segments
+
+    // Case 1: Tweet URL format https://x.com/[TwitterUserHandle]/status/[TweetURLNumber]
+    if (pathSegments.length === 3 && pathSegments[1] === 'status') {
+      const twitterUserHandle = pathSegments[0];
+      const tweetURLNumber = pathSegments[2];
+      return `${twitterUserHandle}/${tweetURLNumber}/screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`;
+    }
+
+    // Case 2: Profile URL format https://x.com/[TwitterUserHandle]
+    if (pathSegments.length === 1) {
+      const twitterUserHandle = pathSegments[0];
+      return `${twitterUserHandle}/screenshot_userInfo_${twitterUserHandle}_${date}.png`;
+    }
+  }
+
+  // Default case: For other URLs, create a general filename
+  const pageURL = urlObj.hostname;
+  return `screenshot_${pageURL}_${date}.png`;
+}
+
 // # Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Received message in background:", request)
@@ -1144,6 +1177,52 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "startAnalysis":
           await startFullAnalysis()
           sendResponse({ analysisId: getActiveAnalysisId() })
+          break
+
+        case "fullpagelengthss":
+          console.log("here in fullpage")
+          const url = await getCurrentTabUrl()
+          // Generate the filename based on the URL
+          const filename = generateFilename(url);
+          console.log("filename>>>>>", filename)
+          await requestinitialScreenshotCapture(url, filename, "")
+          sendResponse({ analysisId: getActiveAnalysisId() })
+          break
+
+        case "visiblelengthss":
+          console.log("here in visibletabpage")
+          const urlofpost = await getCurrentTabUrl()
+          const filenameofpost = generateFilename(urlofpost);
+          console.log("filenameofpost>>>>>", filenameofpost)
+          const profileScreenshot = await requestScreenshotCapture(urlofpost, filenameofpost, "")
+          console.log("profilescreenshot>>>>>>>>>>>", profileScreenshot) 
+          addToZip(profileScreenshot, filenameofpost, "")
+          sendResponse({ analysisId: getActiveAnalysisId() })
+          break
+
+        case "SEARCH_PROFILE":
+          //call perplexity and the create a folder which contains the report
+          const { profileUrl, knownProfileInfo } = message.data;
+
+          // Now you have access to `profileUrl` and `knownProfileInfo`
+          console.log('Profile URL:', profileUrl);
+          console.log('Known Profile Info:', knownProfileInfo);
+
+          // Define a regular expression to match profile URLs in the format https://x.com/[username]
+          const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/;
+
+          let username = null;
+          if (profileUrlPattern.test(profileUrl)) {
+            // Extract the username from the profile URL
+            username = profileUrl.match(profileUrlPattern)[1];
+            console.log('Extracted Username:', username);
+          } else {
+            console.log('Profile URL does not match the expected format.');
+          }
+
+          const perplexityQuery = generatePerplexityPrompt(username, knownProfileInfo)
+          const perplexityresponse = await callPerplexity(perplexityQuery)
+          console.log("perplexityresponse>>>>>>>>>>>", perplexityresponse)
           break
 
         case "getCurrentTime":

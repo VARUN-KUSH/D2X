@@ -240,7 +240,6 @@ export async function createFinalReport(results, originalUrl) {
   // Create folder name in format D2X_Report_year.month.date.time
   let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
-  mainFolder.file("AnalyseZeitpunkt.txt")
   const formData = await getFormData()
   console.log("Retrieved formData:", formData)
   const {
@@ -291,7 +290,7 @@ export async function createFinalReport(results, originalUrl) {
     let post = results.find((item) => item.Username === username)
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${year}.${month}.${date}.txt`,
-      ``
+      `${post.perplexityresponse.online_praesenz}`
     )
     userFolder.file(
       `profilUrl.txt`,
@@ -299,8 +298,8 @@ export async function createFinalReport(results, originalUrl) {
     )
     userFolder.file(
       `UserInfo_${post.Username}_${year}.${month}.${date}.txt`,
-      `Biografie: ${post.scrapedData.profileBio}
-      ${post.scrapedData.joiningDate}
+      `Biografie: ${post.scrapedData.profilebiodata}
+      ${post.scrapedData.userJoindate}
       Folgt: ${post.scrapedData.followingCount}
       Follower: ${post.scrapedData.followersCount} `
     )
@@ -317,7 +316,9 @@ export async function createFinalReport(results, originalUrl) {
     //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
     // ]
     const response = await fetch(post.profileScreenshot[0])
+    console.log("response>>>>>>>>>>", response)
     const blobData = await response.blob()
+    console.log("blobData>>>>..", blobData)
     userFolder.file(
       `screenshot_${post.Username}_${year}.${month}.${date}.png`,
       blobData,
@@ -326,10 +327,10 @@ export async function createFinalReport(results, originalUrl) {
 
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
-    userPosts.forEach(async (post, index) => {
-      // Add post information as text files
-      // userFolder.file(`post_${index + 1}.txt`, `Post URL: ${post.Post_URL}\nContent: ${post.Inhalt}\nExplanation: ${post.Erklärung}`);
-      // userFolder.file(`screenshot_profile_${post.Username}_${year}.${month}.${date}.png`, post.profileScreenshot[0], { binary: true });
+    console.log("userPosts>>>>>>>>>>>", userPosts)
+
+    for (let post of userPosts) {
+      
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
       folder2.file(
@@ -342,24 +343,32 @@ export async function createFinalReport(results, originalUrl) {
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
 
-      // postScreenshot: [
-      //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
-      // ]
-      const response = await fetch(post.postScreenshot[0])
-      const blobData = await response.blob()
-
-      folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`,
-        blobData,
-        { binary: true }
-      )
+      
+      try {
+        const postResponse = await fetch(post.postScreenshot[0]);
+        if (!postResponse.ok) {
+          throw new Error(`Failed to fetch post screenshot: ${postResponse.statusText}`);
+        }
+        console.log("postResponse>>>>>>>>", postResponse);
+        const postblobData = await postResponse.blob();
+        console.log("postblobData>>>>>>>>>>.", postblobData);
+    
+        folder2.file(
+          `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`,
+          postblobData,
+          { binary: true }
+        );
+      } catch (error) {
+        console.error("Error fetching post screenshot:", error);
+      }
+      
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
-      folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)
+      folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
         `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `
       )
-    })
+    }
   }
 }
 
@@ -395,7 +404,7 @@ export async function downloadZip() {
 
 // Function to get the API key and run the query
 
-export async function callPerplexity(userprofileData, instruction) {
+export async function callPerplexity(query) {
   const usePerplexity = await new Promise((resolve) => {
     chrome.storage.local.get("usePerplexity", (result) => {
       resolve(result.usePerplexity)
@@ -406,8 +415,7 @@ export async function callPerplexity(userprofileData, instruction) {
   if (usePerplexity) {
     try {
       const perplexityResponse = await runPerplexityQuery(
-        userprofileData,
-        instruction
+       query
       )
       return perplexityResponse
     } catch (error) {
@@ -417,7 +425,7 @@ export async function callPerplexity(userprofileData, instruction) {
   }
 }
 
-async function runPerplexityQuery(userprofileData, instruction) {
+async function runPerplexityQuery(query) {
   return await new Promise((resolve, reject) => {
     // Fetch the API key from storage
     chrome.storage.local.get("perplexityApiKey", (result) => {
@@ -433,8 +441,7 @@ async function runPerplexityQuery(userprofileData, instruction) {
       const API_URL = "https://api.perplexity.ai/chat/completions"
       const MODEL = "llama-3.1-70b-instruct"
 
-      // Construct the query from userprofileData and instruction
-      const query = `${instruction}\n\nUser Profile Data: ${JSON.stringify(userprofileData)}`
+      
 
       // Set up request headers and body
       const headers = {

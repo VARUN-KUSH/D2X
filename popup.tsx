@@ -10,6 +10,11 @@ import {
 import "./popup.css"
 
 function Popup() {
+  const [inputValues, setInputValues] = useState({
+    profileUrl: '',
+    knownProfileInfo: ''
+  });
+
   const [base64data, setBase64Data] = useState(null)
   const [formData, setFormData] = useState({
     senderAddress: "",
@@ -59,6 +64,22 @@ function Popup() {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
   }
+
+  const handleInputChanges = (e) => {
+    const { name, value } = e.target;
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [name]: value
+    }));
+  };
+
+  const handleProfileSearch = () => {
+    // Send data to background script
+    chrome.runtime.sendMessage({
+      action: 'SEARCH_PROFILE',
+      data: inputValues
+    });
+  };
 
   const handleBackgroundInfo = (e) => {
     setbackgroundInfo(e.target.value)
@@ -328,6 +349,43 @@ function Popup() {
     setupMessageListener()
   }
 
+  const takefullpagess = () => {
+    setShowProgressBar(true)
+    chrome.runtime.sendMessage(
+      { action: "fullpagelengthss" },
+      function (response) {
+        if (response && response.analysisId) {
+          setAnalysisId(response.analysisId)
+          console.log("Analysis initiated with ID:", response.analysisId)
+        } else {
+          console.error("Failed to start analysis", response)
+          alert("Failed to start analysis")
+          setShowProgressBar(false)
+        }
+      }
+    )
+    setupMessageListener()
+  }
+
+  const visiblepagess = () => {
+    setShowProgressBar(true)
+    chrome.runtime.sendMessage(
+      { action: "visiblelengthss" },
+      function (response) {
+        if (response && response.analysisId) {
+          setAnalysisId(response.analysisId)
+          console.log("Analysis initiated with ID:", response.analysisId)
+        } else {
+          console.error("Failed to start analysis", response)
+          alert("Failed to start analysis")
+          setShowProgressBar(false)
+        }
+      }
+    )
+    setupMessageListener()
+  }
+
+  
   const screenshot = {
     captureAndStoreScreenshot: function (
       analysisId,
@@ -866,12 +924,14 @@ function Popup() {
             <div>
               <button
                 id="fullPageScreenshot"
-                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich der Bereiche, die aktuell nicht sichtbar sind.">
+                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich der Bereiche, die aktuell nicht sichtbar sind."
+                onClick={takefullpagess}>
                 Ganze Seite
               </button>
               <button
                 id="visibleAreaScreenshot"
-                title="Erstellt einen Screenshot des aktuell sichtbaren Bereichs der Webseite.">
+                title="Erstellt einen Screenshot des aktuell sichtbaren Bereichs der Webseite."
+                onClick={visiblepagess}>
                 Angezeigter Bereich
               </button>
             </div>
@@ -886,11 +946,14 @@ function Popup() {
                 Profil-URL:{" "}
                 <span
                   className="help-icon"
-                  title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll.">
+                  title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll."
+                  >
                   ⓘ
                 </span>
               </label>
-              <input type="text" id="profileUrl" name="profileUrl" />
+              <input type="text" id="profileUrl" name="profileUrl" 
+               value={inputValues.profileUrl}
+               onChange={handleInputChanges}/>
               <label htmlFor="knownProfileInfo">
                 Bekannte Profilinformationen:{" "}
                 <span
@@ -901,10 +964,13 @@ function Popup() {
               </label>
               <textarea
                 id="knownProfileInfo"
-                name="knownProfileInfo"></textarea>
+                name="knownProfileInfo"
+                value={inputValues.knownProfileInfo}
+                onChange={handleInputChanges}></textarea>
               <button
                 id="searchProfile"
-                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai.">
+                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
+                onClick={handleProfileSearch}>
                 Profil recherchieren
               </button>
             </div>

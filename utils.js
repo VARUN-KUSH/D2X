@@ -1,7 +1,8 @@
 // Evaluator system prompt
-export const perplexityPrompt = `Für eine tiefgehende Recherche zum X.com-User {user_handle} durchführen.
+export function generatePerplexityPrompt(user_handle, user_info) {
+return`Für eine tiefgehende Recherche zum X.com-User ${user_handle} durchführen.
 Hier sind bereits bekannte Informationen zu dem User:
-{user_info}
+${user_info}
 
 Antworte ausschließlich im folgenden JSON-Format:
 
@@ -29,6 +30,7 @@ Wichtig: Es darf kein Text außerhalb des JSON-Formats zurückgegeben werden. In
 Wichtig: Wenn zu einem Thema der JSON-Keys "online_praesenz" und/oder "weitere_informationen_zur_person" keine wesentlichen neuen Informationen gefunden wurden, die nicht schon in der Frage enthalten waren, dann muss der entsprechende "value" ein leerer String sein (""), also keinen Text enthalten.
 
 Wichtig: Wenn die Antwort Links enthält, dürfen diese nur verifizierte Links aus den Quellen sein. Halluzination von Informationen muss unter allen Umständen verhindert werden.`
+}
 
 
 export const evaluatorSystemPrompt = `
