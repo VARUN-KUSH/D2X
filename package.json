@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@expo/spawn-async": "^1.7.2",
     "plasmo": "0.89.3",
     "react": "18.2.0",
     "react-dom": "18.2.0"
