@@ -1,0 +1,236 @@
+{
+    "name": "D2X_response_schema",
+    "strict": true,
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Social Media Post Evaluation Schema",
+      "description": "Schema for evaluating social media posts and generating a German police report draft under German law.",
+      "type": "object",
+      "properties": {
+        "Posts": {
+          "type": "array",
+          "description": "An array of evaluation results for social media posts.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ID": {
+                "type": "string",
+                "description": "A unique identifier for the post as given by the user."
+              },
+              "Post_URL": {
+                "type": "string",
+                "description": "The URL of the social media post (must be a valid URI)."
+              },
+              "Username": {
+                "type": "string",
+                "description": "The user handle of the person who made the post."
+              },
+              "Screenname": {
+                "type": "string",
+                "description": "The display name or screen name of the person who made the post."
+              },
+              "User_Profil_URL": {
+                "type": "string",
+                "description": "The URL to the person's profile who made the post (must be a valid URI)."
+              },
+              "Veröffentlichungszeitpunkt": {
+                "type": "string",
+                "description": "The timestamp when the post was published (must be in ISO date-time format, e.g., '2024-03-21T14:30:00Z')."
+              },
+              "Inhalt": {
+                "type": "string",
+                "description": "The text content or description of the post."
+              },
+              "Erklärung": {
+                "type": "string",
+                "description": "Beschreibung: Wer sagt was zu wem. Inklusive Kontext und Bedeutung. (auf Deutsch)"
+              },
+              "Schriftliche_Bewertung": {
+                "type": "string",
+                "description": "Eine detaillierte Bewertung des Posts (auf Deutsch)."
+              },
+              "Post_selbst_ist_anzeigbar_flag": {
+                "type": "boolean",
+                "description": "Indicates whether the person who posted directly violates German law through their post (`true`) or if the post is not reportable (`false`) e.g. because the person merely is reporting others' illegal actions."
+              },
+              "Straftatbestand": {
+                "type": "string",
+                "description": "Applicable criminal offense identified in the post.",
+                "enum": [
+                  "Beleidigung",
+                  "üble Nachrede",
+                  "Verleumdung",
+                  "Bedrohung",
+                  "Volksverhetzung",
+                  "Doxxing",
+                  "Cybermobbing",
+                  "Cyberstalking",
+                  "Digitale_Erpressung",
+                  "Noetigung",
+                  "Ehrverletzung"
+                ]
+              },
+              "Schweregrad": {
+                "type": "string",
+                "description": "The severity level associated with the offense.",
+                "enum": [
+                  "NIEDRIG",
+                  "MITTEL",
+                  "HOCH"
+                ]
+              },
+              "Verfolgungsart": {
+                "type": "string",
+                "description": "Ob es sich um ein Antragsdelikt (ANTRAGSDELIKT), ein Offizialdelikt (OFFIZIALDELIKT) oder in seltenen Fällen um beides (ANTRAGSDELIKT_OFFIZIALDELIKT) handelt.",
+                "enum": [
+                  "ANTRAGSDELIKT",
+                  "OFFIZIALDELIKT",
+                  "ANTRAGSDELIKT_OFFIZIALDELIKT"
+                ]
+              },
+              "Antragsfrist": {
+                "type": "string",
+                "description": "ANTRAGSDELIKT muss innerhalb von drei Monaten eingereicht werden, sonst ist die Frist abgelaufen (DREI_MONATE). Bei OFFIZIALDELIKT besteht keine Frist (KEINE_FRIST). Bei ANTRAGSDELIKT_OFFIZIALDELIKT besteht eine Frist von drei Monaten (DREI_MONATE) für den ANTRAGSDELIKT.",
+                "enum": [
+                  "DREI_MONATE",
+                  "KEINE_FRIST"
+                ]
+              },
+              "Antragsberechtigte": {
+                "type": "string",
+                "description": "Bei ANTRAGSDELIKT ist nur der Betroffene zuständig (NUR_BETROFFENER). Bei OFFIZIALDELIKT kann jeder einen Antrag einreichen (JEDER). Bei ANTRAGSDELIKT_OFFIZIALDELIKT kann jeder einen Antrag einreichen (JEDER) bezogen auf das OFFIZIALDELIKT.",
+                "enum": [
+                  "NUR_BETROFFENER",
+                  "JEDER"
+                ]
+              },
+              "Wiederholung": {
+                "type": "string",
+                "description": "Whether an offense has happened before i.e., if it is a repeated offense or not.",
+                "enum": [
+                  "EINMALIG",
+                  "WIEDERHOLT",
+                  "NICHT_BEKANNT"
+                ]
+              },
+              "Ziel": {
+                "type": "string",
+                "description": "The target of the offense. A specific person (PERSON) or a group of people (GRUPPE).",
+                "enum": [
+                  "PERSON",
+                  "GRUPPE"
+                ]
+              },
+              "Inhaltliche_Merkmale": {
+                "type": "array",
+                "description": "Content characteristics identified in the post.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "Merkmal": {
+                      "type": "string",
+                      "enum": [
+                        "SCHIMPFWOERTER",
+                        "HERABWUERDIGENDE_AUSDRUECKE",
+                        "TATSACHENBEHAUPTUNG",
+                        "GEWALTANDROHUNG",
+                        "HASS_AUFRUF",
+                        "PRIVATE_DATEN",
+                        "FALSCHE_TATSACHEN"
+                      ],
+                      "description": "The specific characteristic or feature of the content."
+                    },
+                    "Zitat": {
+                      "type": "string",
+                      "description": "Relevant quote from the post illustrating the characteristic."
+                    }
+                  },
+                  "required": ["Merkmal", "Zitat"],
+                  "additionalProperties": false
+                }
+              },
+              "Vorsatz": {
+                "type": "string",
+                "description": "Intent behind the offense.",
+                "enum": [
+                  "WISSENTLICH_FALSCH",
+                  "NICHT_BEWEISBAR"
+                ]
+              },
+              "Potenzielle_Konsequenzen": {
+                "type": "array",
+                "description": "Potential consequences of the offense.",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "RUF_SCHAEDIGUNG",
+                    "PSYCHISCHE_BELASTUNG",
+                    "MATERIELLE_SCHAEDEN"
+                  ]
+                }
+              },
+              "Reichweite": {
+                "type": "string",
+                "description": "The reach or visibility of the post.",
+                "enum": [
+                  "INTERN",
+                  "OEFFENTLICH",
+                  "UNBEKANNT"
+                ]
+              },
+              "Plattformen": {
+                "type": "string",
+                "description": "The platform where the post was made.",
+                "enum": [
+                  "X_Twitter"
+                ]
+              },
+              "Wahrscheinlichkeit_der_Strafbarkeit": {
+                "type": "string",
+                "description": "The likelihood that the offense is punishable.",
+                "enum": [
+                  "GERING",
+                  "MITTEL",
+                  "HOCH"
+                ]
+              },
+              "Anzeige_Entwurf": {
+                "type": "string",
+                "description": "The draft of the police report letter prepared for the victim. Must be an empty string if the post is not reportable (\"Post_selbst_ist_anzeigbar_flag\": false). If not empty, it must start with \"Sehr geehrte Damen und Herren,\\n\" and end with \"Mit freundlichen Grüßen,\\n\" and it must be in German. Pattern: \"^Sehr geehrte Damen und Herren,\\n[\\s\\S]*Mit freundlichen Grüßen,\\n$\""
+              }
+            },
+            "required": [
+              "ID",
+              "Post_URL",
+              "Username",
+              "Screenname",
+              "User_Profil_URL",
+              "Veröffentlichungszeitpunkt",
+              "Inhalt",
+              "Erklärung",
+              "Schriftliche_Bewertung",
+              "Post_selbst_ist_anzeigbar_flag",
+              "Straftatbestand",
+              "Schweregrad",
+              "Verfolgungsart",
+              "Antragsfrist",
+              "Antragsberechtigte",
+              "Wiederholung",
+              "Ziel",
+              "Inhaltliche_Merkmale",
+              "Vorsatz",
+              "Potenzielle_Konsequenzen",
+              "Reichweite",
+              "Plattformen",
+              "Wahrscheinlichkeit_der_Strafbarkeit",
+              "Anzeige_Entwurf"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["Posts"],
+      "additionalProperties": false
+    }
+}
+  

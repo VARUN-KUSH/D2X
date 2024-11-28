@@ -48,10 +48,10 @@ export async function profileScrape() {
         const following_followercount = profileBio.querySelector(":scope > div:nth-child(5)");
         console.log("following_followercount:", following_followercount);
         
-        const followingCount = following_followercount?.querySelector('div > a[href*="following"]')?.innerText || "Data not found";
+        const followingCount = following_followercount?.querySelector('div > a[href*="following"]')?.innerText || " ";
         console.log("followingCount:", followingCount);
         
-        const followersCount = following_followercount?.querySelector('div > a[href*="verified_followers"]')?.innerText || "Data not found";
+        const followersCount = following_followercount?.querySelector('div > a[href*="verified_followers"]')?.innerText || " ";
         console.log("followersCount:", followersCount);
         
         let profilebiodata
@@ -61,7 +61,7 @@ export async function profileScrape() {
           const profiledata = profileBioofUser.querySelectorAll(':scope > span');
           profilebiodata = Array.from(profiledata)
               .map(span => span.textContent.trim())
-              .join(" ") || "Data not found";
+              .join(" ") || "";
           console.log("profilebiodata:", profilebiodata);
       } else {
           console.log("profilebiodata: Data not found");
@@ -101,12 +101,12 @@ export async function profileScrape() {
         if (attempts >= maxAttempts) {
           console.log("Max attempts reached without finding all data.");
           resolve({
-            profileBioofUser: "Data not found",
-            userJoindate: "Data not found",
-            followersCount: "Data not found",
-            followingCount: "Data not found",
-            userlocation: "Data not found",
-            userBirthdate: "Data not found"
+            profileBioofUser: "",
+            userJoindate: "",
+            followersCount: "",
+            followingCount: "",
+            userlocation: "",
+            userBirthdate: ""
           });
         } else {
           setTimeout(attemptScraping, 1000);

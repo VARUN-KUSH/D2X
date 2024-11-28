@@ -3,6 +3,8 @@ function logFileOperation(operation, path) {
   console.log(`File Operation: ${operation}, Path: ${path}`);
 }
 export const CaptureAPI = (function () {
+ 
+  
   const MAX_PRIMARY_DIMENSION = 15000 * 2,
     MAX_SECONDARY_DIMENSION = 4000 * 2,
     MAX_AREA = MAX_PRIMARY_DIMENSION * MAX_SECONDARY_DIMENSION;
@@ -12,6 +14,12 @@ export const CaptureAPI = (function () {
   //
   // URL Matching test - to verify we can talk to this URL
   //
+
+   // Add a function to cleanup after capture
+   function cleanupCapture(tabId) {
+    injectedTabs.delete(tabId);
+    captureLocks.delete(tabId);
+  }
 
   const matches = ["http://*/*", "https://*/*", "ftp://*/*", "file://*/*"],
     noMatches = [/^https?:\/\/chrome.google.com\/.*$/];
@@ -58,7 +66,7 @@ export const CaptureAPI = (function () {
     // Log the timestamp before the captureVisibleTab call
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] Calling chrome.tabs.captureVisibleTab`);
-
+    // new Promise(resolve => setTimeout(resolve, 1000));
     chrome.tabs.captureVisibleTab(null, { format: "png" }, function (dataURI) {
       if (!dataURI) return;
       const image = new Image();
@@ -307,32 +315,29 @@ export const CaptureAPI = (function () {
     }
 
     // TODO will this stack up if run multiple times? (I think it will get cleared?)
-    chrome.runtime.onMessage.addListener(function (
-      request,
-      sender,
-      sendResponse
-    ) {
+    // Clean up existing message listeners before adding new one
+    const messageListener = function (request, sender, sendResponse) {
       if (request.msg === "capture") {
         progress(request.complete);
-        capture(request, screenshots, sendResponse, splitnotifier);
-
-        // https://developer.chrome.com/extensions/messaging#simple
-        //
-        // If you want to asynchronously use sendResponse, add return true;
-        // to the onMessage event handler.
-        //
+        (async () => {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          capture(request, screenshots, sendResponse, splitnotifier);
+        })();
         return true;
-      } else {
-        console.log("Ignoring unknown message in capture-api.js:", request);
-        return false;
       }
-    });
+      return false;
+    };
+
+    // Remove previous listener if it exists
+    chrome.runtime.onMessage.removeListener(messageListener);
+    chrome.runtime.onMessage.addListener(messageListener);
 
     console.log("Tab object before executeScript: ", tab);
 
-    if (!injectedTabs.has(tab.id)) {
-      injectedTabs.set(tab.id, true);
 
+    console.log("Tab object before executeScript: ", tab);
+
+   
       if (chrome.scripting) {
         chrome.scripting.executeScript(
           { target: { tabId: tab.id }, files: ["capture-page.js"] },
@@ -354,18 +359,15 @@ export const CaptureAPI = (function () {
         );
       } else {
         console.error("Scripting API is unavailable in this context.");
+        cleanupCapture(tab.id);
+        errback("Scripting API unavailable");
       }
-    } else {
-      // `capture-page.js` already injected, proceed directly
-      console.log("`capture-page.js` already injected, proceed directly ");
-      initiateCapture(tab, function () {
-        callback(getBlobs(screenshots));
-      });
-    }
+   
 
     window.setTimeout(function () {
       if (!loaded) {
         timedOut = true;
+        cleanupCapture(tab.id);
         errback("execute timeout");
       }
     }, timeout);
@@ -391,6 +393,7 @@ export const CaptureAPI = (function () {
 
     if (typeof filename !== "string") {
       console.error("Invalid filename:", filename);
+      cleanupCapture(tab.id);
       errback(new Error("Invalid filename provided"));
       return;
     }
@@ -416,18 +419,20 @@ export const CaptureAPI = (function () {
                   `All blobs processed. Total files: ${filenames.length}`
                 );
                 callback(filenames);
+                cleanupCapture(tab.id);
               } else {
                 doNext();
               }
             },
             function (error) {
               console.error(`Error saving blob ${i + 1}:`, error);
+              cleanupCapture(tab.id);
               errback(error);
-            }
+            },
+            progress,
+            splitnotifier
           );
         })();
-        captureLocks.delete(tab.id);
-        callback(filenames);
       },
       function (error) {
         captureLocks.delete(tab.id);

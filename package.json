@@ -25,11 +25,13 @@
   },
   "manifest": {
     "host_permissions": [
+      "<all_urls>",
       "https://api.openai.com/",
       "http://worldtimeapi.org/",
       "https://x.com/*"
     ],
     "permissions": [
+      "sidePanel",
       "activeTab",
       "tabs",
       "scripting",
@@ -38,10 +40,17 @@
       "offscreen",
       "downloads"
     ],
+    "action": {
+      "default_title": "Click to open panel"
+    },
+    "side_panel": {
+      "default_path": "sidepanel.html"
+    },
     "web_accessible_resources": [
       {
         "resources": [
-          "contents/capture-page.js"
+          "contents/capture-page.js",
+          "Anzeigen_neu_generieren.html"
         ],
         "matches": [
           "<all_urls>"
