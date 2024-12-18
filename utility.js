@@ -267,7 +267,7 @@ export async function createFinalReport(results, originalUrl) {
   folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
   folder1.file(
     "Anlagen.txt",
-    `Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
+    `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
   )
   folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
   folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
