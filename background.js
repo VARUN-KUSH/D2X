@@ -321,25 +321,25 @@ async function startFullAnalysis() {
   }
 }
 
-async function addAnalysisResultsToZip(results) {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(
-      {
-        action: "addToZip",
-        fileData: JSON.stringify(results, null, 2),
-        filename: "analysis_results.json",
-        directory: ""
-      },
-      (response) => {
-        if (chrome.runtime.lastError || (response && response.error)) {
-          reject(chrome.runtime.lastError || response.error)
-        } else {
-          resolve()
-        }
-      }
-    )
-  })
-}
+// async function addAnalysisResultsToZip(results) {
+//   return new Promise((resolve, reject) => {
+//     chrome.runtime.sendMessage(
+//       {
+//         action: "addToZip",
+//         fileData: JSON.stringify(results, null, 2),
+//         filename: "analysis_results.json",
+//         directory: ""
+//       },
+//       (response) => {
+//         if (chrome.runtime.lastError || (response && response.error)) {
+//           reject(chrome.runtime.lastError || response.error)
+//         } else {
+//           resolve()
+//         }
+//       }
+//     )
+//   })
+// }
 
 // # Assistent functionality
 // Function to load API key storage
@@ -512,7 +512,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
         // Capture post screenshot
         //should be taken once the dom and assets fully loaded
 
-        await new Promise((resolve) => setTimeout(resolve, 8000))
+        await new Promise((resolve) => setTimeout(resolve, 10000))
         console.log("going to take screenshort of fullpage")
         const reportablepostscreenshots = await requestinitialScreenshotCapture(
           post.Post_URL,
@@ -526,7 +526,6 @@ async function captureReportablePostScreenshots(reportablePosts) {
         )
 
         // Optional delay
-        await delay(2000)
 
         // Initialize profileScreenshot as null for each post
         let profileScreenshot = null
@@ -539,7 +538,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
             })
             await waitForTabToLoad(originalTab.id)
           }
-
+          await delay(3000)
           scrapedData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
               {
@@ -567,7 +566,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
           console.log("scrapedprofileData", scrapedData)
 
-          await new Promise((resolve) => setTimeout(resolve, 2000))
+          await new Promise((resolve) => setTimeout(resolve, 3000))
 
           profileScreenshot = await requestScreenshotCapture(
             post.User_Profil_URL,
@@ -582,7 +581,6 @@ async function captureReportablePostScreenshots(reportablePosts) {
           // Store the profile screenshot in the map for reuse
           capturedProfiles.set(post.User_Profil_URL, profileScreenshot)
           capturedProfilesdata.set(post.User_Profil_URL, scrapedData)
-          await delay(8000)
         } else {
           // Reuse the existing profile screenshot if already captured
           profileScreenshot = capturedProfiles.get(post.User_Profil_URL)
@@ -641,32 +639,62 @@ async function captureReportablePostScreenshots(reportablePosts) {
 }
 
 async function requestinitialScreenshotCapture(url, filename, directory) {
-  return await new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(
-      {
-        action: "captureScreenshot",
-        analysisId: getActiveAnalysisId(),
-        url: url,
-        filename: filename,
-        directory: directory
-      },
+  // return await new Promise((resolve, reject) => {
+  //   chrome.runtime.sendMessage(
+  //     {
+  //       action: "captureScreenshot",
+  //       analysisId: getActiveAnalysisId(),
+  //       url: url,
+  //       filename: filename,
+  //       directory: directory,
+  //     },
+  //     (response) => {
+  //       if (chrome.runtime.lastError || (response && response.error)) {
+  //         reject(chrome.runtime.lastError || response.error);
+  //       } else {
+  //         if (response.success && response.modifiedscreenshots) {
+  //           resolve(response.modifiedscreenshots)
+  //           return
+  //         }
+  //       }
+  //     }
+  //   );
+  // });
 
-      (response) => {
-        if (chrome.runtime.lastError || (response && response.error)) {
-          reject(chrome.runtime.lastError || response.error)
-        } else {
-          if (response.success && response.modifiedscreenshots) {
-            resolve(response.modifiedscreenshots)
-            return
-          }
-        }
+  return await new Promise((resolve, reject) => {
+    const port = chrome.runtime.connect({ name: "fullpagescreenshot" })
+
+    // Send the message through the port
+    port.postMessage({
+      action: "fulltweetsScreenshot",
+      analysisId: getActiveAnalysisId(),
+      url: url,
+      filename: filename,
+      directory: directory
+    })
+
+    port.onMessage.addListener((response) => {
+      if (response.success && response.modifiedscreenshots) {
+        resolve(response.modifiedscreenshots)
+      } else if (response.error) {
+        reject(response.error)
       }
-    )
+
+      port.disconnect()
+    })
+
+    port.onDisconnect.addListener(() => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError) // Handle runtime errors
+      } else {
+        console.log("Port disconnected in background.")
+      }
+    })
   })
 }
 
 async function requestScreenshotCapture(url, filename, directory) {
-  return new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     const port = chrome.runtime.connect({ name: "reportablescreenshotPort" })
 
     // Send the message through the port
@@ -741,61 +769,6 @@ async function requestScreenshotCapture(url, filename, directory) {
   // )
 }
 
-// // Neue Funktion zum Hinzufügen von Zeitstempeln zu Screenshots
-// async function addTimestampToScreenshots(
-//   screenshotFiles,
-//   time,
-//   url,
-//   analysisId
-// ) {
-//   return Promise.all(
-//     screenshotFiles.map((file, index) => {
-//       return new Promise((resolve, reject) => {
-//         const newUrl = modifyUrl(url)
-//         const img = new Image()
-//         img.onload = function () {
-//           const canvas = document.createElement("canvas")
-//           const ctx = canvas.getContext("2d")
-
-//           const bannerHeight = 80
-//           canvas.width = img.width
-//           canvas.height = img.height + bannerHeight
-
-//           ctx.drawImage(img, 0, bannerHeight, img.width, img.height)
-
-//           ctx.fillStyle = "#f0f0f0"
-//           ctx.fillRect(0, 0, canvas.width, bannerHeight)
-//           ctx.fillStyle = "#000000"
-//           ctx.font = "14px Arial"
-//           ctx.textAlign = "left"
-//           ctx.textBaseline = "middle"
-
-//           const timestamp = `Captured on: ${new Date(time).toUTCString()}`
-//           const urlText = `URL: ${newUrl}`
-//           const idText = `Analysis ID: ${analysisId}`
-//           const partText = `Part ${index + 1} of ${screenshotFiles.length}`
-
-//           ctx.fillText(timestamp, 10, bannerHeight / 5)
-//           ctx.fillText(urlText, 10, (bannerHeight / 5) * 2)
-//           ctx.fillText(idText, 10, (bannerHeight / 5) * 3)
-//           ctx.fillText(partText, 10, (bannerHeight / 5) * 4)
-
-//           canvas.toBlob(function (blob) {
-//             const url = URL.createObjectURL(blob)
-//             resolve(url)
-//           }, "image/png")
-//         }
-
-//         img.onerror = function (error) {
-//           reject(new Error(`Failed to load the screenshot image ${index + 1}`))
-//         }
-
-//         img.src = file
-//       })
-//     })
-//   )
-// }
-
 // Utility function to get the current date in DD.MM.YYYY format
 function getCurrentDate() {
   const now = new Date()
@@ -806,6 +779,8 @@ function getCurrentDate() {
 function generateFilename(url) {
   const date = getCurrentDate()
   const urlObj = new URL(url)
+  let directory = ""
+  let filename = ""
 
   // Check if it's a Twitter profile or tweet URL on x.com
   if (urlObj.hostname === "x.com") {
@@ -815,19 +790,33 @@ function generateFilename(url) {
     if (pathSegments.length === 3 && pathSegments[1] === "status") {
       const twitterUserHandle = pathSegments[0]
       const tweetURLNumber = pathSegments[2]
-      return `${twitterUserHandle}/${tweetURLNumber}/screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`
+
+      directory = `${twitterUserHandle}/tweets/${tweetURLNumber}`
+      filename = `screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`
     }
 
     // Case 2: Profile URL format https://x.com/[TwitterUserHandle]
     if (pathSegments.length === 1) {
       const twitterUserHandle = pathSegments[0]
-      return `${twitterUserHandle}/screenshot_userInfo_${twitterUserHandle}_${date}.png`
+      // Create directory structure: username/profile
+      directory = `${twitterUserHandle}`
+      filename = `screenshot_userInfo_${twitterUserHandle}_${date}.png`
     }
   }
 
+  // Default case: For other URLs, organize by domain
+  else {
+    const pageURL = urlObj.hostname
+    // Remove common TLDs and create clean directory name
+
+    ;(directory = ""), (filename = `screenshot_${pageURL}_${date}.png`)
+  }
   // Default case: For other URLs, create a general filename
-  const pageURL = urlObj.hostname
-  return `screenshot_${pageURL}_${date}.png`
+
+  return {
+    directory,
+    filename
+  }
 }
 
 // # Message handling
@@ -851,25 +840,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           console.log("here in fullpage")
           const url = await getCurrentTabUrl()
           // Generate the filename based on the URL
-          const filename = generateFilename(url)
+          const { directory, filename } = generateFilename(url)
           console.log("filename>>>>>", filename)
-          await requestinitialScreenshotCapture(url, filename, "")
-          sendResponse({ analysisId: getActiveAnalysisId() })
+          sendResponse({
+            analysisId: getActiveAnalysisId(),
+            url: url,
+            filename: filename,
+            directory: directory
+          })
           break
 
         case "visiblelengthss":
           console.log("here in visibletabpage")
           const urlofpost = await getCurrentTabUrl()
-          const filenameofpost = generateFilename(urlofpost)
+          const res = generateFilename(urlofpost)
           console.log("filenameofpost>>>>>", filenameofpost)
-          const profileScreenshot = await requestScreenshotCapture(
-            urlofpost,
-            filenameofpost,
-            ""
-          )
-          console.log("profilescreenshot>>>>>>>>>>>", profileScreenshot)
-          addToZip(profileScreenshot, filenameofpost, "")
-          sendResponse({ analysisId: getActiveAnalysisId() })
+          sendResponse({
+            analysisId: getActiveAnalysisId(),
+            url: urlofpost,
+            filename: res.filename,
+            directory: res.directory
+          })
           break
 
         case "SEARCH_PROFILE":
@@ -898,8 +889,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           )
           const perplexityresponse = await callPerplexity(perplexityQuery)
           console.log("perplexityresponse>>>>>>>>>>>", perplexityresponse)
+          sendResponse({
+            analysisId: getActiveAnalysisId(),
+            perplexityresponse: perplexityresponse
+          })
           break
 
+        case "SEARCH_POST":
+          const { postUrl, knownPostInfo } = request.data
+          console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
+          //send both values to open ai
+          const message = {
+            posturl: postUrl,
+            postInfo: knownPostInfo
+          }
+          try {
+            const postresults = await fetchEvaluation(
+              API_KEY,
+              systemPromptWithContext,
+              jsonSchema,
+              message
+            )
+
+            console.log("Structured Response:", postresults)
+            const posts = JSON.parse(postresults.choices[0].message?.content)
+            console.log("posts>>>>>>", posts)
+          } catch (error) {
+            console.error("Error fetching evaluation:", error)
+          }
+          sendResponse({
+            analysisId: getActiveAnalysisId(),
+            openairesponse: openairesponse
+          })
+
+          break
         case "getCurrentTime":
           const time = await getCurrentTime()
           sendResponse({ time: time })

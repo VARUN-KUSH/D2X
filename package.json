@@ -24,6 +24,7 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+   
     "host_permissions": [
       "<all_urls>",
       "https://api.openai.com/",
@@ -49,7 +50,6 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "contents/capture-page.js",
           "Anzeigen_neu_generieren.html"
         ],
         "matches": [

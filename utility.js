@@ -14,21 +14,6 @@ function modifyUrl(url) {
   return modifiedUrl
 }
 
-async function getCurrentTime() {
-  const url = "http://worldtimeapi.org/api/ip"
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    return data.datetime
-  } catch (error) {
-    console.error("Error fetching time:", error)
-    return new Date().toISOString() // Fallback to local system time
-  }
-}
-
 export async function capturereportablessandchangetoURLs(
   currentTab,
   filename,
@@ -149,17 +134,16 @@ export async function addToZip(fileData, filename, directory) {
     directory
   )
 
-  // Fetch the Blob data from the Blob URL
-  const response = await fetch(fileData)
-  const blobData = await response.blob()
+  // No need to fetch; `fileData` is already a Blob
+  const blobData = fileData;
 
   if (directory) {
-    zip.folder(directory).file(filename, blobData, { binary: true })
+    zip.folder(directory).file(filename, blobData, { binary: true });
   } else {
-    zip.file(filename, blobData, { binary: true })
+    zip.file(filename, blobData, { binary: true });
   }
 
-  downloadZip()
+  await downloadallfullfilesZip();
 }
 
 // function _initScreenshots(totalWidth, totalHeight) {
@@ -283,10 +267,7 @@ export async function createFinalReport(results, originalUrl) {
   folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
   folder1.file(
     "Anlagen.txt",
-    `Anlage: Sachverhalt
-        Informationen aus dem Profil Tatverdächtige*r:
-        Screenshot Nutzerprofil auf X/Twitter
-        Screenshot des Kommentars und Kontext:`
+    `Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
   )
   folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
   folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
@@ -344,10 +325,9 @@ export async function createFinalReport(results, originalUrl) {
     for (let post of userPosts) {
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
-      folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
-        `${post.Anzeige_Entwurf}`
-      )
+      const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, '\n');
+      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`, formattedText);
+    
       folder2.file(
         `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
@@ -466,6 +446,22 @@ export function getFilename(contentURL, uid) {
   return `screenshot-${shortUID}-${name}-${Date.now()}.png`
 }
 
+export async function downloadallfullfilesZip() {
+  // Generate the zip Blob
+  // Generate the zip Blob
+   // Generate the zip Blob
+   const zipBlob = await zip.generateAsync({ type: "blob" });
+
+   // Create a download link
+   const url = URL.createObjectURL(zipBlob);
+   const a = document.createElement("a");
+   a.href = url;
+   a.download = "archive.zip";
+   document.body.appendChild(a);
+   a.click();
+   URL.revokeObjectURL(url);
+}
+
 export async function downloadZip() {
   // Generate the zip Blob
   // Generate the zip Blob
@@ -475,15 +471,15 @@ export async function downloadZip() {
 // Function to get the API key and run the query
 
 export async function callPerplexity(query) {
-  // const usePerplexity = await new Promise((resolve) => {
-  //   chrome.storage.local.get("usePerplexity", (result) => {
-  //     resolve(result.usePerplexity)
-  //     //handle edge cases if keys are not added
-  //   })
-  // })
+  const usePerplexity = await new Promise((resolve) => {
+    chrome.storage.local.get("usePerplexity", (result) => {
+      resolve(result.usePerplexity)
+      //handle edge cases if keys are not added
+    })
+  })
 
-  // console.log("usePerplexity>>>>>>>>.", usePerplexity)
-  // if (usePerplexity) {
+  console.log("usePerplexity>>>>>>>>.", usePerplexity)
+  if (usePerplexity) {
   try {
     const perplexityResponse = await runPerplexityQuery(query)
     console.log("perplexityresponse>>>>>>>>>>>", perplexityResponse)
@@ -492,9 +488,9 @@ export async function callPerplexity(query) {
     console.error("Error calling Perplexity API:", error)
     return null // Return null if an error occurs to handle gracefully
   }
-  // } else {
-  //   return
-  // }
+  } else {
+    return
+  }
 }
 
 async function runPerplexityQuery(query) {
@@ -557,37 +553,92 @@ async function runPerplexityQuery(query) {
   })
 }
 
-export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts) {
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: promptText },
-          { role: "user", content: JSON.stringify({ posts }) }
-        ],
-        response_format: {
-          type: "json_schema",
-          json_schema: jsonSchema
-        }
-      })
-    })
+// export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts) {
+//   try {
+//     const response = await fetch("https://api.openai.com/v1/chat/completions", {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${apiKey}`,
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         model: "gpt-4o",
+//         messages: [
+//           { role: "system", content: promptText },
+//           { role: "user", content: JSON.stringify({ posts }) }
+//         ],
+//         response_format: {
+//           type: "json_schema",
+//           json_schema: jsonSchema
+//         }
+//       })
+//     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(
-        `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
-      )
+//     if (!response.ok) {
+//       const errorData = await response.json()
+//       throw new Error(
+//         `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
+//       )
+//     }
+
+//     return await response.json()
+//   } catch (error) {
+//     console.error("OpenAI API error:", error)
+//     throw error
+//   }
+// }
+
+
+export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts, batchSize = 5) {
+  // Helper function to make a single API call
+  const fetchBatch = async (batch) => {
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o", // Use the faster model
+          messages: [
+            { role: "system", content: promptText },
+            { role: "user", content: JSON.stringify({ posts: batch }) },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: jsonSchema,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error processing batch:", batch, error);
+      throw error;
     }
+  };
 
-    return await response.json()
+  // Split posts into smaller batches
+  const batches = [];
+  for (let i = 0; i < posts.length; i += batchSize) {
+    batches.push(posts.slice(i, i + batchSize));
+  }
+
+  // Process all batches in parallel
+  try {
+    const results = await Promise.all(batches.map((batch) => fetchBatch(batch)));
+    console.log("results>>>>>", results)
+    return results; // Combine results from all batches
   } catch (error) {
-    console.error("OpenAI API error:", error)
-    throw error
+    console.error("Error during parallel processing:", error);
+    throw error;
   }
 }

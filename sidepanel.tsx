@@ -43,11 +43,23 @@ import "./popup.css"
 //status logg
 //16-11-2024
 
-function Popup() {
+function SidePanel() {
   const [inputValues, setInputValues] = useState({
     profileUrl: "",
     knownProfileInfo: ""
   })
+
+  const [inputValuesPost, setInputValuesPost] = useState({
+    postUrl: "",
+    knownPostInfo: ""
+  })
+
+  const [analysisData, setAnalysisData] = useState<AnalysisState>({
+    visiblescreenshot: null,
+    fullscreenshot: null,
+    profile: null,
+    posts: null
+  });
 
   const [base64data, setBase64Data] = useState(null)
   const [formData, setFormData] = useState({
@@ -112,12 +124,128 @@ function Popup() {
     }))
   }
 
+  const handleInputPostChanges = (e) => {
+    const { name, value } = e.target
+    setInputValuesPost((prevValues) => ({
+      ...prevValues,
+      [name]: value
+    }))
+  }
+
   const handleProfileSearch = () => {
     // Send data to background script
-    chrome.runtime.sendMessage({
-      action: "SEARCH_PROFILE",
-      data: inputValues
+    //first check the perplexity api is added and enabled
+
+    chrome.storage.local.get(["usePerplexity"], (result) => {
+      // If we have a stored value, use it to update our state
+      //if apikey added
+
+      if (result.usePerplexity !== undefined) {
+        setShowMessage("Please enable Perplexity.")
+        setTimeout(() => setShowMessage(""), 1000)
+        return
+      }
+
+      const { perplexityApiKey } = apiKeys
+      if (!perplexityApiKey) {
+        setShowMessage("Please add PerplexityAI API key to start the analysis.")
+        setTimeout(() => setShowMessage(""), 1000)
+        return
+      }
+
+      setShowProgressBar(true)
+
+       // Store new screenshot in state
+       setAnalysisData(prevState => ({
+        ...prevState,
+        profile: null
+    }));
+      const response: any = new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "SEARCH_PROFILE",
+            data: inputValues
+          },
+          function (response) {
+            if (response && response.analysisId) {
+              resolve(response)
+              setShowProgressBar(false)
+            } else {
+              console.error("Failed to start analysis", response)
+              alert("Failed to start analysis")
+              setShowProgressBar(false)
+              reject()
+              return
+            }
+          }
+        )
+      })
+
+      const { analysisId, perplexityresponse } = response
+      setAnalysisId(analysisId)
+      console.log("perplexityresponse>>>>>>", perplexityresponse)
+      setAnalysisData(prevState => ({
+        ...prevState,
+        profile: {
+          perplexityres: perplexityresponse,
+          analysisId: analysisId,
+          timestamp: new Date().toISOString()
+        }
+    }));
     })
+  }
+
+  const handlePostSearch = () => {
+    // Send data to background script
+    //first check the open api is added and enabled
+
+    const { openaiApiKey } = apiKeys
+    if (!openaiApiKey) {
+      setShowMessage("Please add OpenAI API key to start the analysis.")
+      setTimeout(() => setShowMessage(""), 1000)
+      return
+    }
+
+    setShowProgressBar(true)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      post: null
+  }));
+
+    const response: any = new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "SEARCH_POST",
+          data: inputValuesPost
+        },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+            setShowProgressBar(false)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
+        }
+      )
+    })
+
+    const { analysisId, openairesponse } = response
+    setAnalysisId(analysisId)
+    console.log("openairesponse>>>>>>", openairesponse)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      post: {
+        postres: openairesponse,
+        analysisId: analysisId,
+        timestamp: new Date().toISOString()
+      }
+  }));
   }
 
   const handleBackgroundInfo = (e) => {
@@ -137,8 +265,11 @@ function Popup() {
     setProgress(progress)
   }
   const toggleHelpSection = () => {
-    setShowSettingsSection(false)
-    setShowHelpSection(!showHelpSection)
+    // setShowSettingsSection(false)
+    // setShowHelpSection(!showHelpSection)
+    const url =
+      "chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/tabs/Uber_D2X.html"
+    window.open(url, "_blank")
   }
 
   const toggledownloadSection = () => {
@@ -221,6 +352,18 @@ function Popup() {
       }
     })
   }, [])
+
+  // Load the saved state when the component mounts
+  useEffect(() => {
+    // Get the stored value from chrome.storage.local
+    chrome.storage.local.get(["usePerplexity"], (result) => {
+      // If we have a stored value, use it to update our state
+      if (result.usePerplexity !== undefined) {
+        setIsPerplexityDisabled(result.usePerplexity)
+      }
+      // If no stored value exists, the state will remain at its default value (true)
+    })
+  }, []) // Empty dependency array means this runs once when component mounts
 
   const toggleSubSection = (sectionId: any) => {
     setOpenSubSections((prev) => ({
@@ -382,8 +525,8 @@ function Popup() {
   const triggerFullAnalysis = () => {
     const { openaiApiKey, perplexityApiKey } = apiKeys
 
-     // Check API key conditions
-     if (!openaiApiKey) {
+    // Check API key conditions
+    if (!openaiApiKey) {
       setShowMessage("Please add OpenAI API key to start the analysis.")
       setTimeout(() => setShowMessage(""), 1000)
       return
@@ -413,40 +556,114 @@ function Popup() {
     setupMessageListener()
   }
 
-  const takefullpagess = () => {
-    setShowProgressBar(true)
-    chrome.runtime.sendMessage(
-      { action: "fullpagelengthss" },
-      function (response) {
-        if (response && response.analysisId) {
-          setAnalysisId(response.analysisId)
-          console.log("Analysis initiated with ID:", response.analysisId)
-        } else {
-          console.error("Failed to start analysis", response)
-          alert("Failed to start analysis")
-          setShowProgressBar(false)
+  const takefullpagess = async () => {
+    try {
+      setShowProgressBar(true)
+    //loader should load
+
+    // required things > fullpagess > ss + date + url + analysisId
+    //get analysisId, time from background
+    //
+
+     // First clear the existing screenshot
+     setAnalysisData(prevState => ({
+      ...prevState,
+      fullscreenshot: null
+    }));
+
+    const response: any = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "fullpagelengthss" },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
         }
-      }
+      )
+    })
+
+    const { analysisId, url, filename, directory } = response
+    setAnalysisId(analysisId)
+    console.log("filename>>>>>>>", filename)
+    console.log("Analysis initiated with ID:", analysisId)
+    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+      analysisId,
+      url,
+      filename,
+      directory
     )
-    setupMessageListener()
+    console.log("modifiedscreenshots", modifiednewscreenshots)
+
+    // Store new screenshot in state
+    setAnalysisData(prevState => ({
+      ...prevState,
+      fullscreenshot: {
+          dataUrl: modifiednewscreenshots.dataUrl
+      }
+    }));
+  
+  console.log("New screenshot captured:", modifiednewscreenshots);
+
+    
+  }catch (error) {
+      console.error("Error taking screenshot:", error);
+      alert("Failed to capture screenshot");
+  }finally {
+      setShowProgressBar(false);
+  }
+    
   }
 
-  const visiblepagess = () => {
+  const visiblepagess = async () => {
     setShowProgressBar(true)
-    chrome.runtime.sendMessage(
-      { action: "visiblelengthss" },
-      function (response) {
-        if (response && response.analysisId) {
-          setAnalysisId(response.analysisId)
-          console.log("Analysis initiated with ID:", response.analysisId)
-        } else {
-          console.error("Failed to start analysis", response)
-          alert("Failed to start analysis")
-          setShowProgressBar(false)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      visiblescreenshot: null
+    }));
+
+    const response: any = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "visiblelengthss" },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
         }
-      }
+      )
+    })
+
+    const { analysisId, url, filename, directory } = response
+    let portname = "reportablescreenshotPort"
+
+    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+      analysisId,
+      url,
+      filename,
+      directory,
+      portname
     )
-    setupMessageListener()
+    console.log("modifiedscreenshots", modifiednewscreenshots)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      visiblescreenshot: {
+          dataUrl: modifiednewscreenshots.dataUrl
+      }
+    }));
+  
   }
 
   const screenshot = {
@@ -514,6 +731,11 @@ function Popup() {
                 resolve(blobURLs)
                 return
               } else {
+                await new Promise((resolve) => {
+                  CaptureAPI.forceCleanup()
+                  setTimeout(resolve, 300) // Give cleanup time to complete
+                })
+
                 const blobURL = await new Promise((resolve, reject) => {
                   CaptureAPI.captureToFiles(
                     currentTab,
@@ -538,12 +760,13 @@ function Popup() {
 
                 console.log("processedScreenshots>>>>>>>>>>>>>>>>>", blobURLs)
                 // Add processed screenshots to ZIP
-                // for (let i = 0; i < processedScreenshots.length; i++) {
-                //   const response = await fetch(processedScreenshots[i])
-                //   const blob = await response.blob()
-                //   const fileName = filename || `screenshot_${i + 1}.png`
-                //   addToZip(blob, fileName, directory)
-                // }
+
+                for (let i = 0; i < blobURLs.length; i++) {
+                  const response = await fetch(blobURLs[i])
+                  const blob = await response.blob()
+                  const fileName = filename || `screenshot_${i + 1}.png`
+                  addToZip(blob, fileName, directory)
+                }
 
                 resolve(blobURLs)
                 return
@@ -591,6 +814,30 @@ function Popup() {
             }
           }
         })
+      } else if (port.name == "fullpagescreenshot") {
+        port.onMessage.addListener(async (request) => {
+          console.log("Connection established in content script:", port)
+          if (request.action === "fulltweetsScreenshot") {
+            try {
+              const modifiednewscreenshots =
+                await screenshot.captureAndStoreScreenshot(
+                  request.analysisId,
+                  request.url,
+                  request.filename,
+                  request.directory
+                )
+              port.postMessage({
+                success: true,
+                modifiedscreenshots: modifiednewscreenshots
+              })
+            } catch (error) {
+              port.postMessage({ error: error.message })
+            } finally {
+              // Disconnect the port after sending the response
+              port.disconnect()
+            }
+          }
+        })
       }
     })
 
@@ -604,19 +851,20 @@ function Popup() {
               setProgress(request.progress)
               break
 
-            case "captureScreenshot":
-              const modifiednewscreenshots =
-                await screenshot.captureAndStoreScreenshot(
-                  request.analysisId,
-                  request.url,
-                  request.filename,
-                  request.directory
-                )
-              sendResponse({
-                success: true,
-                modifiedscreenshots: modifiednewscreenshots
-              })
-              return true
+            // case "captureScreenshot":
+            //   console.log("start taking full screenshot in sidepanel")
+            //   const modifiednewscreenshots =
+            //     await screenshot.captureAndStoreScreenshot(
+            //       request.analysisId,
+            //       request.url,
+            //       request.filename,
+            //       request.directory
+            //     )
+            //   sendResponse({
+            //     success: true,
+            //     modifiedscreenshots: modifiednewscreenshots
+            //   })
+            //   return true
 
             case "analysisComplete":
               // Handle ZIP file generation and download
@@ -664,6 +912,8 @@ function Popup() {
 
               // Clean up the URL after download
               URL.revokeObjectURL(url)
+              // Clear the base64 data to prevent duplicate downloads
+              request.base64data = null
               break
 
             case "processUpdate":
@@ -700,7 +950,7 @@ function Popup() {
       <header>
         <h1>D2X</h1>
         {/* Display the message if it exists */}
-       
+
         <div className="header-icons">
           {base64data && (
             <span
@@ -1038,16 +1288,7 @@ function Popup() {
                         Löschen
                       </button>
                     ) : (
-                      // <button
-                      //   onClick={saveaddress}
-                      //   style={{
-                      //     color: "white",
-                      //     border: "none",
-                      //     padding: "8px 12px",
-                      //     cursor: "pointer"
-                      //   }}>
-                      //   Speichern
-                      // </button>
+                     
                       <button
                         type="submit"
                         onMouseDown={(e) =>
@@ -1106,8 +1347,7 @@ function Popup() {
                       }
                       onMouseUp={(e) =>
                         (e.currentTarget.style.transform = "scale(1)")
-                      }
-                      >
+                      }>
                       Löschen
                     </button>
                   ) : (
@@ -1201,7 +1441,7 @@ function Popup() {
                   className="help-icon"
                   title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
                   ⓘ
-                </span>
+                </span>                       
               </label>
               <textarea
                 id="knownProfileInfo"
@@ -1217,13 +1457,13 @@ function Popup() {
             </div>
           </details>
 
-          <details id="profileSection" open={openSection === "profileSection"}>
-            <summary onClick={(e) => toggleSection("profileSection", e)}>
-             Kommentaranalyse
+          <details id="profileSection" open={openSection === "postSection"}>
+            <summary onClick={(e) => toggleSection("postSection", e)}>
+              Kommentaranalyse
             </summary>
             <div>
-            <label htmlFor="profileUrl">
-              ULR des Kommentars:{" "}
+              <label htmlFor="profileUrl">
+                ULR des Kommentars:{" "}
                 <span
                   className="help-icon"
                   title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll.">
@@ -1233,9 +1473,9 @@ function Popup() {
               <input
                 type="text"
                 id="profileUrl"
-                name="profileUrl"
-                // value={inputValues.profileUrl}
-                // onChange={handleInputChanges}
+                name="postUrl"
+                value={inputValuesPost.postUrl}
+                onChange={handleInputPostChanges}
               />
               <label htmlFor="knownProfileInfo">
                 Bekannte Profilinformationen:{" "}
@@ -1247,16 +1487,13 @@ function Popup() {
               </label>
               <textarea
                 id="knownProfileInfo"
-                name="knownProfileInfo"
-                // value={inputValues.knownProfileInfo}
-                // onChange={handleInputChanges}
-                >
-                </textarea>
+                name="knownPostInfo"
+                value={inputValuesPost.knownPostInfo}
+                onChange={handleInputPostChanges}></textarea>
               <button
                 id="searchProfile"
                 title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
-                // onClick={handleProfileSearch}
-                >
+                onClick={handlePostSearch}>
                 Profil recherchieren
               </button>
             </div>
@@ -1277,13 +1514,9 @@ function Popup() {
             <div id="progressText" style={{ color: "green" }}>
               {animatedStatus}
             </div>
-
-          
           </section>
         )}
 
-        
-        
         {/* // removing this section  */}
         {results && (
           <section id="resultsSection">
@@ -1300,4 +1533,4 @@ function Popup() {
   )
 }
 
-export default Popup
+export default SidePanel
