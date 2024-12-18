@@ -272,7 +272,7 @@ async function startFullAnalysis() {
     // Capture initial screenshot without navigation
     //send status of project to popup
     //chnage this to german language
-    sendMessageToPopup("taking ss of full page....")
+    sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
     const screenshot = await requestinitialScreenshotCapture(
       url,
       "initial_page.png",
@@ -283,29 +283,29 @@ async function startFullAnalysis() {
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
     console.log("Scraping content for URL:", url)
-    sendMessageToPopup("scraping the tweet contents....")
+    sendMessageToPopup("Ich lese die Tweets....")
     const scrapedContent = await scrapeContent(uid, tabId)
     console.log("Scraped content:", scrapedContent)
 
     updateAnalysisStatus(uid, "processing")
     //change the lang to german
-    sendMessageToPopup("starting processing of tweets")
+    sendMessageToPopup("Ich beginne mit der Verarbeitung der Tweets...")
     const results = await processContent(scrapedContent)
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
-      sendMessageToPopup("Sorry, no reportable posts found")
+      sendMessageToPopup("Entschuldigung, ich habe keine anzeigbaren Tweets gefunden.")
       return
     }
     // After processing, add analysis results to the ZIP Folder
-    sendMessageToPopup("creating final report")
+    sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...")
     await createFinalReport(
       results.Report.reportablePostsArray,
       results.Report.originalUrl
     )
-    sendMessageToPopup("downloading the reports")
+    sendMessageToPopup("Dokumente werden heruntergeladen...")
     await initiateDownload()
-    sendMessageToPopup("report downloaded successfully")
+    sendMessageToPopup("Dokumente erfolgreich heruntergeladen.")
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
 
@@ -371,7 +371,7 @@ async function processContent(messages) {
       )
     }
 
-    sendMessageToPopup("processing of tweets by openAI")
+    sendMessageToPopup("Ich bewerte die Tweets mit Hilfe von OpenAI...")
 
     let backgroundInfo = ""
     try {
@@ -588,7 +588,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
         }
 
         let postReport = null
-        sendMessageToPopup("searching about the user from perplexity")
+        sendMessageToPopup("Suche Informationen zum User mit Hilfe von Perplexity...")
         const perplexityQuery = generatePerplexityPrompt(
           post.Username,
           scrapedData

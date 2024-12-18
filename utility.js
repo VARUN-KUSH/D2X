@@ -501,7 +501,7 @@ async function runPerplexityQuery(query) {
 
       if (!apiKey) {
         console.error("API Key is not set in Chrome storage.")
-        // sendMessageToPopup("Perplexity API Key missing")
+        // sendMessageToPopup("Der Perplexity-API-Schlüssel fehlt.")
         return
       }
 

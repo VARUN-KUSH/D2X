@@ -919,8 +919,8 @@ function SidePanel() {
             case "processUpdate":
               setprojectStatus(request.data)
               if (
-                request.data === "report downloaded successfully" ||
-                request.data === "Sorry, no reportable posts found"
+                request.data === "Dokumente erfolgreich heruntergeladen." ||
+                request.data === "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
