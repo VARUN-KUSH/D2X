@@ -67,20 +67,20 @@ const Anzeigen_neu_generieren = () => {
                 <style>
                     @page {
                         size: A4;
-                        margin-top: 3cm;
+                        margin-top: 4.5cm;
                         margin-bottom: 3cm;
-                        margin-left: 2cm;
+                        margin-left: 2.5cm;
                         margin-right: 2cm;
                     }
-            
+
                     html, body {
                         width: 100%;
                         margin: 0;
                         padding: 0;
                         font-family: monospace;
-                        line-height: 1.6;
+                        line-height: 1;
                     }
-            
+
                     .container {
                         max-width: 21cm;
                         margin: 0 auto;
@@ -88,36 +88,69 @@ const Anzeigen_neu_generieren = () => {
                         position: relative;
                         width: 100%;
                     }
-            
+
                     .right-align {
                         text-align: right;
                         position: relative;
                     }
-            
+
                     .right-align iframe {
                         position: relative;
                         right: 0;
                         width: 50%;
                     }
-            
+
                     .left-align {
                         text-align: left;
                     }
-            
+
                     .address-block, .subject, .date-line, .content-block, .signature, .attachments {
                         clear: both;
                     }
-            
+
                     h1, h2 {
                         color: #333;
                     }
-            
+
+                    /* DIN 5008 layout classes */
+                    .address-container {
+                        display: grid;
+                        grid-template-columns: 60% 40%;
+                        gap: 0.5rem;
+                        margin-bottom: 1rem;
+                    }
+                    
+                    .left-column {
+                        padding-top: 1.77cm;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                    }
+                    
+                    .recipient-address {
+                        margin-bottom: auto;
+                    }
+                    
+                    .right-column {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0;
+                    }
+                    
+                    .bottom-row {
+                        display: grid;
+                        grid-template-columns: 60% 40%;
+                        gap: 0.5rem;
+                        width: 100%;
+                        margin-top: 1rem;
+                    }
+
                     .screenshot-section {
                         display: block;
                         margin: 0;
                         width: 100%;
                     }
-            
+
                     .screenshot-section figcaption,
                     .screenshot-section h2 {
                         margin: 0;
@@ -127,7 +160,7 @@ const Anzeigen_neu_generieren = () => {
                         page-break-after: avoid;
                         break-after: avoid;
                     }
-            
+
                     .screenshot {
                         display: block;
                         width: 100%;
@@ -136,25 +169,25 @@ const Anzeigen_neu_generieren = () => {
                         margin-top: -0.2cm;
                         object-fit: contain; /* Ensure image fits within container */
                     }
-            
+
                     iframe {
                         width: 100%;
                         border: none;
                         overflow: hidden;
                     }
-            
+
                     /* Adjusted initial heights based on content size */
                     {{iframeStyles}}
-            
+
                     /* Additional styles for page breaks and section boundaries */
                     .page-break {
                         page-break-before: always;
                     }
-            
+
                     .section {
                         page-break-inside: avoid;
                     }
-            
+
                     @media print {
                         /* Any print-specific styles can go here */
                     }
@@ -162,33 +195,23 @@ const Anzeigen_neu_generieren = () => {
             </head>
             <body>
             
-                <!-- Abs.Adresse.txt -->
-                <div class="address-block right-align">
-                    <iframe src="Anschreiben_Basis_Daten/Abs.Adresse.txt" class="iframe-Abs_Adresse"></iframe>
+                <!-- DIN 5008 Address Layout -->
+                <div class="address-container">
+                    <div class="left-column">
+                        <div class="recipient-address">
+                            <iframe src="Anschreiben_Basis_Daten/Empf.Adresse.txt" class="iframe-Empf_Adresse"></iframe>
+                        </div>
+                    </div>
+                    
+                    <div class="right-column">
+                        <iframe src="Anschreiben_Basis_Daten/Abs.Adresse.txt" class="iframe-Abs_Adresse"></iframe>
+                        <iframe src="Anschreiben_Basis_Daten/Abs.Kontakt.txt" class="iframe-Abs_Kontakt"></iframe>
+                        <iframe src="{{userHandle}}/{{postNo}}/unser_Zeichen.txt" class="iframe-unser_Zeichen"></iframe>
+                    </div>
                 </div>
-            
-                <!-- Abs.Kontakt.txt -->
-                <div class="address-block right-align">
-                    <iframe src="Anschreiben_Basis_Daten/Abs.Kontakt.txt" class="iframe-Abs_Kontakt"></iframe>
-                </div>
-            
-                <!-- unser_Zeichen.txt -->
-                <div class="address-block right-align">
-                    <iframe src="{{userHandle}}/{{postNo}}/unser_Zeichen.txt" class="iframe-unser_Zeichen"></iframe>
-                </div>
-            
-                <!-- Empf.Adresse.txt -->
-                <div class="address-block left-align">
-                    <iframe src="Anschreiben_Basis_Daten/Empf.Adresse.txt" class="iframe-Empf_Adresse"></iframe>
-                </div>
-            
-                <!-- Betreff.txt -->
-                <div class="subject left-align">
+
+                <div class="bottom-row">
                     <iframe src="Anschreiben_Basis_Daten/Betreff.txt" class="iframe-Betreff"></iframe>
-                </div>
-            
-                <!-- Datumszeile.txt -->
-                <div class="date-line right-align">
                     <iframe src="Anschreiben_Basis_Daten/Datumszeile.txt" class="iframe-Datumszeile"></iframe>
                 </div>
             
