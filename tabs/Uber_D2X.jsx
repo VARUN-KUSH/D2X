@@ -4,7 +4,7 @@ import "../App.css";
 
 const sections = [
   {
-    title: "Willkommen bei D2X!",
+    title: "Willkommen bei Strafanzeiger!",
     links: [
       // Wenn es Unterpunkte gibt, hier hinzufügen
     ],
@@ -27,7 +27,7 @@ const sections = [
     ],
   },
   {
-    title: "Was ist D2X?",
+    title: "Was ist Strafanzeiger?",
     links: [
       {
         name: "Hauptfunktionen auf einen Blick",
@@ -156,14 +156,16 @@ function App() {
       </nav>
 
       <div className="content">
-        <h1 id="d2x_chrome_extension">D2X Chrome Extension</h1>
+        <h1 id="strafanzeiger_chrome_extension">
+          Strafanzeiger Chrome Extension
+        </h1>
 
-        <h2 id="willkommen-bei-d2x">Willkommen bei D2X!</h2>
+        <h2 id="willkommen-bei-strafanzeiger">Willkommen bei Strafanzeiger!</h2>
         <p>
-          D2X ist dein digitaler Assistent für den Umgang mit strafrechtlich
-          relevanten Kommentaren auf X (ehemals Twitter). Die Extension hilft
-          dir, Hasskommentare und andere illegale Inhalte zu dokumentieren und
-          rechtliche Schritte einzuleiten.
+          Strafanzeiger ist dein digitaler Assistent für den Umgang mit
+          strafrechtlich relevanten Kommentaren auf X (ehemals Twitter). Die
+          Extension hilft dir, Hasskommentare und andere illegale Inhalte zu
+          dokumentieren und rechtliche Schritte einzuleiten.
         </p>
         <p>Diese Anleitung begleitet dich durch:</p>
         <ul>
@@ -302,9 +304,9 @@ function App() {
           <li>
             <strong>Beweise sichern</strong>
             <br />
-            Die D2X Extension hilft Dir dabei, Screenshots mit Zeitstempeln und
-            andere Dokumente automatisch zu erstellen, um strafrechtlich
-            relevante Kommentare zur Anzeige zu bringen.
+            Die Strafanzeiger Extension hilft Dir dabei, Screenshots mit
+            Zeitstempeln und andere Dokumente automatisch zu erstellen, um
+            strafrechtlich relevante Kommentare zur Anzeige zu bringen.
           </li>
           <li>
             <strong>Inhalte melden</strong>
@@ -335,12 +337,12 @@ function App() {
           </li>
         </ol>
 
-        <h2 id="was-ist-d2x">Was ist D2X?</h2>
+        <h2 id="was-ist-strafanzeiger">Was ist Strafanzeiger?</h2>
         <p>
-          D2X ist dein digitaler Assistent für den Umgang mit problematischen
-          Kommentaren auf X (ehemals Twitter). Die Extension analysiert
-          Kommentare auf mögliche Rechtsverstöße gegen deutsches Recht, erstellt
-          automatisch die notwendige Dokumentation und generiert
+          Strafanzeiger ist dein digitaler Assistent für den Umgang mit
+          problematischen Kommentaren auf X (ehemals Twitter). Die Extension
+          analysiert Kommentare auf mögliche Rechtsverstöße gegen deutsches
+          Recht, erstellt automatisch die notwendige Dokumentation und generiert
           Anzeigenentwürfe - und macht es dir damit deutlich leichter, gegen
           Hasskommentare und andere illegale Inhalte vorzugehen.
         </p>
@@ -362,7 +364,8 @@ function App() {
         </p>
         <ul>
           <li>
-            D2X kann aktuell nur Texte und Emojis in Kommentaren analysieren
+            Strafanzeiger kann aktuell nur Texte und Emojis in Kommentaren
+            analysieren
           </li>
           <li>
             Bilder, Videos oder andere Medieninhalte können nicht automatisch
@@ -379,8 +382,8 @@ function App() {
         <h3 id="rechtlicher-hinweis">Rechtlicher Hinweis</h3>
         <ul>
           <li>
-            D2X erstellt nur Entwürfe für Anzeigen - keine rechtsverbindlichen
-            Dokumente
+            Strafanzeiger erstellt nur Entwürfe für Anzeigen - keine
+            rechtsverbindlichen Dokumente
           </li>
           <li>Die Analyse ersetzt keine juristische Beratung</li>
           <li>
@@ -590,7 +593,8 @@ function App() {
         </h2>
         <p>
           Klicke in der Extension auf das ⚙️-Symbol, um zu den Einstellungen zu
-          gelangen. Hier richtest du alles ein, was D2X für die Arbeit benötigt.
+          gelangen. Hier richtest du alles ein, was Strafanzeiger für die Arbeit
+          benötigt.
         </p>
 
         <h2 id="1-api-keys-einrichten">1. API-Keys einrichten</h2>
@@ -632,7 +636,7 @@ function App() {
             </ul>
           </li>
           <li>
-            <p>Key in D2X einfügen</p>
+            <p>Key in Strafanzeiger einfügen</p>
             <ul>
               <li>Füge den kopierten Key in das Feld "OpenAI API Key" ein</li>
               <li>Klicke auf "Speichern"</li>
@@ -676,7 +680,7 @@ function App() {
             </ul>
           </li>
           <li>
-            <p>Key in D2X einfügen</p>
+            <p>Key in Strafanzeiger einfügen</p>
             <ul>
               <li>Füge den Key in das Feld "Perplexity API Key" ein</li>
               <li>Klicke auf "Speichern"</li>
@@ -777,7 +781,7 @@ function App() {
             </ul>
           </li>
           <li>
-            <strong>Screenshots schwärzen</strong>:
+            <strong>Screenshots Anpassen</strong>:
             <ul>
               <li>
                 Auch wenn du die Menüleiste von X.com in den Einstellungen
@@ -786,8 +790,11 @@ function App() {
               </li>
               <li>
                 Wenn nötig kannst du die Screenshot-Dateien in einem
-                Grafikprogramm öffnen und schwärzen. Das wird dann auch in den
-                Anzeigen übernommen.
+                Grafikprogramm öffnen und den untenen Teil wegschneiden, wenn er
+                nicht benötigt wird. Nur in dringenden Fällen solltest Du etwas
+                schwärzen - aber so das es offensichtlich ist und Der Screenshot
+                noch als unverändertes Beweismittel gelten kann. Änderungen
+                werden dann auch automatisch in den Anzeigen übernommen.
               </li>
               <li>Achte darauf den Inhalt nicht zu verändern</li>
             </ul>
@@ -852,10 +859,10 @@ function App() {
         <h1 id="grundfunktionen">Grundfunktionen</h1>
 
         <h2 id="die-benutzeroberfläche">Die Benutzeroberfläche</h2>
-        <p>D2X ist einfach aufgebaut:</p>
+        <p>Strafanzeiger ist einfach aufgebaut:</p>
         <ul>
           <li>
-            <strong>D2X</strong>: Titel der Extension
+            <strong>Strafanzeiger</strong>: Titel der Extension
           </li>
           <li>
             <strong>🔗</strong>: Link zum Anzeigen-neu-generieren-Tool
@@ -896,7 +903,7 @@ function App() {
 
         <h3 id="was-passiert-dann">Was passiert dann?</h3>
         <ol>
-          <li>D2X analysiert alle Kommentare auf der Seite</li>
+          <li>Strafanzeiger analysiert alle Kommentare auf der Seite</li>
           <li>
             Bei problematischen Kommentaren:
             <ul>
@@ -1036,8 +1043,8 @@ function App() {
 
         <h2 id="die-zip-datei">Die ZIP-Datei</h2>
         <p>
-          Nach jeder Analyse erstellt D2X einen ZIP-Ordner mit dem Namen
-          "D2X_Report" und einem Zeitstempel. Dieser wird:
+          Nach jeder Analyse erstellt Strafanzeiger einen ZIP-Ordner mit dem
+          Namen "Strafanzeiger_Report" und einem Zeitstempel. Dieser wird:
         </p>
         <ul>
           <li>Bei automatischer Analyse: Direkt heruntergeladen</li>
@@ -1144,7 +1151,7 @@ function App() {
         <h2 id="anzeigen-neu-generieren">Anzeigen neu generieren</h2>
         <p>Nach Änderungen müssen die Anzeigen neu generiert werden:</p>
         <ol>
-          <li>Öffne die D2X Extension</li>
+          <li>Öffne die Strafanzeiger Extension</li>
           <li>Klicke auf das 🔗-Symbol in der oberen Leiste</li>
           <li>
             Folge den Anweisungen auf der Seite:
@@ -1245,8 +1252,8 @@ function App() {
         </h3>
         <ol>
           <li>
-            D2X versucht die ZIP-Datei automatisch im Download-Ordner zu
-            speichern. Je nach Browsereinstellungen kann es sein, dass der
+            Strafanzeiger versucht die ZIP-Datei automatisch im Download-Ordner
+            zu speichern. Je nach Browsereinstellungen kann es sein, dass der
             Browser dich fragt, wo du die Datei speichern möchtest.
           </li>
           <li>
