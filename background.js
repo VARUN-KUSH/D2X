@@ -420,9 +420,13 @@ async function processContent(messages) {
       )
       // Parse and use the structured output as needed
       console.log("Structured Response:", postresults)
-      const posts = JSON.parse(postresults.choices[0].message?.content)
-      console.log("posts>>>>>>", posts)
-      results.push(...(posts?.Posts || []))
+      postresults.map((post) => {
+        const posts = JSON.parse(post.choices[0].message?.content)
+        results.push(...(posts?.Posts || []))
+      })
+      // const posts = JSON.parse(postresults.choices[0].message?.content)
+      // console.log("posts>>>>>>", posts)
+      // results.push(...(posts?.Posts || []))
       console.log("results>>>>>>>>>>>>>>", results)
     } catch (error) {
       console.error("Error fetching evaluation:", error)

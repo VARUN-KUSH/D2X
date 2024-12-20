@@ -474,6 +474,7 @@ export async function callPerplexity(query) {
   const usePerplexity = await new Promise((resolve) => {
     chrome.storage.local.get("usePerplexity", (result) => {
       resolve(result.usePerplexity)
+      return
       //handle edge cases if keys are not added
     })
   })

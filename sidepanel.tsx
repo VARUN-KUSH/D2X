@@ -337,7 +337,9 @@ function SidePanel() {
 
     // Send message to background script
     // Store usePerplexity value locally in chrome storage
-    chrome.storage.local.set({ usePerplexity: isChecked })
+    chrome.storage.local.set({ usePerplexity: isChecked }, () => {
+      console.log("Saved usePerplexity:", isChecked);
+    })
   }
 
   useEffect(() => {
