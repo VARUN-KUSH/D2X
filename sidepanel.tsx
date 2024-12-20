@@ -9,7 +9,58 @@ import {
 
 import "./popup.css"
 
-function Popup() {
+//need to handle bug when user clicks multiple times the start analysis button
+//edge cases
+//disabling buttons when we start the automatic or manuala report creation until the process is complete
+//showing a nice message to user when they did not added any api key before
+//showing message of each detailed step that is going on during the process
+//api change to chat completions from assistant api
+//side panel and also should be open when we click the icon similar to popup
+//fixed sidepanel errors
+//perplexity response consistecny
+//hover effects
+// click effects
+//save and delete locally to all input fields
+//ui with effects
+//optimisation and making the process faster
+//darkmode (toggle to enable dark mode and light mode)
+//hide the profile image while taking ss
+//making sure profile ss should be taken when profile image is loaded completely
+//post ss should be when post is completely loaded
+//automatic report -->> automatic report download
+//manual download -->> enabling button once step is completed
+//manual analysis and report creation
+//should be running in almost everyone browser
+//improvement in UI
+//user feedback for user functioanlity satisfation and rating
+//user price paying
+//stop button to stop the report creation
+//improving the scrapper so it should be scrolling to bottom and extracting all tweets
+//imrove consistency from openai
+//attaching the creating report tool into an extension itself
+//report iframes improvement
+//testing in multiple user systems
+//status logg
+//16-11-2024
+
+function SidePanel() {
+  const [inputValues, setInputValues] = useState({
+    profileUrl: "",
+    knownProfileInfo: ""
+  })
+
+  const [inputValuesPost, setInputValuesPost] = useState({
+    postUrl: "",
+    knownPostInfo: ""
+  })
+
+  const [analysisData, setAnalysisData] = useState<AnalysisState>({
+    visiblescreenshot: null,
+    fullscreenshot: null,
+    profile: null,
+    posts: null
+  });
+
   const [base64data, setBase64Data] = useState(null)
   const [formData, setFormData] = useState({
     senderAddress: "",
@@ -22,6 +73,7 @@ function Popup() {
     "evaluateSection"
   )
   //state save locally
+  const [isaddress, setisAddress] = useState(false)
   const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
   const [backgroundInfo, setbackgroundInfo] = useState("")
   const [analysisId, setAnalysisId] = useState("")
@@ -39,12 +91,16 @@ function Popup() {
     openaiApiKey: "",
     perplexityApiKey: ""
   })
-
- // Track saved status for each API key and also save it locally
+  const [showMessage, setShowMessage] = useState("")
+  const [projectStatus, setprojectStatus] = useState("")
+  const [isAnimating, setisAnimating] = useState(true)
+  const [animatedStatus, setAnimatedStatus] = useState("")
+  const [dotCount, setDotCount] = useState(0)
+  // Track saved status for each API key and also save it locally
   const [savedKeys, setSavedKeys] = useState({
     openaiApiKey: false,
     perplexityApiKey: false
-  });
+  })
   const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(true) // Default is on (header visible)
   const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(true)
 
@@ -60,6 +116,138 @@ function Popup() {
     setFormData({ ...formData, [name]: value })
   }
 
+  const handleInputChanges = (e) => {
+    const { name, value } = e.target
+    setInputValues((prevValues) => ({
+      ...prevValues,
+      [name]: value
+    }))
+  }
+
+  const handleInputPostChanges = (e) => {
+    const { name, value } = e.target
+    setInputValuesPost((prevValues) => ({
+      ...prevValues,
+      [name]: value
+    }))
+  }
+
+  const handleProfileSearch = () => {
+    // Send data to background script
+    //first check the perplexity api is added and enabled
+
+    chrome.storage.local.get(["usePerplexity"], (result) => {
+      // If we have a stored value, use it to update our state
+      //if apikey added
+
+      if (result.usePerplexity !== undefined) {
+        setShowMessage("Please enable Perplexity.")
+        setTimeout(() => setShowMessage(""), 1000)
+        return
+      }
+
+      const { perplexityApiKey } = apiKeys
+      if (!perplexityApiKey) {
+        setShowMessage("Please add PerplexityAI API key to start the analysis.")
+        setTimeout(() => setShowMessage(""), 1000)
+        return
+      }
+
+      setShowProgressBar(true)
+
+       // Store new screenshot in state
+       setAnalysisData(prevState => ({
+        ...prevState,
+        profile: null
+    }));
+      const response: any = new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "SEARCH_PROFILE",
+            data: inputValues
+          },
+          function (response) {
+            if (response && response.analysisId) {
+              resolve(response)
+              setShowProgressBar(false)
+            } else {
+              console.error("Failed to start analysis", response)
+              alert("Failed to start analysis")
+              setShowProgressBar(false)
+              reject()
+              return
+            }
+          }
+        )
+      })
+
+      const { analysisId, perplexityresponse } = response
+      setAnalysisId(analysisId)
+      console.log("perplexityresponse>>>>>>", perplexityresponse)
+      setAnalysisData(prevState => ({
+        ...prevState,
+        profile: {
+          perplexityres: perplexityresponse,
+          analysisId: analysisId,
+          timestamp: new Date().toISOString()
+        }
+    }));
+    })
+  }
+
+  const handlePostSearch = () => {
+    // Send data to background script
+    //first check the open api is added and enabled
+
+    const { openaiApiKey } = apiKeys
+    if (!openaiApiKey) {
+      setShowMessage("Please add OpenAI API key to start the analysis.")
+      setTimeout(() => setShowMessage(""), 1000)
+      return
+    }
+
+    setShowProgressBar(true)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      post: null
+  }));
+
+    const response: any = new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action: "SEARCH_POST",
+          data: inputValuesPost
+        },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+            setShowProgressBar(false)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
+        }
+      )
+    })
+
+    const { analysisId, openairesponse } = response
+    setAnalysisId(analysisId)
+    console.log("openairesponse>>>>>>", openairesponse)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      post: {
+        postres: openairesponse,
+        analysisId: analysisId,
+        timestamp: new Date().toISOString()
+      }
+  }));
+  }
+
   const handleBackgroundInfo = (e) => {
     setbackgroundInfo(e.target.value)
   }
@@ -69,6 +257,7 @@ function Popup() {
     // Save the formData locally using chrome.storage.local
     chrome.storage.local.set({ formData }, () => {
       console.log("Data saved locally", formData)
+      setisAddress(true)
     })
   }
 
@@ -76,8 +265,11 @@ function Popup() {
     setProgress(progress)
   }
   const toggleHelpSection = () => {
-    setShowSettingsSection(false)
-    setShowHelpSection(!showHelpSection)
+    // setShowSettingsSection(false)
+    // setShowHelpSection(!showHelpSection)
+    const url =
+      "chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/tabs/Uber_D2X.html"
+    window.open(url, "_blank")
   }
 
   const toggledownloadSection = () => {
@@ -145,7 +337,9 @@ function Popup() {
 
     // Send message to background script
     // Store usePerplexity value locally in chrome storage
-    chrome.storage.local.set({ usePerplexity: isChecked })
+    chrome.storage.local.set({ usePerplexity: isChecked }, () => {
+      console.log("Saved usePerplexity:", isChecked);
+    })
   }
 
   useEffect(() => {
@@ -160,6 +354,18 @@ function Popup() {
       }
     })
   }, [])
+
+  // Load the saved state when the component mounts
+  useEffect(() => {
+    // Get the stored value from chrome.storage.local
+    chrome.storage.local.get(["usePerplexity"], (result) => {
+      // If we have a stored value, use it to update our state
+      if (result.usePerplexity !== undefined) {
+        setIsPerplexityDisabled(result.usePerplexity)
+      }
+      // If no stored value exists, the state will remain at its default value (true)
+    })
+  }, []) // Empty dependency array means this runs once when component mounts
 
   const toggleSubSection = (sectionId: any) => {
     setOpenSubSections((prev) => ({
@@ -177,60 +383,52 @@ function Popup() {
     })
   }
 
-  //API KEY SAVING LOGIC CHANGE directly save to locally and get in background
-  // const saveAPIKey = (param) => {
-  //   let apiKey
-  //   param == "openai"
-  //     ? (apiKey = apiKeys.openaiApiKey)
-  //     : (apiKey = apiKeys.perplexityApiKey)
+  useEffect(() => {
+    let interval
 
-  //   chrome.runtime.sendMessage(
-  //     { action: "setAPIKey", apiKey: apiKey, keyType: param },
-  //     function (response) {
-  //       if (response && response.status === "API Key set successfully") {
-  //         alert(
-  //           `${param.charAt(0).toUpperCase() + param.slice(1)} API-Schlüssel erfolgreich gespeichert!`
-  //         )
-  //       } else {
-  //         alert(
-  //           `Fehler beim Speichern des ${param} API-Schlüssels: ` +
-  //             (response ? response.message : "Unbekannter Fehler")
-  //         )
-  //       }
-  //     }
-  //   )
-  // }
+    if (isAnimating) {
+      // Animate the ellipsis dynamically
+      interval = setInterval(() => {
+        setDotCount((prevCount) => (prevCount + 1) % 4) // Cycle through 0, 1, 2, 3
+      }, 500) // Adjust the interval for animation speed
+    }
 
-  // const saveAddress = (type) => {
-  //   const address = document.getElementById(`${type}Address`)
-  //   chrome.storage.local.set({ [`${type}Address`]: address }, function () {
-  //     alert(
-  //       `${type === "sender" ? "Absender" : "Empfänger"} erfolgreich gespeichert!`
-  //     )
-  //   })
-  // }
-  
+    return () => clearInterval(interval) // Cleanup the interval on unmount or stop
+  }, [isAnimating])
+
+  useEffect(() => {
+    const dots = isAnimating ? ".".repeat(dotCount) : "" // Generate the ellipsis dynamically
+    setAnimatedStatus(`${projectStatus}${dots}`)
+  }, [dotCount, projectStatus, isAnimating])
+
   const saveAPIKey = (keyType) => {
-    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey";
-    const apiKey = apiKeys[keyName];
-  
+    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey"
+    const apiKey = apiKeys[keyName]
+
+    const trimmedapiKey = apiKey.trim()
+
+    // Check if the trimmed backgroundInfo is empty
+    if (trimmedapiKey === "") {
+      console.log("Empty input detected. Skipping save.")
+      return
+    }
+
     chrome.storage.local.set({ [keyName]: apiKey }, () => {
       if (chrome.runtime.lastError) {
         alert(
           `Fehler beim Speichern des ${keyType} API-Schlüssels: ${chrome.runtime.lastError.message}`
-        );
+        )
       } else {
         alert(
           `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API-Schlüssel erfolgreich gespeichert!`
-        );
-  
+        )
+
         // Mark the key as saved
-        setSavedKeys((prev) => ({ ...prev, [keyName]: true }));
+        setSavedKeys((prev) => ({ ...prev, [keyName]: true }))
       }
-    });
-  };
-  
-  
+    })
+  }
+
   const saveBackgroundInfo = () => {
     // Trim and validate the backgroundInfo string
     const trimmedBackgroundInfo = backgroundInfo.trim()
@@ -251,25 +449,28 @@ function Popup() {
   }
 
   useEffect(() => {
-    chrome.storage.local.get(["backgroundInfo", "openaiApiKey", "perplexityApiKey"], function (result) {
-      const backgroundinfo = result.backgroundInfo || "";
-      setbackgroundInfo(backgroundinfo)
-       // Set backgroundInfopresent to true if backgroundInfo is found
-      setbackgroundInfopresent(!!backgroundinfo);
-      const openaiKey = result.openaiApiKey || "";
-      const perplexityKey = result.perplexityApiKey || "";
-      
-      setApiKeys({
-        openaiApiKey: openaiKey,
-        perplexityApiKey: perplexityKey
-      });
+    chrome.storage.local.get(
+      ["backgroundInfo", "openaiApiKey", "perplexityApiKey"],
+      function (result) {
+        const backgroundinfo = result.backgroundInfo || ""
+        setbackgroundInfo(backgroundinfo)
+        // Set backgroundInfopresent to true if backgroundInfo is found
+        setbackgroundInfopresent(!!backgroundinfo)
+        const openaiKey = result.openaiApiKey || ""
+        const perplexityKey = result.perplexityApiKey || ""
 
-       // Update savedKeys based on whether the API keys exist
-       setSavedKeys({
-        openaiApiKey: !!openaiKey, // Set to true if openaiApiKey exists
-        perplexityApiKey: !!perplexityKey // Set to true if perplexityApiKey exists
-      });
-    })
+        setApiKeys({
+          openaiApiKey: openaiKey,
+          perplexityApiKey: perplexityKey
+        })
+
+        // Update savedKeys based on whether the API keys exist
+        setSavedKeys({
+          openaiApiKey: !!openaiKey, // Set to true if openaiApiKey exists
+          perplexityApiKey: !!perplexityKey // Set to true if perplexityApiKey exists
+        })
+      }
+    )
   }, [])
 
   const deleteBackgroundInfo = () => {
@@ -285,31 +486,60 @@ function Popup() {
     })
   }
 
+  const deleteaddress = () => {
+    chrome.storage.local.remove("formData", () => {
+      console.log("Address deleted")
+      setFormData({
+        senderAddress: "",
+        recipientAddress: "",
+        senderContactdetails: "",
+        city: "",
+        fullName: ""
+      })
+      setisAddress(false)
+    })
+  }
+
   const deleteAPIKey = (keyType) => {
-    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey";
+    const keyName = keyType === "openai" ? "openaiApiKey" : "perplexityApiKey"
 
     // Remove the key from chrome.storage.local
     chrome.storage.local.remove(keyName, () => {
       if (chrome.runtime.lastError) {
         alert(
           `Error deleting ${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key: ${chrome.runtime.lastError.message}`
-        );
+        )
       } else {
         alert(
           `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key deleted successfully!`
-        );
+        )
 
         // Clear the key from state
         setApiKeys((prevKeys) => ({
           ...prevKeys,
           [keyName]: ""
-        }));
-        setSavedKeys((prev) => ({ ...prev, [keyName]: false }));
+        }))
+        setSavedKeys((prev) => ({ ...prev, [keyName]: false }))
       }
-    });
-  };
+    })
+  }
 
   const triggerFullAnalysis = () => {
+    const { openaiApiKey, perplexityApiKey } = apiKeys
+
+    // Check API key conditions
+    if (!openaiApiKey) {
+      setShowMessage("Please add OpenAI API key to start the analysis.")
+      setTimeout(() => setShowMessage(""), 1000)
+      return
+    }
+
+    // If Perplexity key is missing, show a message but still proceed
+    // if (!perplexityApiKey) {
+    //   setShowMessage("Perplexity key is not added.")
+    //   setTimeout(() => setShowMessage(""), 1000)
+    // }
+
     setShowProgressBar(true)
     chrome.runtime.sendMessage(
       { action: "startAnalysis" },
@@ -326,6 +556,116 @@ function Popup() {
     )
 
     setupMessageListener()
+  }
+
+  const takefullpagess = async () => {
+    try {
+      setShowProgressBar(true)
+    //loader should load
+
+    // required things > fullpagess > ss + date + url + analysisId
+    //get analysisId, time from background
+    //
+
+     // First clear the existing screenshot
+     setAnalysisData(prevState => ({
+      ...prevState,
+      fullscreenshot: null
+    }));
+
+    const response: any = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "fullpagelengthss" },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
+        }
+      )
+    })
+
+    const { analysisId, url, filename, directory } = response
+    setAnalysisId(analysisId)
+    console.log("filename>>>>>>>", filename)
+    console.log("Analysis initiated with ID:", analysisId)
+    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+      analysisId,
+      url,
+      filename,
+      directory
+    )
+    console.log("modifiedscreenshots", modifiednewscreenshots)
+
+    // Store new screenshot in state
+    setAnalysisData(prevState => ({
+      ...prevState,
+      fullscreenshot: {
+          dataUrl: modifiednewscreenshots.dataUrl
+      }
+    }));
+  
+  console.log("New screenshot captured:", modifiednewscreenshots);
+
+    
+  }catch (error) {
+      console.error("Error taking screenshot:", error);
+      alert("Failed to capture screenshot");
+  }finally {
+      setShowProgressBar(false);
+  }
+    
+  }
+
+  const visiblepagess = async () => {
+    setShowProgressBar(true)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      visiblescreenshot: null
+    }));
+
+    const response: any = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: "visiblelengthss" },
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+          } else {
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
+          }
+        }
+      )
+    })
+
+    const { analysisId, url, filename, directory } = response
+    let portname = "reportablescreenshotPort"
+
+    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+      analysisId,
+      url,
+      filename,
+      directory,
+      portname
+    )
+    console.log("modifiedscreenshots", modifiednewscreenshots)
+
+    setAnalysisData(prevState => ({
+      ...prevState,
+      visiblescreenshot: {
+          dataUrl: modifiednewscreenshots.dataUrl
+      }
+    }));
+  
   }
 
   const screenshot = {
@@ -373,6 +713,10 @@ function Popup() {
               // Capture screenshot of the current page
               //condition to check ss for reportable posts or for initial posts
               if (portname == "reportablescreenshotPort") {
+                const timeResponse = await chrome.runtime.sendMessage({
+                  action: "getCurrentTime"
+                })
+
                 blobURLs = await new Promise((resolve, reject) => {
                   capturereportablessandchangetoURLs(
                     currentTab,
@@ -381,13 +725,20 @@ function Popup() {
                     reject,
                     (progress) => updateProgressBar(progress * 100),
                     directory,
-                    analysisId
+                    analysisId,
+                    timeResponse.time
                   )
                 })
-                
+
                 resolve(blobURLs)
+                return
               } else {
-                blobURLs = await new Promise((resolve, reject) => {
+                await new Promise((resolve) => {
+                  CaptureAPI.forceCleanup()
+                  setTimeout(resolve, 300) // Give cleanup time to complete
+                })
+
+                const blobURL = await new Promise((resolve, reject) => {
                   CaptureAPI.captureToFiles(
                     currentTab,
                     filename || getFilename(url, analysisId),
@@ -397,30 +748,30 @@ function Popup() {
                   )
                 })
 
-                console.log("Blobsul>>>>>>>>>>>>>>", blobURLs)
+                console.log("Blobsul>>>>>>>>>>>>>>", blobURL)
                 const timeResponse = await chrome.runtime.sendMessage({
                   action: "getCurrentTime"
                 })
-                const processedScreenshots = await addTimestampToScreenshots(
-                  blobURLs,
+                blobURLs = await addTimestampToScreenshots(
+                  blobURL,
                   timeResponse.time,
                   url,
-                  analysisId
+                  analysisId,
+                  filename
                 )
 
-                console.log(
-                  "processedScreenshots>>>>>>>>>>>>>>>>>",
-                  processedScreenshots
-                )
+                console.log("processedScreenshots>>>>>>>>>>>>>>>>>", blobURLs)
                 // Add processed screenshots to ZIP
-                for (let i = 0; i < processedScreenshots.length; i++) {
-                  const response = await fetch(processedScreenshots[i])
+
+                for (let i = 0; i < blobURLs.length; i++) {
+                  const response = await fetch(blobURLs[i])
                   const blob = await response.blob()
                   const fileName = filename || `screenshot_${i + 1}.png`
                   addToZip(blob, fileName, directory)
                 }
 
-                resolve()
+                resolve(blobURLs)
+                return
               }
             } catch (error) {
               console.error("Error capturing and storing screenshot:", error)
@@ -430,6 +781,12 @@ function Popup() {
         )
       })
     }
+  }
+
+  const handleLinkClick = () => {
+    const url =
+      "chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/tabs/Anzeigen_neu_generieren.html"
+    window.open(url, "_blank")
   }
 
   const setupMessageListener = () => {
@@ -459,6 +816,30 @@ function Popup() {
             }
           }
         })
+      } else if (port.name == "fullpagescreenshot") {
+        port.onMessage.addListener(async (request) => {
+          console.log("Connection established in content script:", port)
+          if (request.action === "fulltweetsScreenshot") {
+            try {
+              const modifiednewscreenshots =
+                await screenshot.captureAndStoreScreenshot(
+                  request.analysisId,
+                  request.url,
+                  request.filename,
+                  request.directory
+                )
+              port.postMessage({
+                success: true,
+                modifiedscreenshots: modifiednewscreenshots
+              })
+            } catch (error) {
+              port.postMessage({ error: error.message })
+            } finally {
+              // Disconnect the port after sending the response
+              port.disconnect()
+            }
+          }
+        })
       }
     })
 
@@ -472,16 +853,21 @@ function Popup() {
               setProgress(request.progress)
               break
 
-            case "captureScreenshot":
-              await screenshot.captureAndStoreScreenshot(
-                request.analysisId,
-                request.url,
-                request.filename,
-                request.directory
-              )
-              sendResponse({ success: true })
-              return true
-            // break
+            // case "captureScreenshot":
+            //   console.log("start taking full screenshot in sidepanel")
+            //   const modifiednewscreenshots =
+            //     await screenshot.captureAndStoreScreenshot(
+            //       request.analysisId,
+            //       request.url,
+            //       request.filename,
+            //       request.directory
+            //     )
+            //   sendResponse({
+            //     success: true,
+            //     modifiedscreenshots: modifiednewscreenshots
+            //   })
+            //   return true
+
             case "analysisComplete":
               // Handle ZIP file generation and download
               break
@@ -506,9 +892,47 @@ function Popup() {
               break
 
             case "downloadZip":
-              const base64data = request.base64data
+              const base64 = request.base64data
               console.log("base64data>>>>>>>>>>>", base64data)
-              setBase64Data(base64data)
+              // setBase64Data(base64data)
+              const byteCharacters = atob(base64)
+              const byteNumbers = new Array(byteCharacters.length)
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i)
+              }
+              const byteArray = new Uint8Array(byteNumbers)
+              const zipBlob = new Blob([byteArray], { type: "application/zip" })
+
+              // Create a URL for the Blob and download it
+              const url = URL.createObjectURL(zipBlob)
+              const downloadName = "D2X_Report.zip"
+
+              const a = document.createElement("a")
+              a.href = url
+              a.download = downloadName
+              a.click()
+
+              // Clean up the URL after download
+              URL.revokeObjectURL(url)
+              // Clear the base64 data to prevent duplicate downloads
+              request.base64data = null
+              break
+
+            case "processUpdate":
+              setprojectStatus(request.data)
+              if (
+                request.data === "Dokumente erfolgreich heruntergeladen." ||
+                request.data === "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
+              ) {
+                setisAnimating(false) // Stop animation
+                setTimeout(() => {
+                  setShowProgressBar(false)
+                  setAnimatedStatus("")
+                  setprojectStatus("") // Clear the status after a delay
+                }, 3000) // Adjust the delay as needed
+              } else {
+                setisAnimating(true) // Start animation for other statuses
+              }
               break
             default:
               console.log("Unhandled message action:", request.action)
@@ -527,9 +951,12 @@ function Popup() {
     <div>
       <header>
         <h1>D2X</h1>
+        {/* Display the message if it exists */}
+
         <div className="header-icons">
           {base64data && (
             <span
+              className="main-icon"
               onClick={toggledownloadSection}
               style={{
                 cursor: "pointer",
@@ -542,18 +969,42 @@ function Popup() {
               ⬇️
             </span>
           )}
+
+          <span
+            id="mainLinkIcon"
+            role="img"
+            aria-label="link"
+            onClick={handleLinkClick}
+            style={{
+              cursor: "pointer",
+              transition: "transform 0.1s ease-in-out"
+            }}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.9)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+            🔗
+          </span>
           <span
             id="mainHelpIcon"
             className="main-icon"
             title="Über D2X"
-            onClick={toggleHelpSection}>
+            onClick={toggleHelpSection}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.9)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
             ⓘ
           </span>
           <span
             id="settingsToggle"
             className="main-icon"
             title="Einstellungen"
-            onClick={toggleSettingsSection}>
+            onClick={toggleSettingsSection}
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.9)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
             ⚙️
           </span>
         </div>
@@ -628,12 +1079,14 @@ function Popup() {
             </div>
             <section id="settingsSection">
               <h2>Einstellungen</h2>
-              <details id="apiKeysSection" open={openSubSections.apiKeysSection}>
-                <summary onClick={() => {
-                    event.preventDefault(); // Prevent default toggle behavior
-                    toggleSubSection("apiKeysSection")}
-                }
-                >
+              <details
+                id="apiKeysSection"
+                open={openSubSections.apiKeysSection}>
+                <summary
+                  onClick={() => {
+                    event.preventDefault() // Prevent default toggle behavior
+                    toggleSubSection("apiKeysSection")
+                  }}>
                   API Keys
                 </summary>
                 {openSubSections.apiKeysSection && (
@@ -654,14 +1107,29 @@ function Popup() {
                       onChange={handleInputChange}
                       disabled={savedKeys.openaiApiKey} // Disable input if key is saved
                     />
-                   {savedKeys.openaiApiKey ? (
-                      <button onClick={() => deleteAPIKey("openai")}
-                      style={{ backgroundColor: "red", color: "white" }}>
+                    {savedKeys.openaiApiKey ? (
+                      <button
+                        id="deletebutton"
+                        onClick={() => deleteAPIKey("openai")}
+                        style={{ backgroundColor: "red", color: "white" }}
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
                         OpenAI-Schlüssel löschen
                       </button>
                     ) : (
-                      <button onClick={() => saveAPIKey("openai")}>
-                       API-Schlüssel speichern
+                      <button
+                        onClick={() => saveAPIKey("openai")}
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        API-Schlüssel speichern
                       </button>
                     )}
 
@@ -681,18 +1149,31 @@ function Popup() {
                       onChange={handleInputChange}
                       disabled={savedKeys.perplexityApiKey}
                     />
-                   {savedKeys.perplexityApiKey ? (
-                      <button onClick={() => deleteAPIKey("perplexity")}
-                      style={{ backgroundColor: "red", color: "white" }}
-                      >
+                    {savedKeys.perplexityApiKey ? (
+                      <button
+                        id="deletebutton"
+                        onClick={() => deleteAPIKey("perplexity")}
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
                         Perplexity-Schlüssel löschen
                       </button>
                     ) : (
-                      <button onClick={() => saveAPIKey("perplexity")}>
-                       API-Schlüssel speichern
+                      <button
+                        onClick={() => saveAPIKey("perplexity")}
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        API-Schlüssel speichern
                       </button>
                     )}
-                    </div>
+                  </div>
                 )}
               </details>
 
@@ -715,6 +1196,7 @@ function Popup() {
                       name="senderAddress"
                       value={formData.senderAddress}
                       onChange={handleChange}
+                      disabled={isaddress}
                     />
 
                     <label htmlFor="recipientAddress">
@@ -731,6 +1213,7 @@ function Popup() {
                       value={formData.recipientAddress}
                       placeholder="John Smith, MyStreet 123, 12345 Berlin"
                       onChange={handleChange}
+                      disabled={isaddress}
                     />
 
                     <label htmlFor="senderContact">
@@ -747,6 +1230,7 @@ function Popup() {
                       value={formData.senderContactdetails}
                       placeholder="+49 123 45678, Me@example.com"
                       onChange={handleChange}
+                      disabled={isaddress}
                     />
 
                     <label htmlFor="city">
@@ -764,6 +1248,7 @@ function Popup() {
                       value={formData.city}
                       placeholder="Berlin"
                       onChange={handleChange}
+                      disabled={isaddress}
                     />
 
                     <label htmlFor="fullName">
@@ -781,9 +1266,48 @@ function Popup() {
                       value={formData.fullName}
                       placeholder="John Smith"
                       onChange={handleChange}
+                      disabled={isaddress}
                     />
 
-                    <button type="submit">Speichern</button>
+                    {isaddress ? (
+                      <button
+                        id="deletebutton"
+                        type="button"
+                        onClick={deleteaddress}
+                        style={{
+                          backgroundColor: "red",
+                          color: "white",
+                          border: "none",
+                          padding: "8px 12px",
+                          cursor: "pointer"
+                        }}
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }>
+                        Löschen
+                      </button>
+                    ) : (
+                     
+                      <button
+                        type="submit"
+                        onMouseDown={(e) =>
+                          (e.currentTarget.style.transform = "scale(0.9)")
+                        }
+                        onMouseUp={(e) =>
+                          (e.currentTarget.style.transform = "scale(1)")
+                        }
+                        style={{
+                          color: "white",
+                          border: "none",
+                          padding: "8px 12px",
+                          cursor: "pointer"
+                        }}>
+                        Speichern
+                      </button>
+                    )}
                   </div>
                 </form>
               </details>
@@ -808,10 +1332,10 @@ function Popup() {
                     value={backgroundInfo}
                     placeholder=""
                     onChange={handleBackgroundInfo}
-                    disabled={backgroundInfopresent}
-                    ></textarea>
+                    disabled={backgroundInfopresent}></textarea>
                   {backgroundInfopresent ? (
                     <button
+                      id="deletebutton"
                       onClick={deleteBackgroundInfo}
                       style={{
                         backgroundColor: "red",
@@ -819,7 +1343,13 @@ function Popup() {
                         border: "none",
                         padding: "8px 12px",
                         cursor: "pointer"
-                      }}>
+                      }}
+                      onMouseDown={(e) =>
+                        (e.currentTarget.style.transform = "scale(0.9)")
+                      }
+                      onMouseUp={(e) =>
+                        (e.currentTarget.style.transform = "scale(1)")
+                      }>
                       Löschen
                     </button>
                   ) : (
@@ -830,7 +1360,13 @@ function Popup() {
                         border: "none",
                         padding: "8px 12px",
                         cursor: "pointer"
-                      }}>
+                      }}
+                      onMouseDown={(e) =>
+                        (e.currentTarget.style.transform = "scale(0.9)")
+                      }
+                      onMouseUp={(e) =>
+                        (e.currentTarget.style.transform = "scale(1)")
+                      }>
                       Speichern
                     </button>
                   )}
@@ -848,6 +1384,8 @@ function Popup() {
               Seite Auswerten
             </summary>
             <div>
+              {/* disabling button until the process is complete */}
+
               <button
                 onClick={triggerFullAnalysis}
                 title="Führt eine automatische Auswertung der Seite aus, inklusive Screenshots, Profilsuchen und Beweissicherungen, und stellt die Ergebnisse zum Download bereit.">
@@ -863,14 +1401,17 @@ function Popup() {
               Screenshots erstellen
             </summary>
             <div>
+              {/* disable button until process is going */}
               <button
                 id="fullPageScreenshot"
-                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich der Bereiche, die aktuell nicht sichtbar sind.">
+                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich der Bereiche, die aktuell nicht sichtbar sind."
+                onClick={takefullpagess}>
                 Ganze Seite
               </button>
               <button
                 id="visibleAreaScreenshot"
-                title="Erstellt einen Screenshot des aktuell sichtbaren Bereichs der Webseite.">
+                title="Erstellt einen Screenshot des aktuell sichtbaren Bereichs der Webseite."
+                onClick={visiblepagess}>
                 Angezeigter Bereich
               </button>
             </div>
@@ -889,7 +1430,55 @@ function Popup() {
                   ⓘ
                 </span>
               </label>
-              <input type="text" id="profileUrl" name="profileUrl" />
+              <input
+                type="text"
+                id="profileUrl"
+                name="profileUrl"
+                value={inputValues.profileUrl}
+                onChange={handleInputChanges}
+              />
+              <label htmlFor="knownProfileInfo">
+                Bekannte Profilinformationen:{" "}
+                <span
+                  className="help-icon"
+                  title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
+                  ⓘ
+                </span>                       
+              </label>
+              <textarea
+                id="knownProfileInfo"
+                name="knownProfileInfo"
+                value={inputValues.knownProfileInfo}
+                onChange={handleInputChanges}></textarea>
+              <button
+                id="searchProfile"
+                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
+                onClick={handleProfileSearch}>
+                Profil recherchieren
+              </button>
+            </div>
+          </details>
+
+          <details id="profileSection" open={openSection === "postSection"}>
+            <summary onClick={(e) => toggleSection("postSection", e)}>
+              Kommentaranalyse
+            </summary>
+            <div>
+              <label htmlFor="profileUrl">
+                ULR des Kommentars:{" "}
+                <span
+                  className="help-icon"
+                  title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll.">
+                  ⓘ
+                </span>
+              </label>
+              <input
+                type="text"
+                id="profileUrl"
+                name="postUrl"
+                value={inputValuesPost.postUrl}
+                onChange={handleInputPostChanges}
+              />
               <label htmlFor="knownProfileInfo">
                 Bekannte Profilinformationen:{" "}
                 <span
@@ -900,15 +1489,20 @@ function Popup() {
               </label>
               <textarea
                 id="knownProfileInfo"
-                name="knownProfileInfo"></textarea>
+                name="knownPostInfo"
+                value={inputValuesPost.knownPostInfo}
+                onChange={handleInputPostChanges}></textarea>
               <button
                 id="searchProfile"
-                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai.">
+                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
+                onClick={handlePostSearch}>
                 Profil recherchieren
               </button>
             </div>
           </details>
         </section>
+
+        {showMessage && <div className="message">{showMessage}</div>}
 
         {showProgressBar && (
           <section id="progressSection">
@@ -918,9 +1512,14 @@ function Popup() {
             <div id="progressText">
               Wird bearbeitet... {Math.round(progress)}%
             </div>
+            {/* check if there is something in progress state then show the animated status */}
+            <div id="progressText" style={{ color: "green" }}>
+              {animatedStatus}
+            </div>
           </section>
         )}
 
+        {/* // removing this section  */}
         {results && (
           <section id="resultsSection">
             <button
@@ -936,4 +1535,4 @@ function Popup() {
   )
 }
 
-export default Popup
+export default SidePanel

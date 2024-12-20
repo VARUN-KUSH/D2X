@@ -22,7 +22,15 @@ export async function profileScrape() {
 
         console.log("main>>>>>>>>>>", main)
         // Check if the profileBio element is present
-        const profileBio = main.querySelector('div[data-testid="primaryColumn"] > div[aria-label="Home timeline"] > div:nth-child(3) > div > div > div:nth-child(2) > div > div > div > div');
+        const primaryColoumn = main.querySelector(':scope > div > div > div > div[data-testid="primaryColumn"] > div[aria-label="Home timeline"] > div:nth-child(3)');
+        console.log("primaryColoumn", primaryColoumn)
+        if (!primaryColoumn) {
+          console.log("Main element not found, retrying...");
+          retryOrResolve();
+          return;
+        }
+
+        const profileBio = primaryColoumn.querySelector(':scope > div > div > div > div')
         if (!profileBio) {
           console.log("Profile bio not found, retrying...");
           retryOrResolve();
@@ -40,10 +48,10 @@ export async function profileScrape() {
         const following_followercount = profileBio.querySelector(":scope > div:nth-child(5)");
         console.log("following_followercount:", following_followercount);
         
-        const followingCount = following_followercount?.querySelector('div > a[href*="following"]')?.innerText || "Data not found";
+        const followingCount = following_followercount?.querySelector('div > a[href*="following"]')?.innerText || " ";
         console.log("followingCount:", followingCount);
         
-        const followersCount = following_followercount?.querySelector('div > a[href*="verified_followers"]')?.innerText || "Data not found";
+        const followersCount = following_followercount?.querySelector('div > a[href*="verified_followers"]')?.innerText || " ";
         console.log("followersCount:", followersCount);
         
         let profilebiodata
@@ -53,19 +61,19 @@ export async function profileScrape() {
           const profiledata = profileBioofUser.querySelectorAll(':scope > span');
           profilebiodata = Array.from(profiledata)
               .map(span => span.textContent.trim())
-              .join(" ") || "Data not found";
+              .join(" ") || "";
           console.log("profilebiodata:", profilebiodata);
       } else {
           console.log("profilebiodata: Data not found");
       }
         
-        const userlocation = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]')?.innerText || "Data not found";
+        const userlocation = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]')?.innerText || "";
         console.log("userlocation:", userlocation);
 
-        const userBirthdate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]')?.innerText || "Data not found";
+        const userBirthdate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]')?.innerText || "";
         console.log("userBirthdate:", userBirthdate);
         
-        const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "Data not found";
+        const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "";
         console.log("userJoindate:", userJoindate);
         
         // Check if necessary data has been found
@@ -93,12 +101,12 @@ export async function profileScrape() {
         if (attempts >= maxAttempts) {
           console.log("Max attempts reached without finding all data.");
           resolve({
-            profileBioofUser: "Data not found",
-            userJoindate: "Data not found",
-            followersCount: "Data not found",
-            followingCount: "Data not found",
-            userlocation: "Data not found",
-            userBirthdate: "Data not found"
+            profileBioofUser: "",
+            userJoindate: "",
+            followersCount: "",
+            followingCount: "",
+            userlocation: "",
+            userBirthdate: ""
           });
         } else {
           setTimeout(attemptScraping, 1000);

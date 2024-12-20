@@ -1,0 +1,185 @@
+{
+  "name": "D2X_response_schema",
+  "strict": true,
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Social Media Post Evaluation Schema",
+    "description": "Schema for evaluating social media posts and generating a German police report draft under German law.",
+    "type": "object",
+    "properties": {
+      "Posts": {
+        "type": "array",
+        "description": "An array of evaluation results for social media posts.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "ID": {
+              "type": "string",
+              "description": "A unique identifier for the post as given by the user."
+            },
+            "Post_URL": {
+              "type": "string",
+              "description": "The URL of the social media post (must be a valid URI)."
+            },
+            "Username": {
+              "type": "string",
+              "description": "The user handle of the person who made the post."
+            },
+            "Screenname": {
+              "type": "string",
+              "description": "The display name or screen name of the person who made the post."
+            },
+            "User_Profil_URL": {
+              "type": "string",
+              "description": "The URL to the person's profile who made the post (must be a valid URI)."
+            },
+            "Veröffentlichungszeitpunkt": {
+              "type": "string",
+              "description": "The timestamp when the post was published (must be in ISO date-time format, e.g., '2024-03-21T14:30:00Z')."
+            },
+            "Inhalt": {
+              "type": "string",
+              "description": "The text content or description of the post."
+            },
+            "Erklärung": {
+              "type": "string",
+              "description": "Beschreibung: Wer sagt was zu wem. Inklusive Kontext und Bedeutung. (auf Deutsch)"
+            },
+            "Inhaltliche_Merkmale": {
+              "type": "array",
+              "description": "Content characteristics identified in the post.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "Merkmal": {
+                    "type": "string",
+                    "enum": [
+                      "SCHIMPFWOERTER",
+                      "HERABWUERDIGENDE_AUSDRUECKE",
+                      "TATSACHENBEHAUPTUNG",
+                      "GEWALTANDROHUNG",
+                      "HASS_AUFRUF",
+                      "PRIVATE_DATEN",
+                      "FALSCHE_TATSACHEN"
+                    ],
+                    "description": "The specific characteristic or feature of the content."
+                  },
+                  "Zitat": {
+                    "type": "string",
+                    "description": "All relevant quotes from the post illustrating the characteristic."
+                  }
+                },
+                "required": ["Merkmal", "Zitat"],
+                "additionalProperties": false
+              }
+            },
+            "Subsumtion": {
+              "type": "array",
+              "description": "Juristische Prüfung möglicher Straftatbestände nach dem für jeden Tatbestand vorgegebenen Schema: Zur Subsumtion prüfe:",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "Verdacht": {
+                    "type": "string",
+                    "enum": [
+                      "Beleidigung",
+                      "üble Nachrede",
+                      "Verleumdung",
+                      "Bedrohung",
+                      "Volksverhetzung",
+                      "Doxxing",
+                      "Cybermobbing",
+                      "Cyberstalking",
+                      "Digitale_Erpressung",
+                      "Noetigung",
+                      "Ehrverletzung",
+                      "Kein_Verdacht"
+                    ],
+                    "description": "Mögliche Straftatbestände die für den Post geprüft werden sollten."
+                  },
+                  "Subsumtion": {
+                    "type": "string",
+                    "description": "Subsumtion: Prüfung aller der für den jeweiligen Straftatbestand unter **Zur Subsumtion prüfe** vorgegebenen Kriterien"
+                  },
+                  "Strafwahrsch": {
+                    "type": "string",
+                    "description": "Wahrscheinlichkeit der Strafbarkeit basiered auf der Subsumtion.",
+                    "enum": [
+                      "VERDACHT_NICHT_BESTAETIGT",
+                      "NIEDRIG",
+                      "MITTEL",
+                      "HOCH"
+                    ]
+                  }
+                },
+                "required": ["Verdacht", "Subsumtion", "Strafwahrsch"],
+                "additionalProperties": false
+              }
+            },
+            "Schriftliche_Bewertung": {
+              "type": "string",
+              "description": "Eine detaillierte Bewertung des Posts (auf Deutsch)."
+            },
+            "Post_selbst_ist_anzeigbar_flag": {
+              "type": "boolean",
+              "description": "Indicates whether the person who posted directly violates German law through their post (`true`) or if the post is not reportable (`false`) e.g. because the person merely is reporting others' illegal actions."
+            },
+            "Straftatbestand": {
+              "type": "array",
+              "description": "List of identified criminal offenses that should be reported to the police.",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "Beleidigung",
+                  "üble Nachrede",
+                  "Verleumdung",
+                  "Bedrohung",
+                  "Volksverhetzung",
+                  "Doxxing",
+                  "Cybermobbing",
+                  "Cyberstalking",
+                  "Digitale_Erpressung",
+                  "Noetigung",
+                  "Ehrverletzung"
+                ]
+              }
+            },
+            "Verfolgungsart": {
+              "type": "string",
+              "description": "Ob es sich um ein Antragsdelikt (ANTRAGSDELIKT), ein Offizialdelikt (OFFIZIALDELIKT) oder in seltenen Fällen um beides (ANTRAGSDELIKT_OFFIZIALDELIKT) handelt.",
+              "enum": [
+                "ANTRAGSDELIKT",
+                "OFFIZIALDELIKT",
+                "ANTRAGSDELIKT_OFFIZIALDELIKT"
+              ]
+            },
+            "Anzeige_Entwurf": {
+              "type": "string",
+              "description": "The draft of the police report letter prepared for the victim. Must be an empty string if the post is not reportable (\"Post_selbst_ist_anzeigbar_flag\": false). If not empty, it must start with \"Sehr geehrte Damen und Herren,\\n\" and end with \"Mit freundlichen Grüßen,\\n\" and it must be in German. Pattern: \"^Sehr geehrte Damen und Herren,\\n[\\s\\S]*Mit freundlichen Grüßen,\\n$\""
+            }
+          },
+          "required": [
+            "ID",
+            "Post_URL",
+            "Username",
+            "Screenname",
+            "User_Profil_URL",
+            "Veröffentlichungszeitpunkt",
+            "Inhalt",
+            "Erklärung",
+            "Inhaltliche_Merkmale",
+            "Subsumtion",
+            "Schriftliche_Bewertung",
+            "Post_selbst_ist_anzeigbar_flag",
+            "Straftatbestand",
+            "Verfolgungsart",
+            "Anzeige_Entwurf"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["Posts"],
+    "additionalProperties": false
+  }
+}

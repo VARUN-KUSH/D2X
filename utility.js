@@ -1,5 +1,7 @@
 import JSZip from "jszip.min.js"
 
+import { generateHtmlReport } from "./generateHtmlReport.js"
+
 let zip = new JSZip()
 
 function modifyUrl(url) {
@@ -12,21 +14,6 @@ function modifyUrl(url) {
   return modifiedUrl
 }
 
-async function getCurrentTime() {
-  const url = "http://worldtimeapi.org/api/ip"
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    return data.datetime
-  } catch (error) {
-    console.error("Error fetching time:", error)
-    return new Date().toISOString() // Fallback to local system time
-  }
-}
-
 export async function capturereportablessandchangetoURLs(
   currentTab,
   filename,
@@ -34,7 +21,8 @@ export async function capturereportablessandchangetoURLs(
   reject,
   progressCallback,
   directory,
-  analysisId
+  analysisId,
+  time
 ) {
   try {
     // Step 1: Capture the screenshot of the current tab and convert it into a Promise
@@ -57,13 +45,11 @@ export async function capturereportablessandchangetoURLs(
     // Step 3: Create a Blob URL for the captured screenshot
     const screenshotBlobUrl = URL.createObjectURL(blob)
 
-    // Step 4: Get the current time from the background script
-    const timeResponse = getCurrentTime()
-
+    
     // Step 5: Process the screenshot and add timestamps using addTimestampToScreenshots
     const processedScreenshot = await addTimestampToScreenshots(
       [screenshotBlobUrl], // Screenshot file array (only 1 in this case)
-      timeResponse, // Timestamp
+      time, // Timestamp
       currentTab.url, // Tab URL
       analysisId // Filename or analysisId
     )
@@ -83,13 +69,17 @@ export async function addTimestampToScreenshots(
   screenshotFiles,
   time,
   url,
-  analysisId
+  analysisId,
+  filename
 ) {
   return Promise.all(
     screenshotFiles.map((file, index) => {
       return new Promise((resolve, reject) => {
-        // const newUrl = modifyUrl(url)
-        const newUrl = url
+        let newUrl = url
+        if (filename === "initial_page.png") {
+          newUrl = modifyUrl(url)
+        }
+
         const img = new Image()
         img.onload = function () {
           const canvas = document.createElement("canvas")
@@ -144,17 +134,16 @@ export async function addToZip(fileData, filename, directory) {
     directory
   )
 
-  // Fetch the Blob data from the Blob URL
-  const response = await fetch(fileData)
-  const blobData = await response.blob()
+  // No need to fetch; `fileData` is already a Blob
+  const blobData = fileData;
 
   if (directory) {
-    zip.folder(directory).file(filename, blobData, { binary: true })
+    zip.folder(directory).file(filename, blobData, { binary: true });
   } else {
-    zip.file(filename, blobData, { binary: true })
+    zip.file(filename, blobData, { binary: true });
   }
 
-  downloadZip()
+  await downloadallfullfilesZip();
 }
 
 // function _initScreenshots(totalWidth, totalHeight) {
@@ -240,16 +229,21 @@ export async function createFinalReport(results, originalUrl) {
   // Create folder name in format D2X_Report_year.month.date.time
   let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
-  mainFolder.file("AnalyseZeitpunkt.txt")
-  const formData = await getFormData()
-  console.log("Retrieved formData:", formData)
+  let formData;
+  try {
+    formData = await getFormData();
+    console.log("Retrieved formData:", formData);
+  } catch (error) {
+    console.error("Error retrieving form data:", error);
+    formData = {};
+  }
   const {
     senderAddress = "",
     recipientAddress = "",
     senderContactdetails = "",
     city = "",
     fullName = ""
-  } = formData
+  } = formData || {};
 
   // Helper function to format data with new lines
   function formatText(text) {
@@ -262,6 +256,7 @@ export async function createFinalReport(results, originalUrl) {
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
   mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${originalUrl}`)
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
+
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
 
   //extract from formDataValue
@@ -271,11 +266,8 @@ export async function createFinalReport(results, originalUrl) {
   folder1.file("Abs.Kontakt.txt", `${formatText(senderContactdetails)}`)
   folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
   folder1.file(
-    "Anglagen.txt",
-    `Anlage: Sachverhalt
-        Informationen aus dem Profil Tatverdächtige*r:
-        Screenshot Nutzerprofil auf X/Twitter
-        Screenshot des Kommentars und Kontext:`
+    "Anlagen.txt",
+    `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
   )
   folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
   folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
@@ -290,17 +282,17 @@ export async function createFinalReport(results, originalUrl) {
     let userFolder = mainFolder.folder(username)
     let post = results.find((item) => item.Username === username)
     userFolder.file(
-      `ExtraUserInfo_${post.Username}_${year}.${month}.${date}.txt`,
-      ``
+      `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `${post.perplexityresponse.online_praesenz}`
     )
     userFolder.file(
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`
     )
     userFolder.file(
-      `UserInfo_${post.Username}_${year}.${month}.${date}.txt`,
-      `Biografie: ${post.scrapedData.profileBio}
-      ${post.scrapedData.joiningDate}
+      `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `Biografie: ${post.scrapedData.profilebiodata}
+      ${post.scrapedData.userJoindate}
       Folgt: ${post.scrapedData.followingCount}
       Follower: ${post.scrapedData.followersCount} `
     )
@@ -317,49 +309,116 @@ export async function createFinalReport(results, originalUrl) {
     //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
     // ]
     const response = await fetch(post.profileScreenshot[0])
+    console.log("response>>>>>>>>>>", response)
     const blobData = await response.blob()
+    console.log("blobData>>>>..", blobData)
     userFolder.file(
-      `screenshot_${post.Username}_${year}.${month}.${date}.png`,
+      `screenshot_profile_${post.Username}_${date}.${month}.${year}.png`,
       blobData,
       { binary: true }
     )
 
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
-    userPosts.forEach(async (post, index) => {
-      // Add post information as text files
-      // userFolder.file(`post_${index + 1}.txt`, `Post URL: ${post.Post_URL}\nContent: ${post.Inhalt}\nExplanation: ${post.Erklärung}`);
-      // userFolder.file(`screenshot_profile_${post.Username}_${year}.${month}.${date}.png`, post.profileScreenshot[0], { binary: true });
+    console.log("userPosts>>>>>>>>>>>", userPosts)
+
+    for (let post of userPosts) {
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
+      const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, '\n');
+      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`, formattedText);
+    
       folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}.txt`,
-        `${post.Anzeige_Entwurf}`
-      )
-      folder2.file(
-        `Post_${post.Username}_${tweetID}_${year}.${month}.${date}.txt`,
+        `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
 
-      // postScreenshot: [
-      //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/d8a6cc50-37fc-4e1d-af00-24a33a55c58f"
-      // ]
-      const response = await fetch(post.postScreenshot[0])
-      const blobData = await response.blob()
+      try {
+        const postResponse = await fetch(post.postScreenshot[0])
+        if (!postResponse.ok) {
+          throw new Error(
+            `Failed to fetch post screenshot: ${postResponse.statusText}`
+          )
+        }
+        console.log("postResponse>>>>>>>>", postResponse)
+        const postblobData = await postResponse.blob()
+        console.log("postblobData>>>>>>>>>>.", postblobData)
 
-      folder2.file(
-        `screenshot_${post.Username}_${tweetID}_${year}.${month}.${date}.png`,
-        blobData,
-        { binary: true }
-      )
+        folder2.file(
+          `screenshot_${post.Username}_${tweetID}_${date}.${month}.${year}.png`,
+          postblobData,
+          { binary: true }
+        )
+      } catch (error) {
+        console.error("Error fetching post screenshot:", error)
+      }
+
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
-      folder2.file(`Verfolgungsart.txt`, `OFFIZIALDELIKT`)
+      folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
-        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um `
+        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}:${minutes} Uhr`
       )
-    })
+      const dateString = `${date}.${month}.${year}`
+      if (!post.Username || !tweetID || !dateString || !post.Verfolgungsart) {
+        console.error("Missing required inputs:", { post, tweetID, dateString })
+        return
+      }
+      try {
+        const fileContents = {
+          AnzeigenEntwurf: `${post.Anzeige_Entwurf}`,
+          Abs_Adresse: `${formatText(senderAddress)}`,
+          Abs_Kontakt: `${formatText(senderContactdetails)}`,
+          Empf_Adresse: `${formatText(recipientAddress)}`,
+          Betreff: "Anzeige zu Kommentar auf X/Twitter",
+          Datumszeile: `${city}, den ${date}.${month}.${year}`,
+          Abs_UnterzeichnendePerson: `${fullName}`,
+          Anlagen: `Anlage: Sachverhalt
+          Informationen aus dem Profil Tatverdächtige*r:
+          Screenshot Nutzerprofil auf X/Twitter
+          Screenshot des Kommentars und Kontext:`,
+          AnalyseZeitpunkt: `${date}.${month}.${year}`,
+          Post: `${post.Inhalt}`,
+          Zeitpunkt: `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}.${minutes}.${seconds}`,
+          userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
+          screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`,
+          profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
+          postUrl: `URL des Kommentars: ${post.Post_URL}`,
+          initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
+          UserInfo: `Biografie: ${post.scrapedData.profilebiodata}
+      ${post.scrapedData.userJoindate}
+      Folgt: ${post.scrapedData.followingCount}
+      Follower: ${post.scrapedData.followersCount} `,
+          ExtraUserInfo: `${post.perplexityresponse?.online_praesenz}`
+        }
+
+        const htmlreport = generateHtmlReport(
+          post.Username,
+          tweetID,
+          dateString,
+          post.Verfolgungsart,
+          fileContents
+        )
+        console.log("Generated HTML Report:", htmlreport)
+
+        mainFolder.file(
+          `Anzeige_${post.Username}_${tweetID}_${post.Verfolgungsart}_${date}.${month}.${year}.html`,
+          htmlreport
+        )
+      } catch (error) {
+        console.error("Error generating HTML report:", error)
+
+        // Optional: If the error stack or specific input details are important for debugging, log them as well
+        console.error("Stack Trace:", error.stack)
+        console.log("Input Details:", {
+          Username: post.Username,
+          TweetID: tweetID,
+          DateString: dateString,
+          Verfolgungsart: post.Verfolgungsart
+        })
+      }
+    }
   }
 }
 
@@ -387,6 +446,22 @@ export function getFilename(contentURL, uid) {
   return `screenshot-${shortUID}-${name}-${Date.now()}.png`
 }
 
+export async function downloadallfullfilesZip() {
+  // Generate the zip Blob
+  // Generate the zip Blob
+   // Generate the zip Blob
+   const zipBlob = await zip.generateAsync({ type: "blob" });
+
+   // Create a download link
+   const url = URL.createObjectURL(zipBlob);
+   const a = document.createElement("a");
+   a.href = url;
+   a.download = "archive.zip";
+   document.body.appendChild(a);
+   a.click();
+   URL.revokeObjectURL(url);
+}
+
 export async function downloadZip() {
   // Generate the zip Blob
   // Generate the zip Blob
@@ -395,46 +470,45 @@ export async function downloadZip() {
 
 // Function to get the API key and run the query
 
-export async function callPerplexity(userprofileData, instruction) {
+export async function callPerplexity(query) {
   const usePerplexity = await new Promise((resolve) => {
     chrome.storage.local.get("usePerplexity", (result) => {
       resolve(result.usePerplexity)
+      return
       //handle edge cases if keys are not added
     })
   })
 
+  console.log("usePerplexity>>>>>>>>.", usePerplexity)
   if (usePerplexity) {
-    try {
-      const perplexityResponse = await runPerplexityQuery(
-        userprofileData,
-        instruction
-      )
-      return perplexityResponse
-    } catch (error) {
-      console.error("Error calling Perplexity API:", error)
-      return null // Return null if an error occurs to handle gracefully
-    }
+  try {
+    const perplexityResponse = await runPerplexityQuery(query)
+    console.log("perplexityresponse>>>>>>>>>>>", perplexityResponse)
+    return perplexityResponse
+  } catch (error) {
+    console.error("Error calling Perplexity API:", error)
+    return null // Return null if an error occurs to handle gracefully
+  }
+  } else {
+    return
   }
 }
 
-async function runPerplexityQuery(userprofileData, instruction) {
+async function runPerplexityQuery(query) {
   return await new Promise((resolve, reject) => {
     // Fetch the API key from storage
-    chrome.storage.local.get("PERPLEXITY_API_KEY", (result) => {
-      const apiKey = result.PERPLEXITY_API_KEY
+    chrome.storage.local.get("perplexityApiKey", (result) => {
+      const apiKey = result.perplexityApiKey
 
       if (!apiKey) {
         console.error("API Key is not set in Chrome storage.")
-        reject("API Key missing")
+        // sendMessageToPopup("Der Perplexity-API-Schlüssel fehlt.")
         return
       }
 
       // Set up the API details
       const API_URL = "https://api.perplexity.ai/chat/completions"
       const MODEL = "llama-3.1-70b-instruct"
-
-      // Construct the query from userprofileData and instruction
-      const query = `${instruction}\n\nUser Profile Data: ${JSON.stringify(userprofileData)}`
 
       // Set up request headers and body
       const headers = {
@@ -478,4 +552,94 @@ async function runPerplexityQuery(userprofileData, instruction) {
         })
     })
   })
+}
+
+// export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts) {
+//   try {
+//     const response = await fetch("https://api.openai.com/v1/chat/completions", {
+//       method: "POST",
+//       headers: {
+//         Authorization: `Bearer ${apiKey}`,
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({
+//         model: "gpt-4o",
+//         messages: [
+//           { role: "system", content: promptText },
+//           { role: "user", content: JSON.stringify({ posts }) }
+//         ],
+//         response_format: {
+//           type: "json_schema",
+//           json_schema: jsonSchema
+//         }
+//       })
+//     })
+
+//     if (!response.ok) {
+//       const errorData = await response.json()
+//       throw new Error(
+//         `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
+//       )
+//     }
+
+//     return await response.json()
+//   } catch (error) {
+//     console.error("OpenAI API error:", error)
+//     throw error
+//   }
+// }
+
+
+export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts, batchSize = 5) {
+  // Helper function to make a single API call
+  const fetchBatch = async (batch) => {
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o", // Use the faster model
+          messages: [
+            { role: "system", content: promptText },
+            { role: "user", content: JSON.stringify({ posts: batch }) },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: jsonSchema,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error processing batch:", batch, error);
+      throw error;
+    }
+  };
+
+  // Split posts into smaller batches
+  const batches = [];
+  for (let i = 0; i < posts.length; i += batchSize) {
+    batches.push(posts.slice(i, i + batchSize));
+  }
+
+  // Process all batches in parallel
+  try {
+    const results = await Promise.all(batches.map((batch) => fetchBatch(batch)));
+    console.log("results>>>>>", results)
+    return results; // Combine results from all batches
+  } catch (error) {
+    console.error("Error during parallel processing:", error);
+    throw error;
+  }
 }

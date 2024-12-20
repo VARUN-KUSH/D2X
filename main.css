@@ -1,0 +1,137 @@
+body {
+    display: flex;
+    flex-direction: row;
+    font-family: 'Roboto', Arial, sans-serif;
+    min-width: 300px;
+    padding: 20px;
+    margin: 0;
+    background-color: #f4f4f4;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Seitenleiste für die Anleitung */
+.sidebar {
+    width: 35%;
+    max-width: 400px;
+    min-width: 250px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-right: 1px solid #cccccc;
+    overflow-y: auto;
+}
+
+.sidebar h2 {
+    color: #4A90E2;
+    margin-top: 0;
+}
+
+.sidebar h3 {
+    color: #333333;
+}
+
+.sidebar ul, .sidebar ol {
+    margin-left: 20px;
+    color: #555555;
+    font-size: 14px;
+}
+
+.sidebar li {
+    margin-bottom: 10px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #4A90E2;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 0;
+    color: #333333;
+}
+
+button {
+    background-color: #4A90E2;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: 10px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+button:hover {
+    background-color: #357ABD;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+    background-color: #2C5984;
+}
+
+label {
+    display: block;
+    margin-top: 20px;
+    color: #555555;
+    font-size: 14px;
+}
+
+select {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    height: auto;
+    min-height: 30px;
+    font-size: 14px;
+}
+
+select:focus {
+    border-color: #4A90E2;
+    outline: none;
+}
+
+#status {
+    margin-top: 20px;
+    color: #333333;
+    font-size: 14px;
+    white-space: pre-line; /* Ermöglicht Zeilenumbrüche in Statusmeldungen */
+}
+
+/* Responsive Anpassung */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #cccccc;
+        height: 40vh;
+    }
+
+    .main-content {
+        height: 60vh;
+    }
+}
