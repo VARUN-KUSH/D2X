@@ -424,9 +424,7 @@ async function processContent(messages) {
         const posts = JSON.parse(post.choices[0].message?.content)
         results.push(...(posts?.Posts || []))
       })
-      // const posts = JSON.parse(postresults.choices[0].message?.content)
-      // console.log("posts>>>>>>", posts)
-      // results.push(...(posts?.Posts || []))
+     
       console.log("results>>>>>>>>>>>>>>", results)
     } catch (error) {
       console.error("Error fetching evaluation:", error)
@@ -858,7 +856,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           console.log("here in visibletabpage")
           const urlofpost = await getCurrentTabUrl()
           const res = generateFilename(urlofpost)
-          console.log("filenameofpost>>>>>", filenameofpost)
           sendResponse({
             analysisId: getActiveAnalysisId(),
             url: urlofpost,
@@ -900,6 +897,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "SEARCH_POST":
+          const results = []
           const { postUrl, knownPostInfo } = request.data
           console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
           //send both values to open ai
@@ -907,6 +905,44 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             posturl: postUrl,
             postInfo: knownPostInfo
           }
+
+          let backgroundInfo = ""
+          try {
+            const result = await chrome.storage.local.get(["backgroundInfo"])
+            backgroundInfo = result.backgroundInfo || ""
+            console.log(
+              "resultInbackgroundinfo>>>>>>>>>>",
+              result,
+              "backgroundInfo>>>>>>>>",
+              backgroundInfo
+            )
+          } catch (error) {
+            console.error("Error retrieving background info:", error)
+          }
+          
+          const API_KEY = await getAPIKey();
+
+          let systemPromptWithContext = evaluatorSystemPrompt
+          if (backgroundInfo.trim() !== "") {
+            const contextBlock = `
+          # Context by the user
+          Additional context provided by the user to be considered during analysis:
+          ${backgroundInfo}
+          # End of user context
+          `
+            // Use a regular expression to safely replace the placeholder
+            systemPromptWithContext = evaluatorSystemPrompt.replace(
+              /\{\{context_block\}\}\n*/g,
+              contextBlock
+            )
+          } else {
+            // If no context, just remove the placeholder
+            systemPromptWithContext = evaluatorSystemPrompt.replace(
+              /\{\{context_block\}\}\n*/g,
+              ""
+            )
+          }
+
           try {
             const postresults = await fetchEvaluation(
               API_KEY,
@@ -916,14 +952,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             )
 
             console.log("Structured Response:", postresults)
-            const posts = JSON.parse(postresults.choices[0].message?.content)
-            console.log("posts>>>>>>", posts)
+            // const posts = JSON.parse(postresults.choices[0].message?.content)
+            // console.log("posts>>>>>>", posts)
+            postresults.map((post) => {
+              const posts = JSON.parse(post.choices[0].message?.content)
+              results.push(...(posts?.Posts || []))
+            })
+
+            console.log("results>>>>>>>>>>>>>>", results)
+
+            const reportablePosts = results.filter(
+              (post) => post.Post_selbst_ist_anzeigbar_flag === true
+            )
+
+            console.log("Reportable posts:", reportablePosts)
+               
           } catch (error) {
             console.error("Error fetching evaluation:", error)
           }
           sendResponse({
             analysisId: getActiveAnalysisId(),
-            openairesponse: openairesponse
+            openairesponse: reportablePosts
           })
 
           break

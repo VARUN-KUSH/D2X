@@ -334,6 +334,42 @@ export async function createFinalReport(results, originalUrl) {
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
 
+      // Entscheidungstext basierend auf dem Flag
+      const decisionText = post.Post_selbst_ist_anzeigbar_flag
+      ? "Ja"
+      : "Nein";
+
+      // Initialisierung des Prüfungstextes
+      let prüfungText = "Prüfungen:\n\n";
+
+      // Überprüfen, ob Subsumtion vorhanden ist und dann durchlaufen
+      if (post.Subsumtion && Array.isArray(post.Subsumtion) && post.Subsumtion.length > 0) {
+      post.Subsumtion.forEach((item, index) => {
+        prüfungText += `  > Verdacht: ${item.Verdacht}\n` +
+                      `  > Subsumtion: ${item.Subsumtion}\n` +
+                      `  > Strafwahrscheinlichkeit: ${item.Strafwahrsch}\n\n`;
+      });
+      } else {
+      prüfungText += "Keine Prüfungen vorhanden.\n\n";
+      }
+
+      // Zusammensetzen des gesamten Textes
+      const textBegründung =
+      `Post:\n${post.Inhalt}\n\n` +
+      `Erläuterung:\n${post.Erklärung}\n\n` +
+      `${prüfungText}` +
+      `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
+      `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`;
+
+      // Ersetzen von doppelten Backslashes mit einfachen Zeilenumbrüchen
+      const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n");
+
+      // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
+      folder2.file(
+      `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+      formattedTextBegründung
+      );
+
       try {
         const postResponse = await fetch(post.postScreenshot[0])
         if (!postResponse.ok) {

@@ -54,12 +54,13 @@ function SidePanel() {
     knownPostInfo: ""
   })
 
-  const [analysisData, setAnalysisData] = useState<AnalysisState>({
+  const [AnalysisData, setAnalysisData] = useState({
     visiblescreenshot: null,
     fullscreenshot: null,
     profile: null,
-    posts: null
-  });
+    posts: null,
+    analysisID: null
+  })
 
   const [base64data, setBase64Data] = useState(null)
   const [formData, setFormData] = useState({
@@ -155,11 +156,11 @@ function SidePanel() {
 
       setShowProgressBar(true)
 
-       // Store new screenshot in state
-       setAnalysisData(prevState => ({
+      // Store new screenshot in state
+      setAnalysisData((prevState) => ({
         ...prevState,
         profile: null
-    }));
+      }))
       const response: any = new Promise((resolve, reject) => {
         chrome.runtime.sendMessage(
           {
@@ -182,16 +183,17 @@ function SidePanel() {
       })
 
       const { analysisId, perplexityresponse } = response
-      setAnalysisId(analysisId)
+
       console.log("perplexityresponse>>>>>>", perplexityresponse)
-      setAnalysisData(prevState => ({
+      const parsedresponse = JSON.parse(perplexityresponse)
+      setAnalysisData((prevState) => ({
         ...prevState,
-        profile: {
-          perplexityres: perplexityresponse,
-          analysisId: analysisId,
-          timestamp: new Date().toISOString()
-        }
-    }));
+        profile: parsedresponse,
+        analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+      }))
+
+      // Update analysisId state using the same logic
+      setAnalysisId(AnalysisData.analysisID || analysisId)
     })
   }
 
@@ -208,10 +210,10 @@ function SidePanel() {
 
     setShowProgressBar(true)
 
-    setAnalysisData(prevState => ({
+    setAnalysisData((prevState) => ({
       ...prevState,
       post: null
-  }));
+    }))
 
     const response: any = new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
@@ -235,17 +237,18 @@ function SidePanel() {
     })
 
     const { analysisId, openairesponse } = response
-    setAnalysisId(analysisId)
+
     console.log("openairesponse>>>>>>", openairesponse)
 
-    setAnalysisData(prevState => ({
+    // Combine both state updates into a single conditional update
+    setAnalysisData((prevState) => ({
       ...prevState,
-      post: {
-        postres: openairesponse,
-        analysisId: analysisId,
-        timestamp: new Date().toISOString()
-      }
-  }));
+      posts: openairesponse,
+      analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+    }))
+
+    // Update analysisId state using the same logic
+    setAnalysisId(AnalysisData.analysisID || analysisId)
   }
 
   const handleBackgroundInfo = (e) => {
@@ -338,7 +341,7 @@ function SidePanel() {
     // Send message to background script
     // Store usePerplexity value locally in chrome storage
     chrome.storage.local.set({ usePerplexity: isChecked }, () => {
-      console.log("Saved usePerplexity:", isChecked);
+      console.log("Saved usePerplexity:", isChecked)
     })
   }
 
@@ -561,74 +564,76 @@ function SidePanel() {
   const takefullpagess = async () => {
     try {
       setShowProgressBar(true)
-    //loader should load
+      //loader should load
 
-    // required things > fullpagess > ss + date + url + analysisId
-    //get analysisId, time from background
-    //
+      // required things > fullpagess > ss + date + url + analysisId
+      //get analysisId, time from background
+      //
 
-     // First clear the existing screenshot
-     setAnalysisData(prevState => ({
-      ...prevState,
-      fullscreenshot: null
-    }));
+      // First clear the existing screenshot
+      setAnalysisData((prevState) => ({
+        ...prevState,
+        fullscreenshot: null
+      }))
 
-    const response: any = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        { action: "fullpagelengthss" },
-        function (response) {
-          if (response && response.analysisId) {
-            resolve(response)
-          } else {
-            console.error("Failed to start analysis", response)
-            alert("Failed to start analysis")
-            setShowProgressBar(false)
-            reject()
-            return
+      const response: any = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          // if analysis id there send it
+          { action: "fullpagelengthss" },
+          function (response) {
+            if (response && response.analysisId) {
+              resolve(response)
+            } else {
+              console.error("Failed to start analysis", response)
+              alert("Failed to start analysis")
+              setShowProgressBar(false)
+              reject()
+              return
+            }
           }
-        }
-      )
-    })
+        )
+      })
 
-    const { analysisId, url, filename, directory } = response
-    setAnalysisId(analysisId)
-    console.log("filename>>>>>>>", filename)
-    console.log("Analysis initiated with ID:", analysisId)
-    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
-      analysisId,
-      url,
-      filename,
-      directory
-    )
-    console.log("modifiedscreenshots", modifiednewscreenshots)
+      const { analysisId, url, filename, directory } = response
+      setAnalysisId(AnalysisData.analysisID || analysisId)
+      console.log("filename>>>>>>>", filename)
+      console.log("Analysis initiated with ID:", analysisId)
+      // Add condition to check which analysisId to use
+      const screenshotAnalysisId = AnalysisData.analysisID
+        ? AnalysisData.analysisID
+        : analysisId
 
-    // Store new screenshot in state
-    setAnalysisData(prevState => ({
-      ...prevState,
-      fullscreenshot: {
-          dataUrl: modifiednewscreenshots.dataUrl
-      }
-    }));
-  
-  console.log("New screenshot captured:", modifiednewscreenshots);
+      const modifiednewscreenshots: any =
+        await screenshot.captureAndStoreScreenshot(
+          screenshotAnalysisId, // Use the determined analysisId
+          url,
+          filename,
+          directory
+        )
+      console.log("modifiedscreenshots", modifiednewscreenshots)
 
-    
-  }catch (error) {
-      console.error("Error taking screenshot:", error);
-      alert("Failed to capture screenshot");
-  }finally {
-      setShowProgressBar(false);
-  }
-    
+      // Store new screenshot in state
+      setAnalysisData((prevState) => ({
+        ...prevState,
+        fullscreenshot: modifiednewscreenshots
+      }))
+
+      console.log("New screenshot captured:", modifiednewscreenshots)
+    } catch (error) {
+      console.error("Error taking screenshot:", error)
+      alert("Failed to capture screenshot")
+    } finally {
+      setShowProgressBar(false)
+    }
   }
 
   const visiblepagess = async () => {
     setShowProgressBar(true)
-
-    setAnalysisData(prevState => ({
+    updateProgressBar(10)
+    setAnalysisData((prevState) => ({
       ...prevState,
       visiblescreenshot: null
-    }));
+    }))
 
     const response: any = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
@@ -649,23 +654,31 @@ function SidePanel() {
 
     const { analysisId, url, filename, directory } = response
     let portname = "reportablescreenshotPort"
+    updateProgressBar(50)
+    const screenshotAnalysisId = AnalysisData.analysisID
+    ? AnalysisData.analysisID
+    : analysisId
 
-    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
-      analysisId,
-      url,
-      filename,
-      directory,
-      portname
-    )
+    const modifiednewscreenshots: any =
+      await screenshot.captureAndStoreScreenshot(
+        screenshotAnalysisId,
+        url,
+        filename,
+        directory,
+        portname
+      )
     console.log("modifiedscreenshots", modifiednewscreenshots)
-
-    setAnalysisData(prevState => ({
+    updateProgressBar(100)
+    
+    setAnalysisData((prevState) => ({
       ...prevState,
-      visiblescreenshot: {
-          dataUrl: modifiednewscreenshots.dataUrl
-      }
-    }));
-  
+      visiblescreenshot: modifiednewscreenshots
+    }))
+    setAnalysisId(AnalysisData.analysisID || analysisId)
+    setTimeout(() => {
+      setShowProgressBar(false)
+    }, 1000)
+   
   }
 
   const screenshot = {
@@ -922,7 +935,8 @@ function SidePanel() {
               setprojectStatus(request.data)
               if (
                 request.data === "Dokumente erfolgreich heruntergeladen." ||
-                request.data === "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
+                request.data ===
+                  "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
@@ -1290,7 +1304,6 @@ function SidePanel() {
                         Löschen
                       </button>
                     ) : (
-                     
                       <button
                         type="submit"
                         onMouseDown={(e) =>
@@ -1443,7 +1456,7 @@ function SidePanel() {
                   className="help-icon"
                   title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
                   ⓘ
-                </span>                       
+                </span>
               </label>
               <textarea
                 id="knownProfileInfo"
@@ -1480,7 +1493,7 @@ function SidePanel() {
                 onChange={handleInputPostChanges}
               />
               <label htmlFor="knownProfileInfo">
-                Bekannte Profilinformationen:{" "}
+                Bekannte Postinformationen:{" "}
                 <span
                   className="help-icon"
                   title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
