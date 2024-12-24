@@ -274,8 +274,8 @@ function SidePanel() {
     setbackgroundInfo(e.target.value)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const saveformdata = () => {
+    // e.preventDefault()
     // Save the formData locally using chrome.storage.local
     chrome.storage.local.set({ formData }, () => {
       console.log("Data saved locally", formData)
@@ -492,13 +492,13 @@ function SidePanel() {
 
   const saveBackgroundInfo = () => {
     // Trim and validate the backgroundInfo string
-    const trimmedBackgroundInfo = backgroundInfo.trim()
+    // const trimmedBackgroundInfo = backgroundInfo.trim()
 
-    // Check if the trimmed backgroundInfo is empty
-    if (trimmedBackgroundInfo === "") {
-      console.log("Empty input detected. Skipping save.")
-      return
-    }
+    // // Check if the trimmed backgroundInfo is empty
+    // if (trimmedBackgroundInfo === "") {
+    //   console.log("Empty input detected. Skipping save.")
+    //   return
+    // }
   
     
     chrome.storage.local.set({ backgroundInfo: backgroundInfo }, function () {
@@ -1242,7 +1242,7 @@ function SidePanel() {
                 <summary onClick={() => toggleSubSection("addressSection")}>
                   Adressdaten
                 </summary>
-                <form onSubmit={handleSubmit}>
+                <div>
                   <div>
                     <label htmlFor="senderAddress">
                       Absender:
@@ -1353,6 +1353,7 @@ function SidePanel() {
                     ) : (
                       <button
                         type="submit"
+                        onClick={saveformdata}
                         onMouseDown={(e) =>
                           (e.currentTarget.style.transform = "scale(0.9)")
                         }
@@ -1369,7 +1370,7 @@ function SidePanel() {
                       </button>
                     )}
                   </div>
-                </form>
+                </div>
               </details>
 
               <details id="backgroundInfoSection">
