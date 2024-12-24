@@ -216,7 +216,7 @@ async function getFormData() {
   })
 }
 
-export async function createFinalReport(results, originalUrl) {
+export async function createFinalReport(results, originalUrl="") {
   // First subfolder: "Anschreiben_Basis_Daten"
   let now = new Date()
   let year = now.getFullYear()

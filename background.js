@@ -294,7 +294,9 @@ async function startFullAnalysis() {
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
-      sendMessageToPopup("Entschuldigung, ich habe keine anzeigbaren Tweets gefunden.")
+      sendMessageToPopup(
+        "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
+      )
       return
     }
     // After processing, add analysis results to the ZIP Folder
@@ -424,7 +426,7 @@ async function processContent(messages) {
         const posts = JSON.parse(post.choices[0].message?.content)
         results.push(...(posts?.Posts || []))
       })
-     
+
       console.log("results>>>>>>>>>>>>>>", results)
     } catch (error) {
       console.error("Error fetching evaluation:", error)
@@ -590,7 +592,9 @@ async function captureReportablePostScreenshots(reportablePosts) {
         }
 
         let postReport = null
-        sendMessageToPopup("Suche Informationen zum User mit Hilfe von Perplexity...")
+        sendMessageToPopup(
+          "Suche Informationen zum User mit Hilfe von Perplexity..."
+        )
         const perplexityQuery = generatePerplexityPrompt(
           post.Username,
           scrapedData
@@ -898,14 +902,54 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "SEARCH_POST":
           const results = []
-          const { postUrl, knownPostInfo } = request.data
-          console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
-          //send both values to open ai
-          const message = {
-            posturl: postUrl,
-            postInfo: knownPostInfo
+          async function parseTwitterUrl(url) {
+            try {
+              const urlObj = new URL(url)
+
+              if (
+                !urlObj.hostname.includes("x.com") &&
+                !urlObj.hostname.includes("twitter.com")
+              ) {
+                throw new Error("Invalid Twitter/X URL")
+              }
+
+              const pathParts = urlObj.pathname.split("/").filter(Boolean)
+              if (pathParts.length < 1) {
+                throw new Error("No username found in URL")
+              }
+
+              const userName = pathParts[0]
+              const profileURl = `https://x.com/${userName}`
+
+              return {
+                userName,
+                profileURl
+              }
+            } catch (error) {
+              throw new Error(`Failed to parse URL: ${error.message}`)
+            }
           }
 
+          const { postUrl, knownPostInfo } = request.data
+          console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
+          const resp = await parseTwitterUrl(postUrl)
+          const { userName, profileURl } = resp
+          //send both values to open ai
+          const message = {
+            postUrl: postUrl,
+            handle: userName,
+            isTruncated: false,
+            postId: getActiveAnalysisId(),
+            postUrl: postUrl,
+            screenname: "",
+            text: knownPostInfo,
+            time: getCurrentTime(),
+            userProfileUrl: profileURl
+          }
+
+          let messages = []
+          messages.push(message)
+          console.log("messages>>>>>>.", messages)
           let backgroundInfo = ""
           try {
             const result = await chrome.storage.local.get(["backgroundInfo"])
@@ -919,8 +963,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           } catch (error) {
             console.error("Error retrieving background info:", error)
           }
-          
-          const API_KEY = await getAPIKey();
+
+          const API_KEY = await getAPIKey()
 
           let systemPromptWithContext = evaluatorSystemPrompt
           if (backgroundInfo.trim() !== "") {
@@ -948,7 +992,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               API_KEY,
               systemPromptWithContext,
               jsonSchema,
-              message
+              messages
             )
 
             console.log("Structured Response:", postresults)
@@ -966,21 +1010,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             )
 
             console.log("Reportable posts:", reportablePosts)
-               
+            sendResponse({
+              analysisId: getActiveAnalysisId(),
+              openairesponse: reportablePosts
+            })
           } catch (error) {
             console.error("Error fetching evaluation:", error)
           }
-          sendResponse({
-            analysisId: getActiveAnalysisId(),
-            openairesponse: reportablePosts
-          })
-
+         
           break
         case "getCurrentTime":
           const time = await getCurrentTime()
           sendResponse({ time: time })
           break
-
         case "getActiveAnalysisId":
           sendResponse({ analysisId: getActiveAnalysisId() })
           break

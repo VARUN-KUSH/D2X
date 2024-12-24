@@ -7,7 +7,13 @@ import {
   getFilename
 } from "utility"
 
+import { profileScrape } from "./contents/profile-scrapper.js"
+
 import "./popup.css"
+
+import { profile } from "node:console"
+import type { accessSync } from "node:fs"
+import { createFinalReport, downloadZip } from "utility"
 
 //need to handle bug when user clicks multiple times the start analysis button
 //edge cases
@@ -59,7 +65,9 @@ function SidePanel() {
     fullscreenshot: null,
     profile: null,
     posts: null,
-    analysisID: null
+    analysisID: null,
+    postsUrl: null,
+    profilescrape: null
   })
 
   const [base64data, setBase64Data] = useState(null)
@@ -133,71 +141,103 @@ function SidePanel() {
     }))
   }
 
-  const handleProfileSearch = () => {
+  const handleProfileSearch = async () => {
     // Send data to background script
     //first check the perplexity api is added and enabled
 
-    chrome.storage.local.get(["usePerplexity"], (result) => {
-      // If we have a stored value, use it to update our state
-      //if apikey added
+    // chrome.storage.local.get(["usePerplexity"], (result) => {
+    //   // If we have a stored value, use it to update our state
+    //   //if apikey added
 
-      if (result.usePerplexity !== undefined) {
-        setShowMessage("Please enable Perplexity.")
-        setTimeout(() => setShowMessage(""), 1000)
-        return
-      }
+    //   if (result.usePerplexity !== undefined) {
+    //     setShowMessage("Please enable Perplexity.")
+    //     setTimeout(() => setShowMessage(""), 1000)
+    //     return
+    //   }
 
-      const { perplexityApiKey } = apiKeys
-      if (!perplexityApiKey) {
-        setShowMessage("Please add PerplexityAI API key to start the analysis.")
-        setTimeout(() => setShowMessage(""), 1000)
-        return
-      }
+    //   const { perplexityApiKey } = apiKeys
+    //   if (!perplexityApiKey) {
+    //     setShowMessage("Please add PerplexityAI API key to start the analysis.")
+    //     setTimeout(() => setShowMessage(""), 1000)
+    //     return
+    //   }
 
-      setShowProgressBar(true)
+    //   setShowProgressBar(true)
 
-      // Store new screenshot in state
-      setAnalysisData((prevState) => ({
-        ...prevState,
-        profile: null
-      }))
-      const response: any = new Promise((resolve, reject) => {
-        chrome.runtime.sendMessage(
-          {
-            action: "SEARCH_PROFILE",
-            data: inputValues
-          },
-          function (response) {
-            if (response && response.analysisId) {
-              resolve(response)
-              setShowProgressBar(false)
-            } else {
-              console.error("Failed to start analysis", response)
-              alert("Failed to start analysis")
-              setShowProgressBar(false)
-              reject()
-              return
-            }
+    //   // Store new screenshot in state
+    //   setAnalysisData((prevState) => ({
+    //     ...prevState,
+    //     profile: null
+    //   }))
+    //   const response: any = new Promise((resolve, reject) => {
+    //     chrome.runtime.sendMessage(
+    //       {
+    //         action: "SEARCH_PROFILE",
+    //         data: inputValues
+    //       },
+    //       function (response) {
+    //         if (response && response.analysisId) {
+    //           resolve(response)
+    //           setShowProgressBar(false)
+    //         } else {
+    //           console.error("Failed to start analysis", response)
+    //           alert("Failed to start analysis")
+    //           setShowProgressBar(false)
+    //           reject()
+    //           return
+    //         }
+    //       }
+    //     )
+    //   })
+
+    //   const { analysisId, perplexityresponse } = response
+
+    //   console.log("perplexityresponse>>>>>>", perplexityresponse)
+    //   const parsedresponse = JSON.parse(perplexityresponse)
+    //   setAnalysisData((prevState) => ({
+    //     ...prevState,
+    //     profile: parsedresponse,
+    //     analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+    //   }))
+
+    //   // Update analysisId state using the same logic
+    //   setAnalysisId(AnalysisData.analysisID || analysisId)
+    // })
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    const scrapedData = await new Promise((resolve, reject) => {
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tab.id },
+          world: "MAIN", // Access the window object directly
+          func: profileScrape
+        },
+        (results) => {
+          if (chrome.runtime.lastError) {
+            console.error("Script injection failed:", chrome.runtime.lastError)
+            reject(chrome.runtime.lastError)
+          } else if (results && results[0]?.result !== undefined) {
+            console.log("Background script got callback after injection")
+            resolve(results[0].result) // Access the returned data here
+          } else {
+            console.error("No data returned from content script.")
+            resolve(null)
           }
-        )
-      })
-
-      const { analysisId, perplexityresponse } = response
-
-      console.log("perplexityresponse>>>>>>", perplexityresponse)
-      const parsedresponse = JSON.parse(perplexityresponse)
-      setAnalysisData((prevState) => ({
-        ...prevState,
-        profile: parsedresponse,
-        analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
-      }))
-
-      // Update analysisId state using the same logic
-      setAnalysisId(AnalysisData.analysisID || analysisId)
+        }
+      )
     })
+
+    console.log("scrapedprofileData", scrapedData)
+    setAnalysisData((prevState) => ({
+      ...prevState,
+      profilescrape: scrapedData
+    }))
+
+    // Update analysisId state using the same logic
+    // setAnalysisId(AnalysisData.analysisID || analysisId)
   }
 
-  const handlePostSearch = () => {
+  const handlePostSearch = async () => {
     // Send data to background script
     //first check the open api is added and enabled
 
@@ -209,13 +249,14 @@ function SidePanel() {
     }
 
     setShowProgressBar(true)
-
+    setProgress(10)
+    setprojectStatus("post is analysed by openai")
     setAnalysisData((prevState) => ({
       ...prevState,
       post: null
     }))
 
-    const response: any = new Promise((resolve, reject) => {
+    const response: any = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         {
           action: "SEARCH_POST",
@@ -235,7 +276,7 @@ function SidePanel() {
         }
       )
     })
-
+    setProgress(50)
     const { analysisId, openairesponse } = response
 
     console.log("openairesponse>>>>>>", openairesponse)
@@ -244,11 +285,15 @@ function SidePanel() {
     setAnalysisData((prevState) => ({
       ...prevState,
       posts: openairesponse,
-      analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+      analysisID: prevState.analysisID || analysisId, // Keep existing analysisID if it exists, otherwise use new one
+      postsUrl: openairesponse.Post_URL
     }))
-
+    setProgress(100)
     // Update analysisId state using the same logic
     setAnalysisId(AnalysisData.analysisID || analysisId)
+    setTimeout(() => {
+      setShowProgressBar(false)
+    }, 1000)
   }
 
   const handleBackgroundInfo = (e) => {
@@ -275,29 +320,73 @@ function SidePanel() {
     window.open(url, "_blank")
   }
 
-  const toggledownloadSection = () => {
-    if (!base64data) return
+  async function initiateDownload() {
+    try {
+      const zipBlob = await downloadZip()
 
-    // Decode base64 data and create a Blob
-    const byteCharacters = atob(base64data)
-    const byteNumbers = new Array(byteCharacters.length)
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i)
+      // Convert the Blob to a base64 string to send to the content script or popup
+      const reader: any = new FileReader()
+      reader.onloadend = () => {
+        const base64data = reader.result.split(",")[1] // Extract base64 part
+        // Decode base64 data and create a Blob
+        const byteCharacters = atob(base64data)
+        const byteNumbers = new Array(byteCharacters.length)
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i)
+        }
+        const byteArray = new Uint8Array(byteNumbers)
+        const zipBlob = new Blob([byteArray], { type: "application/zip" })
+
+        // Create a URL for the Blob and download it
+        const url = URL.createObjectURL(zipBlob)
+        const downloadName = "D2X_Report.zip"
+
+        const a = document.createElement("a")
+        a.href = url
+        a.download = downloadName
+        a.click()
+
+        // Clean up the URL after download
+        URL.revokeObjectURL(url)
+      }
+      reader.readAsDataURL(zipBlob)
+    } catch (error) {
+      console.error("Error during download:", error)
     }
-    const byteArray = new Uint8Array(byteNumbers)
-    const zipBlob = new Blob([byteArray], { type: "application/zip" })
+  }
 
-    // Create a URL for the Blob and download it
-    const url = URL.createObjectURL(zipBlob)
-    const downloadName = "D2X_Report.zip"
+  const toggledownloadSection = async () => {
+    if (
+      AnalysisData.fullscreenshot ||
+      AnalysisData.posts ||
+      AnalysisData.visiblescreenshot
+    ) {
+    }
+    if (
+      AnalysisData.fullscreenshot &&
+      AnalysisData.posts &&
+      AnalysisData.visiblescreenshot &&
+      AnalysisData.profilescrape
+    ) {
+      //handle the profile scraping
+      const results = {
+        ...AnalysisData.posts[0],
+        postScreenshot: AnalysisData.fullscreenshot,
+        profileScreenshot: AnalysisData.visiblescreenshot,
+        scrapedData: AnalysisData.profilescrape
+      }
+      console.log("results>>>>>>.", results)
+      const finalreport = {
+        originalUrl: AnalysisData.postsUrl,
+        reportablePostsArray: [...results]
+      }
 
-    const a = document.createElement("a")
-    a.href = url
-    a.download = downloadName
-    a.click()
-
-    // Clean up the URL after download
-    URL.revokeObjectURL(url)
+      await createFinalReport(
+        finalreport.reportablePostsArray,
+        finalreport.originalUrl
+      )
+      await initiateDownload()
+    }
   }
 
   const toggleSettingsSection = () => {
@@ -656,8 +745,8 @@ function SidePanel() {
     let portname = "reportablescreenshotPort"
     updateProgressBar(50)
     const screenshotAnalysisId = AnalysisData.analysisID
-    ? AnalysisData.analysisID
-    : analysisId
+      ? AnalysisData.analysisID
+      : analysisId
 
     const modifiednewscreenshots: any =
       await screenshot.captureAndStoreScreenshot(
@@ -669,7 +758,7 @@ function SidePanel() {
       )
     console.log("modifiedscreenshots", modifiednewscreenshots)
     updateProgressBar(100)
-    
+
     setAnalysisData((prevState) => ({
       ...prevState,
       visiblescreenshot: modifiednewscreenshots
@@ -678,7 +767,6 @@ function SidePanel() {
     setTimeout(() => {
       setShowProgressBar(false)
     }, 1000)
-   
   }
 
   const screenshot = {
@@ -907,7 +995,7 @@ function SidePanel() {
             case "downloadZip":
               const base64 = request.base64data
               console.log("base64data>>>>>>>>>>>", base64data)
-              // setBase64Data(base64data)
+
               const byteCharacters = atob(base64)
               const byteNumbers = new Array(byteCharacters.length)
               for (let i = 0; i < byteCharacters.length; i++) {
@@ -927,8 +1015,6 @@ function SidePanel() {
 
               // Clean up the URL after download
               URL.revokeObjectURL(url)
-              // Clear the base64 data to prevent duplicate downloads
-              request.base64data = null
               break
 
             case "processUpdate":
@@ -968,21 +1054,26 @@ function SidePanel() {
         {/* Display the message if it exists */}
 
         <div className="header-icons">
-          {base64data && (
-            <span
-              className="main-icon"
-              onClick={toggledownloadSection}
-              style={{
-                cursor: "pointer",
-                transition: "transform 0.1s ease-in-out"
-              }}
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "scale(0.9)")
-              }
-              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-              ⬇️
-            </span>
-          )}
+          {(AnalysisData.visiblescreenshot ||
+            AnalysisData.posts ||
+            AnalysisData.fullscreenshot ||
+            AnalysisData.profilescrape) && (
+              <span
+                className="main-icon"
+                onClick={toggledownloadSection}
+                style={{
+                  cursor: "pointer",
+                  transition: "transform 0.1s ease-in-out"
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.9)")
+                }
+                onMouseUp={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }>
+                ⬇️
+              </span>
+            )}
 
           <span
             id="mainLinkIcon"
@@ -1431,11 +1522,11 @@ function SidePanel() {
           </details>
 
           <details id="profileSection" open={openSection === "profileSection"}>
-            <summary onClick={(e) => toggleSection("profileSection", e)}>
+            {/* <summary onClick={(e) => toggleSection("profileSection", e)}>
               Profilrecherche
-            </summary>
+            </summary> */}
             <div>
-              <label htmlFor="profileUrl">
+              {/* <label htmlFor="profileUrl">
                 Profil-URL:{" "}
                 <span
                   className="help-icon"
@@ -1449,8 +1540,8 @@ function SidePanel() {
                 name="profileUrl"
                 value={inputValues.profileUrl}
                 onChange={handleInputChanges}
-              />
-              <label htmlFor="knownProfileInfo">
+              /> */}
+              {/* <label htmlFor="knownProfileInfo">
                 Bekannte Profilinformationen:{" "}
                 <span
                   className="help-icon"
@@ -1462,7 +1553,7 @@ function SidePanel() {
                 id="knownProfileInfo"
                 name="knownProfileInfo"
                 value={inputValues.knownProfileInfo}
-                onChange={handleInputChanges}></textarea>
+                onChange={handleInputChanges}></textarea> */}
               <button
                 id="searchProfile"
                 title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
