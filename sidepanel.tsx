@@ -11,10 +11,6 @@ import { profileScrape } from "./contents/profile-scrapper.js"
 
 import "./popup.css"
 
-import { profile } from "node:console"
-import type { accessSync } from "node:fs"
-import { createFinalReport, downloadZip } from "utility"
-
 //need to handle bug when user clicks multiple times the start analysis button
 //edge cases
 //disabling buttons when we start the automatic or manuala report creation until the process is complete
@@ -63,11 +59,11 @@ function SidePanel() {
   const [AnalysisData, setAnalysisData] = useState({
     visiblescreenshot: null,
     fullscreenshot: null,
-    profile: null,
     posts: null,
     analysisID: null,
     postsUrl: null,
-    profilescrape: null
+    profilesdata: null,
+    screenName: null
   })
 
   const [base64data, setBase64Data] = useState(null)
@@ -142,99 +138,77 @@ function SidePanel() {
   }
 
   const handleProfileSearch = async () => {
-    // Send data to background script
-    //first check the perplexity api is added and enabled
-
-    // chrome.storage.local.get(["usePerplexity"], (result) => {
-    //   // If we have a stored value, use it to update our state
-    //   //if apikey added
-
-    //   if (result.usePerplexity !== undefined) {
-    //     setShowMessage("Please enable Perplexity.")
-    //     setTimeout(() => setShowMessage(""), 1000)
-    //     return
-    //   }
-
-    //   const { perplexityApiKey } = apiKeys
-    //   if (!perplexityApiKey) {
-    //     setShowMessage("Please add PerplexityAI API key to start the analysis.")
-    //     setTimeout(() => setShowMessage(""), 1000)
-    //     return
-    //   }
-
-    //   setShowProgressBar(true)
-
-    //   // Store new screenshot in state
-    //   setAnalysisData((prevState) => ({
-    //     ...prevState,
-    //     profile: null
-    //   }))
-    //   const response: any = new Promise((resolve, reject) => {
-    //     chrome.runtime.sendMessage(
-    //       {
-    //         action: "SEARCH_PROFILE",
-    //         data: inputValues
-    //       },
-    //       function (response) {
-    //         if (response && response.analysisId) {
-    //           resolve(response)
-    //           setShowProgressBar(false)
-    //         } else {
-    //           console.error("Failed to start analysis", response)
-    //           alert("Failed to start analysis")
-    //           setShowProgressBar(false)
-    //           reject()
-    //           return
-    //         }
-    //       }
-    //     )
-    //   })
-
-    //   const { analysisId, perplexityresponse } = response
-
-    //   console.log("perplexityresponse>>>>>>", perplexityresponse)
-    //   const parsedresponse = JSON.parse(perplexityresponse)
-    //   setAnalysisData((prevState) => ({
-    //     ...prevState,
-    //     profile: parsedresponse,
-    //     analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
-    //   }))
-
-    //   // Update analysisId state using the same logic
-    //   setAnalysisId(AnalysisData.analysisID || analysisId)
-    // })
-
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    const scrapedData = await new Promise((resolve, reject) => {
-      chrome.scripting.executeScript(
+    // Store new screenshot in state
+    setprojectStatus("processing the profile info")
+    setAnalysisData((prevState) => ({
+      ...prevState,
+      profilesdata: null
+    }))
+    const response: any = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
         {
-          target: { tabId: tab.id },
-          world: "MAIN", // Access the window object directly
-          func: profileScrape
+          action: "SEARCH_PROFILE",
+          data: inputValues
         },
-        (results) => {
-          if (chrome.runtime.lastError) {
-            console.error("Script injection failed:", chrome.runtime.lastError)
-            reject(chrome.runtime.lastError)
-          } else if (results && results[0]?.result !== undefined) {
-            console.log("Background script got callback after injection")
-            resolve(results[0].result) // Access the returned data here
+        function (response) {
+          if (response && response.analysisId) {
+            resolve(response)
+            setShowProgressBar(false)
           } else {
-            console.error("No data returned from content script.")
-            resolve(null)
+            console.error("Failed to start analysis", response)
+            alert("Failed to start analysis")
+            setShowProgressBar(false)
+            reject()
+            return
           }
         }
       )
     })
 
-    console.log("scrapedprofileData", scrapedData)
+    const { analysisId, userprofiledata } = response
+    console.log("userprofiledata>>>>>>>", userprofiledata)
     setAnalysisData((prevState) => ({
       ...prevState,
-      profilescrape: scrapedData
+      profilesdata: userprofiledata,
+      screenName: userprofiledata.screenName || "",
+      analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
     }))
 
+    //   // Update analysisId state using the same logic
+    //   setAnalysisId(AnalysisData.analysisID || analysisId)
+    // })
+
+    // const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    // const scrapedData = await new Promise((resolve, reject) => {
+    //   chrome.scripting.executeScript(
+    //     {
+    //       target: { tabId: tab.id },
+    //       world: "MAIN", // Access the window object directly
+    //       func: profileScrape
+    //     },
+    //     (results) => {
+    //       if (chrome.runtime.lastError) {
+    //         console.error("Script injection failed:", chrome.runtime.lastError)
+    //         reject(chrome.runtime.lastError)
+    //       } else if (results && results[0]?.result !== undefined) {
+    //         console.log("Background script got callback after injection")
+    //         resolve(results[0].result) // Access the returned data here
+    //       } else {
+    //         console.error("No data returned from content script.")
+    //         resolve(null)
+    //       }
+    //     }
+    //   )
+    // })
+
+    // console.log("scrapedprofileData", scrapedData)
+    // setAnalysisData((prevState) => ({
+    //   ...prevState,
+    //   profilescrape: scrapedData
+    // }))
+
     // Update analysisId state using the same logic
-    // setAnalysisId(AnalysisData.analysisID || analysisId)
+    setAnalysisId(AnalysisData.analysisID || analysisId)
   }
 
   const handlePostSearch = async () => {
@@ -265,7 +239,7 @@ function SidePanel() {
         function (response) {
           if (response && response.analysisId) {
             resolve(response)
-            setShowProgressBar(false)
+            // setShowProgressBar(false)
           } else {
             console.error("Failed to start analysis", response)
             alert("Failed to start analysis")
@@ -286,7 +260,7 @@ function SidePanel() {
       ...prevState,
       posts: openairesponse,
       analysisID: prevState.analysisID || analysisId, // Keep existing analysisID if it exists, otherwise use new one
-      postsUrl: openairesponse.Post_URL
+      postsUrl: openairesponse[0].Post_URL
     }))
     setProgress(100)
     // Update analysisId state using the same logic
@@ -309,6 +283,31 @@ function SidePanel() {
     })
   }
 
+  useEffect(() => {
+    chrome.storage.local.get(["formData"], function (result) {
+      const formData = result.formData || {};
+      const {
+        senderAddress = "",
+        recipientAddress = "",
+        senderContactdetails = "",
+        city = "", 
+        fullName = ""
+      } = formData;
+      
+      setFormData(() => ({
+  
+        senderAddress,
+        recipientAddress,
+        senderContactdetails,
+        city,
+        fullName
+      }));
+
+      setisAddress(!!formData)
+    });
+  }, []);
+  
+  
   function updateProgressBar(progress) {
     setProgress(progress)
   }
@@ -320,72 +319,42 @@ function SidePanel() {
     window.open(url, "_blank")
   }
 
-  async function initiateDownload() {
-    try {
-      const zipBlob = await downloadZip()
-
-      // Convert the Blob to a base64 string to send to the content script or popup
-      const reader: any = new FileReader()
-      reader.onloadend = () => {
-        const base64data = reader.result.split(",")[1] // Extract base64 part
-        // Decode base64 data and create a Blob
-        const byteCharacters = atob(base64data)
-        const byteNumbers = new Array(byteCharacters.length)
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i)
-        }
-        const byteArray = new Uint8Array(byteNumbers)
-        const zipBlob = new Blob([byteArray], { type: "application/zip" })
-
-        // Create a URL for the Blob and download it
-        const url = URL.createObjectURL(zipBlob)
-        const downloadName = "D2X_Report.zip"
-
-        const a = document.createElement("a")
-        a.href = url
-        a.download = downloadName
-        a.click()
-
-        // Clean up the URL after download
-        URL.revokeObjectURL(url)
-      }
-      reader.readAsDataURL(zipBlob)
-    } catch (error) {
-      console.error("Error during download:", error)
-    }
-  }
-
   const toggledownloadSection = async () => {
-    if (
-      AnalysisData.fullscreenshot ||
-      AnalysisData.posts ||
-      AnalysisData.visiblescreenshot
-    ) {
-    }
+    console.log("in toggle")
+    console.log("AnalysisData>>>>>>>", AnalysisData)
+
     if (
       AnalysisData.fullscreenshot &&
       AnalysisData.posts &&
       AnalysisData.visiblescreenshot &&
-      AnalysisData.profilescrape
+      AnalysisData.profilesdata
     ) {
+      console.log("running the toggle download section")
       //handle the profile scraping
       const results = {
         ...AnalysisData.posts[0],
+        Screenname: AnalysisData.screenName,
         postScreenshot: AnalysisData.fullscreenshot,
         profileScreenshot: AnalysisData.visiblescreenshot,
-        scrapedData: AnalysisData.profilescrape
+        scrapedData: AnalysisData.profilesdata
       }
       console.log("results>>>>>>.", results)
       const finalreport = {
         originalUrl: AnalysisData.postsUrl,
-        reportablePostsArray: [...results]
+        reportablePostsArray: [results]
       }
 
-      await createFinalReport(
-        finalreport.reportablePostsArray,
-        finalreport.originalUrl
-      )
-      await initiateDownload()
+      // Send message to background.js
+      try {
+        const response = await chrome.runtime.sendMessage({
+          action: "SAVE_REPORT",
+          payload: finalreport
+        })
+        console.log("Response from background:", response)
+      } catch (error) {
+        console.error("Error sending message:", error)
+      }
+      return
     }
   }
 
@@ -530,10 +499,8 @@ function SidePanel() {
       console.log("Empty input detected. Skipping save.")
       return
     }
-    // Remove the assistant ID from chrome.storage.local
-    chrome.storage.local.remove("Assistantid", function () {
-      console.log("Assistant ID removed from local storage.")
-    })
+  
+    
     chrome.storage.local.set({ backgroundInfo: backgroundInfo }, function () {
       alert("Hintergrundinformationen erfolgreich gespeichert!")
       setbackgroundInfopresent(true)
@@ -565,31 +532,21 @@ function SidePanel() {
     )
   }, [])
 
-  const deleteBackgroundInfo = () => {
+  const editBackgroundInfo = () => {
     // Remove the assistant ID from chrome.storage.local
-    chrome.storage.local.remove("Assistantid", function () {
-      console.log("Assistant ID removed from local storage.")
-    })
+    // chrome.storage.local.remove("Assistantid", function () {
+    //   console.log("Assistant ID removed from local storage.")
+    // })
 
-    chrome.storage.local.remove("backgroundInfo", () => {
-      console.log("Background info removed.")
-      setbackgroundInfo("")
+    // chrome.storage.local.remove("backgroundInfo", () => {
+    //   console.log("Background info removed.")
+    //   setbackgroundInfo("")
       setbackgroundInfopresent(false)
-    })
+    // })
   }
 
-  const deleteaddress = () => {
-    chrome.storage.local.remove("formData", () => {
-      console.log("Address deleted")
-      setFormData({
-        senderAddress: "",
-        recipientAddress: "",
-        senderContactdetails: "",
-        city: "",
-        fullName: ""
-      })
-      setisAddress(false)
-    })
+  const editaddress = () => {
+    setisAddress(false)
   }
 
   const deleteAPIKey = (keyType) => {
@@ -658,7 +615,7 @@ function SidePanel() {
       // required things > fullpagess > ss + date + url + analysisId
       //get analysisId, time from background
       //
-
+      setprojectStatus("taking the full screenshots of this page")
       // First clear the existing screenshot
       setAnalysisData((prevState) => ({
         ...prevState,
@@ -719,6 +676,7 @@ function SidePanel() {
   const visiblepagess = async () => {
     setShowProgressBar(true)
     updateProgressBar(10)
+    setprojectStatus("screenshoting the user profile")
     setAnalysisData((prevState) => ({
       ...prevState,
       visiblescreenshot: null
@@ -1057,23 +1015,21 @@ function SidePanel() {
           {(AnalysisData.visiblescreenshot ||
             AnalysisData.posts ||
             AnalysisData.fullscreenshot ||
-            AnalysisData.profilescrape) && (
-              <span
-                className="main-icon"
-                onClick={toggledownloadSection}
-                style={{
-                  cursor: "pointer",
-                  transition: "transform 0.1s ease-in-out"
-                }}
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.9)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "scale(1)")
-                }>
-                ⬇️
-              </span>
-            )}
+            AnalysisData.profilesdata) && (
+            <span
+              className="main-icon"
+              onClick={toggledownloadSection}
+              style={{
+                cursor: "pointer",
+                transition: "transform 0.1s ease-in-out"
+              }}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.9)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+              ⬇️
+            </span>
+          )}
 
           <span
             id="mainLinkIcon"
@@ -1378,7 +1334,7 @@ function SidePanel() {
                       <button
                         id="deletebutton"
                         type="button"
-                        onClick={deleteaddress}
+                        onClick={editaddress}
                         style={{
                           backgroundColor: "red",
                           color: "white",
@@ -1392,7 +1348,7 @@ function SidePanel() {
                         onMouseUp={(e) =>
                           (e.currentTarget.style.transform = "scale(1)")
                         }>
-                        Löschen
+                        edit
                       </button>
                     ) : (
                       <button
@@ -1440,7 +1396,7 @@ function SidePanel() {
                   {backgroundInfopresent ? (
                     <button
                       id="deletebutton"
-                      onClick={deleteBackgroundInfo}
+                      onClick={editBackgroundInfo}
                       style={{
                         backgroundColor: "red",
                         color: "white",
@@ -1454,7 +1410,7 @@ function SidePanel() {
                       onMouseUp={(e) =>
                         (e.currentTarget.style.transform = "scale(1)")
                       }>
-                      Löschen
+                      edit
                     </button>
                   ) : (
                     <button
@@ -1522,11 +1478,11 @@ function SidePanel() {
           </details>
 
           <details id="profileSection" open={openSection === "profileSection"}>
-            {/* <summary onClick={(e) => toggleSection("profileSection", e)}>
+            <summary onClick={(e) => toggleSection("profileSection", e)}>
               Profilrecherche
-            </summary> */}
+            </summary>
             <div>
-              {/* <label htmlFor="profileUrl">
+              <label htmlFor="profileUrl">
                 Profil-URL:{" "}
                 <span
                   className="help-icon"
@@ -1540,8 +1496,8 @@ function SidePanel() {
                 name="profileUrl"
                 value={inputValues.profileUrl}
                 onChange={handleInputChanges}
-              /> */}
-              {/* <label htmlFor="knownProfileInfo">
+              />
+              <label htmlFor="knownProfileInfo">
                 Bekannte Profilinformationen:{" "}
                 <span
                   className="help-icon"
@@ -1553,7 +1509,7 @@ function SidePanel() {
                 id="knownProfileInfo"
                 name="knownProfileInfo"
                 value={inputValues.knownProfileInfo}
-                onChange={handleInputChanges}></textarea> */}
+                onChange={handleInputChanges}></textarea>
               <button
                 id="searchProfile"
                 title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."

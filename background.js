@@ -872,9 +872,63 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           //call perplexity and the create a folder which contains the report
           const { profileUrl, knownProfileInfo } = request.data
 
+          function parseTwitterProfile(profileText) {
+            const lines = profileText
+              .split("\n")
+              .map((line) => line.trim())
+              .filter((line) => line)
+
+            const extractNumber = (text) => {
+              const match = text.match(/\d+/)
+              return match ? parseInt(match[0]) : 0
+            }
+
+            const profile = {
+              screenName: lines[0] || "",
+              username: (lines[1] || "").replace("@", ""),
+              profilebiodata: lines[2] || "",
+              userlocation: "",
+              userBirthdate: "",
+              userJoindate: "",
+              followingCount: 0,
+              followersCount: 0,
+              isVerified: false
+            }
+
+            // Parse the metadata line (location, DOB, join date, verification)
+            const metadataLine = lines[3] || ""
+            if (metadataLine) {
+              const parts = metadataLine.split(/(?=(?:Born|Joined|Verified))/)
+              parts.forEach((part) => {
+                if (part.includes("Born")) {
+                  profile.dob = part.replace("Born", "").trim()
+                } else if (part.includes("Joined")) {
+                  profile.joinDate = part.replace("Joined", "").trim()
+                } else if (part.includes("Verified")) {
+                  profile.isVerified = true
+                } else {
+                  profile.location = part.trim()
+                }
+              })
+            }
+
+            // Parse following/followers counts
+            lines.forEach((line) => {
+              if (line.includes("Following")) {
+                profile.followingCount = extractNumber(line)
+              } else if (line.includes("Followers")) {
+                profile.followersCount = extractNumber(line)
+              }
+            })
+
+            return profile
+          }
+
+          const userprofiledata = parseTwitterProfile(knownProfileInfo)
           // Now you have access to `profileUrl` and `knownProfileInfo`
           console.log("Profile URL:", profileUrl)
           console.log("Known Profile Info:", knownProfileInfo)
+          console.log("userprofiledata>>>>>", userprofiledata)
 
           // Define a regular expression to match profile URLs in the format https://x.com/[username]
           const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
@@ -888,15 +942,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log("Profile URL does not match the expected format.")
           }
 
-          const perplexityQuery = generatePerplexityPrompt(
-            username,
-            knownProfileInfo
-          )
-          const perplexityresponse = await callPerplexity(perplexityQuery)
-          console.log("perplexityresponse>>>>>>>>>>>", perplexityresponse)
           sendResponse({
             analysisId: getActiveAnalysisId(),
-            perplexityresponse: perplexityresponse
+            userprofiledata: userprofiledata
           })
           break
 
@@ -1017,7 +1065,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           } catch (error) {
             console.error("Error fetching evaluation:", error)
           }
-         
+
           break
         case "getCurrentTime":
           const time = await getCurrentTime()
@@ -1047,42 +1095,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse(scrapedPost)
           break
 
-        // case "setAPIKey":
-        //   await setAPIKey(request.apiKey)
-        //   sendResponse({ status: "API Key set successfully" })
-        //   break
 
-        //        case "screenshotCaptured":
-        //          await handleCapturedScreenshot(request);
-        //          break;
-
-        // case "toggleDownloadSection":
-        //   const zipBlob = await downloadZip()
-        //   // Create a URL for the Blob and download it
-        //   const url = URL.createObjectURL(zipBlob)
-        //   const downloadName = "D2X_Report.zip"
-
-        //   chrome.downloads.download({
-        //     url: url,
-        //     filename: downloadName,
-        //     saveAs: true
-        //   })
-
-        //   // Clean up the URL object after download
-        //   URL.revokeObjectURL(url)
-
-        //   sendResponse({ status: "Download section toggled" })
-        //   break
+        case "SAVE_REPORT":
+           // Handle the finalreport data
+          const report = request.payload;
+          await createFinalReport(report.originalUrl, report.reportablePostsArray)
+          await initiateDownload()
+          sendResponse({ status: "Download section toggled" })
+          break
 
         case "screenshotError":
           console.error("Fehler bei der Screenshot-Erfassung:", request.error)
           break
 
-        //  case'captureVisibleTabofx':
-        //   chrome.tabs.captureVisibleTab(null, { format: 'png' }, dataUrl => {
-        //     sendResponse({ dataUrl });
-        //   });
-        //   return true;
 
         default:
           console.warn("Unhandled message action:", request.action)
