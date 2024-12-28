@@ -1,4 +1,7 @@
-export {}
+export const config = {
+  matches: ["https://x.com/*"],
+  all_frames: true
+}
 
 console.log("D2X content script loaded", new Date().toISOString())
 
@@ -136,58 +139,56 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log("Message received in content script:", request)
   // Handle the disableTwitterHeader and enableTwitterHeader actions
   const headerElement = document.querySelector('header[role="banner"]')
- //localStorage event save and action based on event
+  //localStorage event save and action based on event
 
   if (request.action === "disableTwitterHeader") {
     if (headerElement) {
       headerElement.style.display = "none" // Hide the header
       console.log("Twitter header disabled")
-      chrome.storage.local.set({ disableTwitterHeader: true }); // Save setting to chrome.storage
-    
+      chrome.storage.local.set({ disableTwitterHeader: true }) // Save setting to chrome.storage
     }
     sendResponse({ status: "Twitter header disabled" })
   } else if (request.action === "enableTwitterHeader") {
     if (headerElement) {
       headerElement.style.display = "" // Show the header
       console.log("Twitter header enabled")
-      chrome.storage.local.set({ disableTwitterHeader: false }); 
+      chrome.storage.local.set({ disableTwitterHeader: false })
     }
     sendResponse({ status: "Twitter header enabled" })
   }
 })
- // to disable twitter header every time tab updates
- function checkTwitterHeaderVisibility() {
+// to disable twitter header every time tab updates
+function checkTwitterHeaderVisibility() {
   // Function to recursively wait for the header element to load
   function waitForHeader() {
-    const headerElement = document.querySelector('header[role="banner"]');
+    const headerElement = document.querySelector('header[role="banner"]')
     if (headerElement) {
       chrome.storage.local.get("disableTwitterHeader", (result) => {
-        console.log("Inside the header visibility function");
-        const disableTwitterHeader = result.disableTwitterHeader || false;
-        console.log("disableTwitterHeader:", disableTwitterHeader);
-        console.log("headerElement found:", headerElement);
+        console.log("Inside the header visibility function")
+        const disableTwitterHeader = result.disableTwitterHeader || false
+        console.log("disableTwitterHeader:", disableTwitterHeader)
+        console.log("headerElement found:", headerElement)
         if (disableTwitterHeader) {
-          headerElement.style.display = "none"; // Hide the header
-          console.log("Twitter header is hidden (based on chrome.storage)");
+          headerElement.style.display = "none" // Hide the header
+          console.log("Twitter header is hidden (based on chrome.storage)")
         } else {
-          headerElement.style.display = ""; // Show the header
-          console.log("Twitter header is visible (based on chrome.storage)");
+          headerElement.style.display = "" // Show the header
+          console.log("Twitter header is visible (based on chrome.storage)")
         }
-      });
+      })
     } else {
       // If headerElement is not found, wait a little and try again
-      console.log("Waiting for headerElement to be available...");
-      setTimeout(waitForHeader, 100); // Check every 100 milliseconds
+      console.log("Waiting for headerElement to be available...")
+      setTimeout(waitForHeader, 100) // Check every 100 milliseconds
     }
   }
 
   // Run the wait function on page load or reload
-  waitForHeader();
+  waitForHeader()
 }
 
 // Run the function to check header visibility on page load
-checkTwitterHeaderVisibility();
-
+checkTwitterHeaderVisibility()
 
 chrome.runtime.onConnect.addListener(function (port) {
   if (port.name === "scrapingChannel") {
@@ -253,4 +254,3 @@ chrome.runtime.onConnect.addListener(function (port) {
 
 // Initialize TwitterScraper when the content script loads
 initializeTwitterScraper()
-

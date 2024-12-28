@@ -1,6 +1,6 @@
 {
   "name": "twitter_threat",
-  "displayName": "Twitter threat",
+  "displayName": "Strafanzeiger",
   "version": "0.0.1",
   "description": "extension to combat onilne harassment on Twitter/X",
   "author": "varun",
@@ -50,7 +50,8 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "Anzeigen_neu_generieren.html"
+          "tabs/Anzeigen_neu_generieren.html",
+          "tabs/Uber_D2X.html"
         ],
         "matches": [
           "<all_urls>"

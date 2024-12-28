@@ -4,6 +4,7 @@ import {
   addTimestampToScreenshots,
   addToZip,
   capturereportablessandchangetoURLs,
+  downloadScreenshots,
   getFilename
 } from "utility"
 
@@ -63,7 +64,12 @@ function SidePanel() {
     analysisID: null,
     postsUrl: null,
     profilesdata: null,
-    screenName: null
+    screenName: null,
+    perplexityresponse: null,
+    fullscreenshotfilename: null,
+    fullscreenshotdirectory: null,
+    capturevisiblescreenshotfilename: null,
+    capturevisiblescreenshotdirectory: null
   })
 
   const [base64data, setBase64Data] = useState(null)
@@ -138,11 +144,33 @@ function SidePanel() {
   }
 
   const handleProfileSearch = async () => {
-    // Store new screenshot in state
-    setprojectStatus("processing the profile info")
+    const { perplexityApiKey } = apiKeys
+    if (!perplexityApiKey) {
+      setShowMessage("Please add PerplexityAI API key to start the analysis.")
+      setTimeout(() => setShowMessage(""), 1000)
+      return
+    }
+    //update it to simply ask from checkbox not locally
+    const usePerplexity = await new Promise((resolve) => {
+      chrome.storage.local.get("usePerplexity", (result) => {
+        resolve(result.usePerplexity)
+        return
+        //handle edge cases if keys are not added
+      })
+    })
+    if (!usePerplexity) {
+      setShowMessage("Perplexity toggle is disabled")
+      setTimeout(() => setShowMessage(""), 1000)
+      return
+    }
+
+    setShowProgressBar(true)
+    setProgress(10)
+    setprojectStatus("processing the profile info from perplexity")
     setAnalysisData((prevState) => ({
       ...prevState,
-      profilesdata: null
+      profilesdata: null,
+      perplexityresponse: null
     }))
     const response: any = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
@@ -153,7 +181,6 @@ function SidePanel() {
         function (response) {
           if (response && response.analysisId) {
             resolve(response)
-            setShowProgressBar(false)
           } else {
             console.error("Failed to start analysis", response)
             alert("Failed to start analysis")
@@ -164,51 +191,28 @@ function SidePanel() {
         }
       )
     })
-
-    const { analysisId, userprofiledata } = response
-    console.log("userprofiledata>>>>>>>", userprofiledata)
+    setProgress(50)
+    const { analysisId, perplexityresponse, userprofileinfo } = response
+    console.log(
+      "perplexityresponse>>>>>>>",
+      perplexityresponse,
+      "userprofileinfo>>>",
+      userprofileinfo
+    )
     setAnalysisData((prevState) => ({
       ...prevState,
-      profilesdata: userprofiledata,
-      screenName: userprofiledata.screenName || "",
+      profilesdata: userprofileinfo || "",
+      perplexityresponse: perplexityresponse,
+      screenName: userprofileinfo?.screenname || "",
       analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
     }))
 
-    //   // Update analysisId state using the same logic
-    //   setAnalysisId(AnalysisData.analysisID || analysisId)
-    // })
-
-    // const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    // const scrapedData = await new Promise((resolve, reject) => {
-    //   chrome.scripting.executeScript(
-    //     {
-    //       target: { tabId: tab.id },
-    //       world: "MAIN", // Access the window object directly
-    //       func: profileScrape
-    //     },
-    //     (results) => {
-    //       if (chrome.runtime.lastError) {
-    //         console.error("Script injection failed:", chrome.runtime.lastError)
-    //         reject(chrome.runtime.lastError)
-    //       } else if (results && results[0]?.result !== undefined) {
-    //         console.log("Background script got callback after injection")
-    //         resolve(results[0].result) // Access the returned data here
-    //       } else {
-    //         console.error("No data returned from content script.")
-    //         resolve(null)
-    //       }
-    //     }
-    //   )
-    // })
-
-    // console.log("scrapedprofileData", scrapedData)
-    // setAnalysisData((prevState) => ({
-    //   ...prevState,
-    //   profilescrape: scrapedData
-    // }))
-
     // Update analysisId state using the same logic
+    setProgress(100)
     setAnalysisId(AnalysisData.analysisID || analysisId)
+    setTimeout(() => {
+      setShowProgressBar(false)
+    }, 1000)
   }
 
   const handlePostSearch = async () => {
@@ -255,12 +259,18 @@ function SidePanel() {
 
     console.log("openairesponse>>>>>>", openairesponse)
 
+    if (!(openairesponse.length > 0)) {
+      setprojectStatus("post is not found reportable by openai")
+      setShowProgressBar(false)
+      return
+    }
+
     // Combine both state updates into a single conditional update
     setAnalysisData((prevState) => ({
       ...prevState,
-      posts: openairesponse,
+      posts: openairesponse || "",
       analysisID: prevState.analysisID || analysisId, // Keep existing analysisID if it exists, otherwise use new one
-      postsUrl: openairesponse[0].Post_URL
+      postsUrl: openairesponse[0]?.Post_URL || ""
     }))
     setProgress(100)
     // Update analysisId state using the same logic
@@ -285,64 +295,173 @@ function SidePanel() {
 
   useEffect(() => {
     chrome.storage.local.get(["formData"], function (result) {
-      const formData = result.formData || {};
+      const formData = result.formData || {}
       const {
         senderAddress = "",
         recipientAddress = "",
         senderContactdetails = "",
-        city = "", 
+        city = "",
         fullName = ""
-      } = formData;
-      
+      } = formData
+
       setFormData(() => ({
-  
         senderAddress,
         recipientAddress,
         senderContactdetails,
         city,
         fullName
-      }));
+      }))
 
       setisAddress(!!formData)
-    });
-  }, []);
-  
-  
+    })
+  }, [])
+
   function updateProgressBar(progress) {
     setProgress(progress)
   }
   const toggleHelpSection = () => {
-    // setShowSettingsSection(false)
-    // setShowHelpSection(!showHelpSection)
-    const url =
-      "chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/tabs/Uber_D2X.html"
-    window.open(url, "_blank")
+    chrome.runtime.sendMessage({
+      action: "openNewTab",
+      url: "tabs/Anzeigen_neu_generieren.html"
+    })
   }
 
   const toggledownloadSection = async () => {
+    setupMessageListener()
+    // Helper function to clear all states
+    const clearAllStates = () => {
+      setAnalysisData({
+        visiblescreenshot: null,
+        fullscreenshot: null,
+        posts: null,
+        analysisID: null,
+        postsUrl: null,
+        profilesdata: null,
+        screenName: null,
+        perplexityresponse: null,
+        fullscreenshotfilename: null,
+        fullscreenshotdirectory: null,
+        capturevisiblescreenshotfilename: null,
+        capturevisiblescreenshotdirectory: null
+      })
+      console.log("All states cleared after download")
+    }
     console.log("in toggle")
     console.log("AnalysisData>>>>>>>", AnalysisData)
+    // when only each func is present
 
+    // Case 1: Only fullscreenshot is present
     if (
+      AnalysisData.fullscreenshot &&
+      !AnalysisData.posts &&
+      !AnalysisData.visiblescreenshot &&
+      !AnalysisData.profilesdata &&
+      !AnalysisData.perplexityresponse
+    ) {
+      downloadScreenshots(
+        AnalysisData.fullscreenshot[0],
+        AnalysisData.fullscreenshotfilename,
+        AnalysisData.fullscreenshotdirectory
+      )
+    }
+
+    // Case 2: Only visiblescreenshot is present
+    else if (
+      !AnalysisData.fullscreenshot &&
+      !AnalysisData.posts &&
+      AnalysisData.visiblescreenshot &&
+      !AnalysisData.profilesdata &&
+      !AnalysisData.perplexityresponse
+    ) {
+      downloadScreenshots(
+        AnalysisData.visiblescreenshot[0],
+        AnalysisData.capturevisiblescreenshotfilename,
+        AnalysisData.capturevisiblescreenshotdirectory
+      )
+    }
+
+    // Case 3: Only perplexityresponse exists
+    else if (
+      !AnalysisData.fullscreenshot &&
+      !AnalysisData.posts &&
+      !AnalysisData.visiblescreenshot &&
+      AnalysisData.profilesdata &&
+      AnalysisData.perplexityresponse
+    ) {
+      const results = {
+        User_Profil_URL: inputValues.profileUrl,
+        Username: AnalysisData.profilesdata?.username,
+        Screenname: AnalysisData.screenName || "",
+        perplexityresponse: AnalysisData.perplexityresponse || "",
+        scrapedData: AnalysisData.profilesdata
+      }
+
+      const finalreport = {
+        reportablePostsArray: [results]
+      }
+
+      try {
+        const response = await chrome.runtime.sendMessage({
+          action: "SaveProfileReport",
+          payload: finalreport
+        })
+        console.log("Response from background:", response)
+      } catch (error) {
+        console.error("Error sending message:", error)
+      }
+    }
+
+    // Case 4: Only posts is present
+    else if (
+      !AnalysisData.fullscreenshot &&
+      AnalysisData.posts &&
+      !AnalysisData.visiblescreenshot &&
+      !AnalysisData.profilesdata &&
+      !AnalysisData.perplexityresponse
+    ) {
+      const results = {
+        ...(AnalysisData.posts[0] || "")
+      }
+
+      const finalreport = {
+        originalUrl: AnalysisData.postsUrl,
+        reportablePostsArray: [results]
+      }
+
+      // Send message to background.js
+      try {
+        const response = await chrome.runtime.sendMessage({
+          action:  "SavepostReport",
+          payload: finalreport
+        })
+        
+        console.log("Response from background:", response)
+      } catch (error) {
+        console.error("Error sending message:", error)
+      }
+    } else if (
       AnalysisData.fullscreenshot &&
       AnalysisData.posts &&
       AnalysisData.visiblescreenshot &&
-      AnalysisData.profilesdata
+      AnalysisData.profilesdata &&
+      AnalysisData.perplexityresponse
     ) {
-      console.log("running the toggle download section")
-      //handle the profile scraping
       const results = {
-        ...AnalysisData.posts[0],
-        Screenname: AnalysisData.screenName,
-        postScreenshot: AnalysisData.fullscreenshot,
-        profileScreenshot: AnalysisData.visiblescreenshot,
-        scrapedData: AnalysisData.profilesdata
+        ...(AnalysisData.posts[0] || ""),
+        Screenname: AnalysisData.screenName || "",
+        postScreenshot: AnalysisData.fullscreenshot || " ",
+        profileScreenshot: AnalysisData.visiblescreenshot || "",
+        scrapedData: AnalysisData.profilesdata || "",
+        perplexityresponse: AnalysisData.perplexityresponse || ""
       }
       console.log("results>>>>>>.", results)
       const finalreport = {
         originalUrl: AnalysisData.postsUrl,
         reportablePostsArray: [results]
       }
+
+      console.log("running the toggle download section")
+      //handle the profile scraping
 
       // Send message to background.js
       try {
@@ -354,8 +473,9 @@ function SidePanel() {
       } catch (error) {
         console.error("Error sending message:", error)
       }
-      return
     }
+
+    clearAllStates()
   }
 
   const toggleSettingsSection = () => {
@@ -499,8 +619,7 @@ function SidePanel() {
     //   console.log("Empty input detected. Skipping save.")
     //   return
     // }
-  
-    
+
     chrome.storage.local.set({ backgroundInfo: backgroundInfo }, function () {
       alert("Hintergrundinformationen erfolgreich gespeichert!")
       setbackgroundInfopresent(true)
@@ -541,7 +660,7 @@ function SidePanel() {
     // chrome.storage.local.remove("backgroundInfo", () => {
     //   console.log("Background info removed.")
     //   setbackgroundInfo("")
-      setbackgroundInfopresent(false)
+    setbackgroundInfopresent(false)
     // })
   }
 
@@ -582,12 +701,6 @@ function SidePanel() {
       setTimeout(() => setShowMessage(""), 1000)
       return
     }
-
-    // If Perplexity key is missing, show a message but still proceed
-    // if (!perplexityApiKey) {
-    //   setShowMessage("Perplexity key is not added.")
-    //   setTimeout(() => setShowMessage(""), 1000)
-    // }
 
     setShowProgressBar(true)
     chrome.runtime.sendMessage(
@@ -661,7 +774,9 @@ function SidePanel() {
       // Store new screenshot in state
       setAnalysisData((prevState) => ({
         ...prevState,
-        fullscreenshot: modifiednewscreenshots
+        fullscreenshot: modifiednewscreenshots,
+        fullscreenshotfilename: filename,
+        fullscreenshotdirectory: directory
       }))
 
       console.log("New screenshot captured:", modifiednewscreenshots)
@@ -719,7 +834,9 @@ function SidePanel() {
 
     setAnalysisData((prevState) => ({
       ...prevState,
-      visiblescreenshot: modifiednewscreenshots
+      visiblescreenshot: modifiednewscreenshots,
+      capturevisiblescreenshotfilename: filename,
+      capturevisiblescreenshotdirectory: directory
     }))
     setAnalysisId(AnalysisData.analysisID || analysisId)
     setTimeout(() => {
@@ -822,12 +939,12 @@ function SidePanel() {
                 console.log("processedScreenshots>>>>>>>>>>>>>>>>>", blobURLs)
                 // Add processed screenshots to ZIP
 
-                for (let i = 0; i < blobURLs.length; i++) {
-                  const response = await fetch(blobURLs[i])
-                  const blob = await response.blob()
-                  const fileName = filename || `screenshot_${i + 1}.png`
-                  addToZip(blob, fileName, directory)
-                }
+                // for (let i = 0; i < blobURLs.length; i++) {
+                //   const response = await fetch(blobURLs[i])
+                //   const blob = await response.blob()
+                //   const fileName = filename || `screenshot_${i + 1}.png`
+                //   addToZip(blob, fileName, directory)
+                // }
 
                 resolve(blobURLs)
                 return
@@ -843,9 +960,10 @@ function SidePanel() {
   }
 
   const handleLinkClick = () => {
-    const url =
-      "chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/tabs/Anzeigen_neu_generieren.html"
-    window.open(url, "_blank")
+    chrome.runtime.sendMessage({
+      action: "openNewTab",
+      url: "tabs/Uber_D2X.html"
+    })
   }
 
   const setupMessageListener = () => {
@@ -912,21 +1030,6 @@ function SidePanel() {
               setProgress(request.progress)
               break
 
-            // case "captureScreenshot":
-            //   console.log("start taking full screenshot in sidepanel")
-            //   const modifiednewscreenshots =
-            //     await screenshot.captureAndStoreScreenshot(
-            //       request.analysisId,
-            //       request.url,
-            //       request.filename,
-            //       request.directory
-            //     )
-            //   sendResponse({
-            //     success: true,
-            //     modifiedscreenshots: modifiednewscreenshots
-            //   })
-            //   return true
-
             case "analysisComplete":
               // Handle ZIP file generation and download
               break
@@ -951,8 +1054,9 @@ function SidePanel() {
               break
 
             case "downloadZip":
+              console.log("recieved message", request)
               const base64 = request.base64data
-              console.log("base64data>>>>>>>>>>>", base64data)
+              console.log("base64>>>>>>>>>>>", base64)
 
               const byteCharacters = atob(base64)
               const byteNumbers = new Array(byteCharacters.length)
@@ -1008,9 +1112,8 @@ function SidePanel() {
   return (
     <div>
       <header>
-        <h1>D2X</h1>
+        <h1>Strafanzeiger</h1>
         {/* Display the message if it exists */}
-
         <div className="header-icons">
           {(AnalysisData.visiblescreenshot ||
             AnalysisData.posts ||

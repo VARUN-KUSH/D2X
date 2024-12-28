@@ -45,7 +45,6 @@ export async function capturereportablessandchangetoURLs(
     // Step 3: Create a Blob URL for the captured screenshot
     const screenshotBlobUrl = URL.createObjectURL(blob)
 
-    
     // Step 5: Process the screenshot and add timestamps using addTimestampToScreenshots
     const processedScreenshot = await addTimestampToScreenshots(
       [screenshotBlobUrl], // Screenshot file array (only 1 in this case)
@@ -135,15 +134,15 @@ export async function addToZip(fileData, filename, directory) {
   )
 
   // No need to fetch; `fileData` is already a Blob
-  const blobData = fileData;
+  const blobData = fileData
 
   if (directory) {
-    zip.folder(directory).file(filename, blobData, { binary: true });
+    zip.folder(directory).file(filename, blobData, { binary: true })
   } else {
-    zip.file(filename, blobData, { binary: true });
+    zip.file(filename, blobData, { binary: true })
   }
 
-  await downloadallfullfilesZip();
+  await downloadallfullfilesZip()
 }
 
 // function _initScreenshots(totalWidth, totalHeight) {
@@ -216,8 +215,7 @@ async function getFormData() {
   })
 }
 
-export async function createFinalReport(results, originalUrl="") {
-  // First subfolder: "Anschreiben_Basis_Daten"
+export async function downloadprofilereport(results) {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
@@ -226,16 +224,13 @@ export async function createFinalReport(results, originalUrl="") {
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
 
-  // Create folder name in format D2X_Report_year.month.date.time
-  let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
-  let mainFolder = zip.folder(folderName) // Main folder
-  let formData;
+  let mainFolder = zip.folder('D2X_Report') // Main folder
+  let formData = {}
   try {
-    formData = await getFormData();
-    console.log("Retrieved formData:", formData);
+    formData = await getFormData()
+    console.log("Retrieved formData:", formData)
   } catch (error) {
-    console.error("Error retrieving form data:", error);
-    formData = {};
+    console.error("Error retrieving form data:", error)
   }
   const {
     senderAddress = "",
@@ -243,10 +238,11 @@ export async function createFinalReport(results, originalUrl="") {
     senderContactdetails = "",
     city = "",
     fullName = ""
-  } = formData || {};
+  } = formData || {}
 
   // Helper function to format data with new lines
-  function formatText(text) {
+  function formatText(text = "") {
+    if (!text) return ""
     return text
       .split(",")
       .map((item) => item.trim())
@@ -254,7 +250,10 @@ export async function createFinalReport(results, originalUrl="") {
   }
 
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
-  mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${originalUrl}`)
+  mainFolder.file(
+    "initialPostUrl.txt",
+    `URL des Ausgangsposts: ${""}`
+  )
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
 
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
@@ -279,22 +278,328 @@ export async function createFinalReport(results, originalUrl="") {
   // Create folders for each unique username in results array
   let uniqueUsernames = [...new Set(results.map((item) => item.Username))]
   for (let username of uniqueUsernames) {
-    let userFolder = mainFolder.folder(username)
-    let post = results.find((item) => item.Username === username)
+    const userFolder = mainFolder.folder(username)
+    const post = results.find((item) => item.Username === username)
+
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `${post.perplexityresponse.online_praesenz}`
+      `${post.perplexityresponse?.online_praesenz || ""}`
     )
     userFolder.file(
       `profilUrl.txt`,
-      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`
+      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
     )
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `Biografie: ${post.scrapedData.profilebiodata}
-      ${post.scrapedData.userJoindate}
-      Folgt: ${post.scrapedData.followingCount}
-      Follower: ${post.scrapedData.followersCount} `
+      `Biografie: ${post.scrapedData?.profilebiodata}
+      ${post.scrapedData?.userJoindate}
+      Folgt: ${post.scrapedData?.followingCount}
+      Follower: ${post.scrapedData?.followersCount} `
+    )
+    userFolder.file(
+      `userHandle.txt`,
+      `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`
+    )
+    userFolder.file(
+      `screenname.txt`,
+      `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
+    )
+  }
+}
+export async function downloadpostreport(results, originalUrl) {
+  let now = new Date()
+  let year = now.getFullYear()
+  let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
+  let date = String(now.getDate()).padStart(2, "0")
+  let hours = String(now.getHours()).padStart(2, "0")
+  let minutes = String(now.getMinutes()).padStart(2, "0")
+  let seconds = String(now.getSeconds()).padStart(2, "0")
+
+  // // Create folder name in format D2X_Report_year.month.date.time
+  // let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
+  let mainFolder = zip.folder('D2X_Report') // Main folder
+  let formData = {}
+  try {
+    formData = await getFormData()
+    console.log("Retrieved formData:", formData)
+  } catch (error) {
+    console.error("Error retrieving form data:", error)
+  }
+  const {
+    senderAddress = "",
+    recipientAddress = "",
+    senderContactdetails = "",
+    city = "",
+    fullName = ""
+  } = formData || {}
+
+  // Helper function to format data with new lines
+  function formatText(text = "") {
+    if (!text) return ""
+    return text
+      .split(",")
+      .map((item) => item.trim())
+      .join("\n")
+  }
+
+  //Timestamp to add in this text file AnalyseZeitpunkt.txt
+  mainFolder.file(
+    "initialPostUrl.txt",
+    `URL des Ausgangsposts: ${originalUrl || ""}`
+  )
+  mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
+
+  let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
+
+  //extract from formDataValue
+
+  // Add 7 files with different names to this folder (text content)
+  folder1.file("Abs.Adresse.txt", `${formatText(senderAddress)}`)
+  folder1.file("Abs.Kontakt.txt", `${formatText(senderContactdetails)}`)
+  folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
+  folder1.file(
+    "Anlagen.txt",
+    `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
+  )
+  folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
+  folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
+  folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
+
+  // number of folders depends on uniques username
+  //run a loop
+
+  // Create folders for each unique username in results array
+  let uniqueUsernames = [...new Set(results.map((item) => item.Username))]
+  for (let username of uniqueUsernames) {
+    const userFolder = mainFolder.folder(username)
+    const post = results.find((item) => item.Username === username)
+
+    userFolder.file(
+      `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `${post.perplexityresponse?.online_praesenz || ""}`
+    )
+    userFolder.file(
+      `profilUrl.txt`,
+      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
+    )
+    userFolder.file(
+      `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `Biografie: ${post.scrapedData?.profilebiodata}
+      ${post.scrapedData?.userJoindate}
+      Folgt: ${post.scrapedData?.followingCount}
+      Follower: ${post.scrapedData?.followersCount} `
+    )
+    userFolder.file(
+      `userHandle.txt`,
+      `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`
+    )
+    userFolder.file(
+      `screenname.txt`,
+      `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
+    )
+
+    
+
+    // Filter results for the current username
+    let userPosts = results.filter((item) => item.Username === username)
+    console.log("userPosts>>>>>>>>>>>", userPosts)
+
+    for (let post of userPosts) {
+      const tweetID = post.Post_URL.split("/").pop()
+      let folder2 = userFolder.folder(tweetID)
+      const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
+      folder2.file(
+        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        formattedText
+      )
+
+      folder2.file(
+        `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `${post.Inhalt}`
+      )
+      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
+
+      // Entscheidungstext basierend auf dem Flag
+      const decisionText = post.Post_selbst_ist_anzeigbar_flag ? "Ja" : "Nein"
+
+      // Initialisierung des Prüfungstextes
+      let prüfungText = "Prüfungen:\n\n"
+
+      // Überprüfen, ob Subsumtion vorhanden ist und dann durchlaufen
+      if (
+        post.Subsumtion &&
+        Array.isArray(post.Subsumtion) &&
+        post.Subsumtion.length > 0
+      ) {
+        post.Subsumtion.forEach((item, index) => {
+          prüfungText +=
+            `  > Verdacht: ${item.Verdacht}\n` +
+            `  > Subsumtion: ${item.Subsumtion}\n` +
+            `  > Strafwahrscheinlichkeit: ${item.Strafwahrsch}\n\n`
+        })
+      } else {
+        prüfungText += "Keine Prüfungen vorhanden.\n\n"
+      }
+
+      // Zusammensetzen des gesamten Textes
+      const textBegründung =
+        `Post:\n${post.Inhalt}\n\n` +
+        `Erläuterung:\n${post.Erklärung}\n\n` +
+        `${prüfungText}` +
+        `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
+        `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`
+
+      // Ersetzen von doppelten Backslashes mit einfachen Zeilenumbrüchen
+      const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n")
+
+      // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
+      folder2.file(
+        `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        formattedTextBegründung
+      )
+
+      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
+      folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
+      folder2.file(
+        `Zeitpunkt.txt`,
+        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}:${minutes} Uhr`
+      )
+      
+    }
+  }
+}
+
+export async function downloadScreenshots(screenshotBlob, filename, directory) {
+  // Create new JSZip instance
+  const zip = new JSZip()
+
+  // Convert blob URL to actual blob
+  const response = await fetch(screenshotBlob)
+  const blobData = await response.blob()
+
+  // Create directory structure
+  const folders = directory.split("/")
+  let currentFolder = zip
+
+  // Create nested folders
+  for (const folder of folders) {
+    currentFolder = currentFolder.folder(folder)
+  }
+
+  // Add the screenshot to the deepest folder
+  currentFolder.file(filename, blobData)
+
+  // Generate the zip file
+  const content = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: {
+      level: 9
+    }
+  })
+
+  // Create download link and trigger download
+  const downloadUrl = URL.createObjectURL(content)
+  const link = document.createElement("a")
+  link.href = downloadUrl
+  link.download = "screenshots.zip"
+  document.body.appendChild(link)
+  link.click()
+
+  // Cleanup
+  document.body.removeChild(link)
+  URL.revokeObjectURL(downloadUrl)
+}
+
+export async function createFinalReport(results, originalUrl = "") {
+  // Validate required input
+  if (!Array.isArray(results)) {
+    console.error("Results must be an array")
+    return
+  }
+
+  // First subfolder: "Anschreiben_Basis_Daten"
+  let now = new Date()
+  let year = now.getFullYear()
+  let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
+  let date = String(now.getDate()).padStart(2, "0")
+  let hours = String(now.getHours()).padStart(2, "0")
+  let minutes = String(now.getMinutes()).padStart(2, "0")
+  let seconds = String(now.getSeconds()).padStart(2, "0")
+
+  // Create folder name in format D2X_Report_year.month.date.time
+  let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
+  let mainFolder = zip.folder(folderName) // Main folder
+  let formData = {}
+  try {
+    formData = await getFormData()
+    console.log("Retrieved formData:", formData)
+  } catch (error) {
+    console.error("Error retrieving form data:", error)
+  }
+  const {
+    senderAddress = "",
+    recipientAddress = "",
+    senderContactdetails = "",
+    city = "",
+    fullName = ""
+  } = formData || {}
+
+  // Helper function to format data with new lines
+  function formatText(text = "") {
+    if (!text) return ""
+    return text
+      .split(",")
+      .map((item) => item.trim())
+      .join("\n")
+  }
+
+  //Timestamp to add in this text file AnalyseZeitpunkt.txt
+  mainFolder.file(
+    "initialPostUrl.txt",
+    `URL des Ausgangsposts: ${originalUrl || ""}`
+  )
+  mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
+
+  let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
+
+  //extract from formDataValue
+
+  // Add 7 files with different names to this folder (text content)
+  folder1.file("Abs.Adresse.txt", `${formatText(senderAddress)}`)
+  folder1.file("Abs.Kontakt.txt", `${formatText(senderContactdetails)}`)
+  folder1.file("Abs.UnterzeichnendePerson.txt", `${fullName}`)
+  folder1.file(
+    "Anlagen.txt",
+    `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
+  )
+  folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
+  folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
+  folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
+
+  // number of folders depends on uniques username
+  //run a loop
+
+  // Create folders for each unique username in results array
+  let uniqueUsernames = [...new Set(results.map((item) => item.Username))]
+  for (let username of uniqueUsernames) {
+    const userFolder = mainFolder.folder(username)
+    const post = results.find((item) => item.Username === username)
+
+    userFolder.file(
+      `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `${post.perplexityresponse?.online_praesenz || ""}`
+    )
+    userFolder.file(
+      `profilUrl.txt`,
+      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
+    )
+    userFolder.file(
+      `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `Biografie: ${post.scrapedData?.profilebiodata}
+      ${post.scrapedData?.userJoindate}
+      Folgt: ${post.scrapedData?.followingCount}
+      Follower: ${post.scrapedData?.followersCount} `
     )
     userFolder.file(
       `userHandle.txt`,
@@ -309,14 +614,16 @@ export async function createFinalReport(results, originalUrl="") {
     //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
     // ]
     const response = await fetch(post.profileScreenshot[0])
-    console.log("response>>>>>>>>>>", response)
-    const blobData = await response.blob()
-    console.log("blobData>>>>..", blobData)
-    userFolder.file(
-      `screenshot_profile_${post.Username}_${date}.${month}.${year}.png`,
-      blobData,
-      { binary: true }
-    )
+  
+    if (response.ok) {
+      const blobData = await response.blob()
+      console.log("blobData>>>>..", blobData)
+      userFolder.file(
+        `screenshot_profile_${post.Username}_${date}.${month}.${year}.png`,
+        blobData,
+        { binary: true }
+      )
+    }
 
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
@@ -325,9 +632,12 @@ export async function createFinalReport(results, originalUrl="") {
     for (let post of userPosts) {
       const tweetID = post.Post_URL.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
-      const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, '\n');
-      folder2.file(`AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`, formattedText);
-    
+      const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
+      folder2.file(
+        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        formattedText
+      )
+
       folder2.file(
         `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
@@ -335,57 +645,57 @@ export async function createFinalReport(results, originalUrl="") {
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
 
       // Entscheidungstext basierend auf dem Flag
-      const decisionText = post.Post_selbst_ist_anzeigbar_flag
-      ? "Ja"
-      : "Nein";
+      const decisionText = post.Post_selbst_ist_anzeigbar_flag ? "Ja" : "Nein"
 
       // Initialisierung des Prüfungstextes
-      let prüfungText = "Prüfungen:\n\n";
+      let prüfungText = "Prüfungen:\n\n"
 
       // Überprüfen, ob Subsumtion vorhanden ist und dann durchlaufen
-      if (post.Subsumtion && Array.isArray(post.Subsumtion) && post.Subsumtion.length > 0) {
-      post.Subsumtion.forEach((item, index) => {
-        prüfungText += `  > Verdacht: ${item.Verdacht}\n` +
-                      `  > Subsumtion: ${item.Subsumtion}\n` +
-                      `  > Strafwahrscheinlichkeit: ${item.Strafwahrsch}\n\n`;
-      });
+      if (
+        post.Subsumtion &&
+        Array.isArray(post.Subsumtion) &&
+        post.Subsumtion.length > 0
+      ) {
+        post.Subsumtion.forEach((item, index) => {
+          prüfungText +=
+            `  > Verdacht: ${item.Verdacht}\n` +
+            `  > Subsumtion: ${item.Subsumtion}\n` +
+            `  > Strafwahrscheinlichkeit: ${item.Strafwahrsch}\n\n`
+        })
       } else {
-      prüfungText += "Keine Prüfungen vorhanden.\n\n";
+        prüfungText += "Keine Prüfungen vorhanden.\n\n"
       }
 
       // Zusammensetzen des gesamten Textes
       const textBegründung =
-      `Post:\n${post.Inhalt}\n\n` +
-      `Erläuterung:\n${post.Erklärung}\n\n` +
-      `${prüfungText}` +
-      `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
-      `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`;
+        `Post:\n${post.Inhalt}\n\n` +
+        `Erläuterung:\n${post.Erklärung}\n\n` +
+        `${prüfungText}` +
+        `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
+        `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`
 
       // Ersetzen von doppelten Backslashes mit einfachen Zeilenumbrüchen
-      const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n");
+      const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n")
 
       // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
       folder2.file(
-      `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
-      formattedTextBegründung
-      );
+        `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        formattedTextBegründung
+      )
 
       try {
         const postResponse = await fetch(post.postScreenshot[0])
-        if (!postResponse.ok) {
-          throw new Error(
-            `Failed to fetch post screenshot: ${postResponse.statusText}`
+        if (postResponse.ok) {
+          console.log("postResponse>>>>>>>>", postResponse)
+          const postblobData = await postResponse.blob()
+          console.log("postblobData>>>>>>>>>>.", postblobData)
+
+          folder2.file(
+            `screenshot_${post.Username}_${tweetID}_${date}.${month}.${year}.png`,
+            postblobData,
+            { binary: true }
           )
         }
-        console.log("postResponse>>>>>>>>", postResponse)
-        const postblobData = await postResponse.blob()
-        console.log("postblobData>>>>>>>>>>.", postblobData)
-
-        folder2.file(
-          `screenshot_${post.Username}_${tweetID}_${date}.${month}.${year}.png`,
-          postblobData,
-          { binary: true }
-        )
       } catch (error) {
         console.error("Error fetching post screenshot:", error)
       }
@@ -418,14 +728,14 @@ export async function createFinalReport(results, originalUrl="") {
           Post: `${post.Inhalt}`,
           Zeitpunkt: `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}.${minutes}.${seconds}`,
           userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
-          screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`,
+          screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
           profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
           postUrl: `URL des Kommentars: ${post.Post_URL}`,
           initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
-          UserInfo: `Biografie: ${post.scrapedData.profilebiodata}
-      ${post.scrapedData.userJoindate}
-      Folgt: ${post.scrapedData.followingCount}
-      Follower: ${post.scrapedData.followersCount} `,
+          UserInfo: `Biografie: ${post.scrapedData?.profilebiodata}
+      ${post.scrapedData?.userJoindate}
+      Folgt: ${post.scrapedData?.followingCount}
+      Follower: ${post.scrapedData?.followersCount} `,
           ExtraUserInfo: `${post.perplexityresponse?.online_praesenz}`
         }
 
@@ -485,17 +795,17 @@ export function getFilename(contentURL, uid) {
 export async function downloadallfullfilesZip() {
   // Generate the zip Blob
   // Generate the zip Blob
-   // Generate the zip Blob
-   const zipBlob = await zip.generateAsync({ type: "blob" });
+  // Generate the zip Blob
+  const zipBlob = await zip.generateAsync({ type: "blob" })
 
-   // Create a download link
-   const url = URL.createObjectURL(zipBlob);
-   const a = document.createElement("a");
-   a.href = url;
-   a.download = "archive.zip";
-   document.body.appendChild(a);
-   a.click();
-   URL.revokeObjectURL(url);
+  // Create a download link
+  const url = URL.createObjectURL(zipBlob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "archive.zip"
+  document.body.appendChild(a)
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export async function downloadZip() {
@@ -517,14 +827,14 @@ export async function callPerplexity(query) {
 
   console.log("usePerplexity>>>>>>>>.", usePerplexity)
   if (usePerplexity) {
-  try {
-    const perplexityResponse = await runPerplexityQuery(query)
-    console.log("perplexityresponse>>>>>>>>>>>", perplexityResponse)
-    return perplexityResponse
-  } catch (error) {
-    console.error("Error calling Perplexity API:", error)
-    return null // Return null if an error occurs to handle gracefully
-  }
+    try {
+      const perplexityResponse = await runPerplexityQuery(query)
+      console.log("perplexityresponse>>>>>>>>>>>", perplexityResponse)
+      return perplexityResponse
+    } catch (error) {
+      console.error("Error calling Perplexity API:", error)
+      return null // Return null if an error occurs to handle gracefully
+    }
   } else {
     return
   }
@@ -625,57 +935,65 @@ async function runPerplexityQuery(query) {
 //   }
 // }
 
-
-export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts, batchSize = 5) {
+export async function fetchEvaluation(
+  apiKey,
+  promptText,
+  jsonSchema,
+  posts,
+  batchSize = 5
+) {
   // Helper function to make a single API call
   const fetchBatch = async (batch) => {
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o", // Use the faster model
-          messages: [
-            { role: "system", content: promptText },
-            { role: "user", content: JSON.stringify({ posts: batch }) },
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: jsonSchema,
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
           },
-        }),
-      });
+          body: JSON.stringify({
+            model: "gpt-4o", // Use the faster model
+            messages: [
+              { role: "system", content: promptText },
+              { role: "user", content: JSON.stringify({ posts: batch }) }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: jsonSchema
+            }
+          })
+        }
+      )
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json()
         throw new Error(
           `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
-        );
+        )
       }
 
-      return await response.json();
+      return await response.json()
     } catch (error) {
-      console.error("Error processing batch:", batch, error);
-      throw error;
+      console.error("Error processing batch:", batch, error)
+      throw error
     }
-  };
+  }
 
   // Split posts into smaller batches
-  const batches = [];
+  const batches = []
   for (let i = 0; i < posts.length; i += batchSize) {
-    batches.push(posts.slice(i, i + batchSize));
+    batches.push(posts.slice(i, i + batchSize))
   }
 
   // Process all batches in parallel
   try {
-    const results = await Promise.all(batches.map((batch) => fetchBatch(batch)));
+    const results = await Promise.all(batches.map((batch) => fetchBatch(batch)))
     console.log("results>>>>>", results)
-    return results; // Combine results from all batches
+    return results // Combine results from all batches
   } catch (error) {
-    console.error("Error during parallel processing:", error);
-    throw error;
+    console.error("Error during parallel processing:", error)
+    throw error
   }
 }

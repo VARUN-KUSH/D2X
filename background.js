@@ -17,7 +17,9 @@ import {
   callPerplexity,
   createFinalReport,
   downloadZip,
-  fetchEvaluation
+  fetchEvaluation,
+  downloadpostreport,
+  downloadprofilereport
 } from "./utility.js"
 import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils.js"
 
@@ -244,7 +246,11 @@ async function initiateDownload() {
     const reader = new FileReader()
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1] // Extract base64 part
-      chrome.runtime.sendMessage({ action: "downloadZip", base64data })
+      console.log("base64data>>>>>>>>", base64data)
+      chrome.runtime.sendMessage({
+        action: "downloadZip",
+        base64data: base64data
+      })
     }
     reader.readAsDataURL(zipBlob)
   } catch (error) {
@@ -443,6 +449,7 @@ async function processContent(messages) {
     let finalreports
     // Capture screenshots for reportable posts and user profiles
     if (reportablePosts.length > 0) {
+      sendMessageToPopup(`${reportablePosts.length} reportable tweets found..`)
       finalreports = await captureReportablePostScreenshots(reportablePosts)
     }
 
@@ -518,6 +525,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
         await new Promise((resolve) => setTimeout(resolve, 10000))
         console.log("going to take screenshort of fullpage")
+        sendMessageToPopup("screenshoting reportable tweets...")
         const reportablepostscreenshots = await requestinitialScreenshotCapture(
           post.Post_URL,
           `post_${post.ID}.png`,
@@ -571,7 +579,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
           console.log("scrapedprofileData", scrapedData)
 
           await new Promise((resolve) => setTimeout(resolve, 3000))
-
+          sendMessageToPopup("screenshoting reportable x profiles...")
           profileScreenshot = await requestScreenshotCapture(
             post.User_Profil_URL,
             `profile_${post.Username}.png`,
@@ -869,68 +877,77 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "SEARCH_PROFILE":
-          //call perplexity and the create a folder which contains the report
-          const { profileUrl, knownProfileInfo } = request.data
+          function extractTwitterProfileData(profileText) {
+            // Initialize the result object
+            const profileData = {
+              screenname: "",
+              username: "",
+              profilebiodata: "",
+              userlocation: "",
+              userJoindate: "",
+              followingCount: 0,
+              followersCount: 0,
+              additionalInfo: []
+            }
 
-          function parseTwitterProfile(profileText) {
+            // Split the text into lines for easier processing
             const lines = profileText
               .split("\n")
               .map((line) => line.trim())
               .filter((line) => line)
 
-            const extractNumber = (text) => {
-              const match = text.match(/\d+/)
-              return match ? parseInt(match[0]) : 0
+            // Extract screen name (first line) and username (second line)
+            profileData.screenName = lines[0]
+            profileData.username = lines[1].startsWith("@") ? lines[1] : ""
+
+            // Extract bio (typically the next few lines until location/join date)
+            let bioLines = []
+            let currentIndex = 2
+
+            while (
+              currentIndex < lines.length &&
+              !lines[currentIndex].includes("Joined") &&
+              !lines[currentIndex].includes("Following") &&
+              !lines[currentIndex].includes("Followers")
+            ) {
+              bioLines.push(lines[currentIndex])
+              currentIndex++
+            }
+            profileData.bio = bioLines.join("\n")
+
+            // Extract location and join date
+            const locationJoinLine = lines.find((line) =>
+              line.includes("Joined")
+            )
+            if (locationJoinLine) {
+              const [location, joinInfo] = locationJoinLine.split("Joined")
+              profileData.location = location.trim()
+              profileData.joinDate = joinInfo.trim()
             }
 
-            const profile = {
-              screenName: lines[0] || "",
-              username: (lines[1] || "").replace("@", ""),
-              profilebiodata: lines[2] || "",
-              userlocation: "",
-              userBirthdate: "",
-              userJoindate: "",
-              followingCount: 0,
-              followersCount: 0,
-              isVerified: false
-            }
-
-            // Parse the metadata line (location, DOB, join date, verification)
-            const metadataLine = lines[3] || ""
-            if (metadataLine) {
-              const parts = metadataLine.split(/(?=(?:Born|Joined|Verified))/)
-              parts.forEach((part) => {
-                if (part.includes("Born")) {
-                  profile.dob = part.replace("Born", "").trim()
-                } else if (part.includes("Joined")) {
-                  profile.joinDate = part.replace("Joined", "").trim()
-                } else if (part.includes("Verified")) {
-                  profile.isVerified = true
-                } else {
-                  profile.location = part.trim()
-                }
-              })
-            }
-
-            // Parse following/followers counts
-            lines.forEach((line) => {
+            // Extract following and followers counts
+            for (const line of lines) {
               if (line.includes("Following")) {
-                profile.followingCount = extractNumber(line)
-              } else if (line.includes("Followers")) {
-                profile.followersCount = extractNumber(line)
+                profileData.followingCount = parseInt(line.match(/\d+/)[0])
               }
-            })
+              if (line.includes("Followers")) {
+                profileData.followersCount = parseInt(line.match(/\d+/)[0])
+              }
+            }
 
-            return profile
+            // Add any additional information
+            const additionalInfoLine = lines.find((line) =>
+              line.includes("Not followed")
+            )
+            if (additionalInfoLine) {
+              profileData.additionalInfo.push(additionalInfoLine)
+            }
+
+            return profileData
           }
 
-          const userprofiledata = parseTwitterProfile(knownProfileInfo)
-          // Now you have access to `profileUrl` and `knownProfileInfo`
-          console.log("Profile URL:", profileUrl)
-          console.log("Known Profile Info:", knownProfileInfo)
-          console.log("userprofiledata>>>>>", userprofiledata)
-
-          // Define a regular expression to match profile URLs in the format https://x.com/[username]
+          //call perplexity and the create a folder which contains the report
+          const { profileUrl, knownProfileInfo } = request.data
           const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
 
           let username = null
@@ -942,9 +959,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             console.log("Profile URL does not match the expected format.")
           }
 
+          const perplexityQuery = generatePerplexityPrompt(
+            username,
+            knownProfileInfo
+          )
+
+          const perplexityresponse = await callPerplexity(perplexityQuery)
+
+          const response = JSON.parse(perplexityresponse)
+          const profileinfo = extractTwitterProfileData(knownProfileInfo)
+
+          // Define a regular expression to match profile URLs in the format https://x.com/[username]
+          //extract the user profile information from perplexity response known_info field
           sendResponse({
             analysisId: getActiveAnalysisId(),
-            userprofiledata: userprofiledata
+            perplexityresponse: response,
+            userprofileinfo: profileinfo
           })
           break
 
@@ -1095,11 +1125,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse(scrapedPost)
           break
 
-
         case "SAVE_REPORT":
-           // Handle the finalreport data
-          const report = request.payload;
-          await createFinalReport(report.originalUrl, report.reportablePostsArray)
+          // Handle the finalreport data
+          const reports = request.payload
+          const originalUrl = reports.originalUrl
+          const reportablePostsArray = reports.reportablePostsArray
+          await createFinalReport(reportablePostsArray, originalUrl)
+          await initiateDownload()
+          sendResponse({ status: "Download section toggled" })
+          break
+
+        case "SaveProfileReport":
+          const report = request.payload
+          const reportableProfilePosts = report.reportablePostsArray
+          await downloadprofilereport(reportableProfilePosts)
+          await initiateDownload()
+          sendResponse({ status: "Download section toggled" })
+          break
+
+        case "SavepostReport":
+          const postreport = request.payload
+          const PostoriginalUrl = postreport.originalUrl
+          const reportablePosts = postreport.reportablePostsArray
+          await downloadpostreport(reportablePosts, PostoriginalUrl)
           await initiateDownload()
           sendResponse({ status: "Download section toggled" })
           break
@@ -1107,7 +1155,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "screenshotError":
           console.error("Fehler bei der Screenshot-Erfassung:", request.error)
           break
-
 
         default:
           console.warn("Unhandled message action:", request.action)
@@ -1134,6 +1181,15 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error) => console.error(error))
+})
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "openNewTab") {
+    console.log("opening new tab")
+    chrome.tabs.create({
+      url: chrome.runtime.getURL(message.url)
+    })
+  }
 })
 
 console.log("Background script loaded")

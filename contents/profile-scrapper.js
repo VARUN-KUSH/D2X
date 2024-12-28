@@ -75,7 +75,7 @@ export async function profileScrape() {
         
         const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "";
         console.log("userJoindate:", userJoindate);
-        
+        //screenname scrape
         // Check if necessary data has been found
         if (
           followersCount !== "Data not found" &&
