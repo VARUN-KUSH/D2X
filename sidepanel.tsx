@@ -330,7 +330,7 @@ function SidePanel() {
   }
 
   const toggledownloadSection = async () => {
-    setupMessageListener()
+    // setupMessageListener()
     // Helper function to clear all states
     const clearAllStates = () => {
       setAnalysisData({
@@ -656,6 +656,7 @@ function SidePanel() {
         })
       }
     )
+    setupMessageListener()
   }, [])
 
   const editBackgroundInfo = () => {
@@ -724,7 +725,7 @@ function SidePanel() {
       }
     )
 
-    setupMessageListener()
+    // setupMessageListener()
   }
 
   const takefullpagess = async () => {
