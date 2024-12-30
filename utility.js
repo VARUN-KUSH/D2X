@@ -2,7 +2,7 @@ import JSZip from "jszip.min.js"
 
 import { generateHtmlReport } from "./generateHtmlReport.js"
 
-let zip = new JSZip()
+let zip = null; 
 
 function modifyUrl(url) {
   // Find the base URL by splitting at the first "/status/" or anything after "https://x.com/"
@@ -84,7 +84,7 @@ export async function addTimestampToScreenshots(
           const canvas = document.createElement("canvas")
           const ctx = canvas.getContext("2d")
 
-          const bannerHeight = 80
+          const bannerHeight = 120
           canvas.width = img.width
           canvas.height = img.height + bannerHeight
 
@@ -93,7 +93,7 @@ export async function addTimestampToScreenshots(
           ctx.fillStyle = "#f0f0f0"
           ctx.fillRect(0, 0, canvas.width, bannerHeight)
           ctx.fillStyle = "#000000"
-          ctx.font = "14px Arial"
+          ctx.font = "20px Arial"
           ctx.textAlign = "left"
           ctx.textBaseline = "middle"
 
@@ -123,85 +123,28 @@ export async function addTimestampToScreenshots(
   )
 }
 
-export async function addToZip(fileData, filename, directory) {
-  console.log(
-    "filename>>>>>>",
-    filename,
-    "fileData>>>>>>>>>>>",
-    fileData,
-    "directory::::::::",
-    directory
-  )
+// export async function addToZip(fileData, filename, directory) {
+//   console.log(
+//     "filename>>>>>>",
+//     filename,
+//     "fileData>>>>>>>>>>>",
+//     fileData,
+//     "directory::::::::",
+//     directory
+//   )
 
-  // No need to fetch; `fileData` is already a Blob
-  const blobData = fileData
+//   // No need to fetch; `fileData` is already a Blob
+//   const blobData = fileData
 
-  if (directory) {
-    zip.folder(directory).file(filename, blobData, { binary: true })
-  } else {
-    zip.file(filename, blobData, { binary: true })
-  }
-
-  await downloadallfullfilesZip()
-}
-
-// function _initScreenshots(totalWidth, totalHeight) {
-//   // Create and return an array of screenshot objects based
-//   // on the `totalWidth` and `totalHeight` of the final image.
-//   // We have to account for multiple canvases if too large,
-//   // because Chrome won't generate an image otherwise.
-//   //
-//   const badSize =
-//     totalHeight > MAX_PRIMARY_DIMENSION ||
-//     totalWidth > MAX_PRIMARY_DIMENSION ||
-//     totalHeight * totalWidth > MAX_AREA;
-
-//   const biggerWidth = totalWidth > totalHeight;
-
-//   const maxWidth = !badSize
-//     ? totalWidth
-//     : biggerWidth
-//     ? MAX_PRIMARY_DIMENSION
-//     : MAX_SECONDARY_DIMENSION;
-
-//   const maxHeight = !badSize
-//     ? totalHeight
-//     : biggerWidth
-//     ? MAX_SECONDARY_DIMENSION
-//     : MAX_PRIMARY_DIMENSION;
-
-//   const numCols = Math.ceil(totalWidth / maxWidth);
-//   const numRows = Math.ceil(totalHeight / maxHeight);
-//   let canvas, left, top;
-//   let canvasIndex = 0;
-//   const result = [];
-
-//   for (let row = 0; row < numRows; row++) {
-//     for (let col = 0; col < numCols; col++) {
-//       canvas = document.createElement("canvas");
-//       canvas.width =
-//         col == numCols - 1 ? totalWidth % maxWidth || maxWidth : maxWidth;
-//       canvas.height =
-//         row == numRows - 1 ? totalHeight % maxHeight || maxHeight : maxHeight;
-//       left = col * maxWidth;
-//       top = row * maxHeight;
-
-//       result.push({
-//         canvas: canvas,
-//         ctx: canvas.getContext("2d"),
-//         index: canvasIndex,
-//         left: left,
-//         right: left + canvas.width,
-//         top: top,
-//         bottom: top + canvas.height,
-//       });
-
-//       canvasIndex++;
-//     }
+//   if (directory) {
+//     zip.folder(directory).file(filename, blobData, { binary: true })
+//   } else {
+//     zip.file(filename, blobData, { binary: true })
 //   }
 
-//   return result;
+//   await downloadallfullfilesZip()
 // }
+
 
 async function getFormData() {
   return new Promise((resolve, reject) => {
@@ -223,7 +166,8 @@ export async function downloadprofilereport(results) {
   let hours = String(now.getHours()).padStart(2, "0")
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
-
+  zip = null;
+  zip = new JSZip()
   let mainFolder = zip.folder('D2X_Report') // Main folder
   let formData = {}
   try {
@@ -317,6 +261,8 @@ export async function downloadpostreport(results, originalUrl) {
 
   // // Create folder name in format D2X_Report_year.month.date.time
   // let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
+  zip = null;
+  zip = new JSZip()
   let mainFolder = zip.folder('D2X_Report') // Main folder
   let formData = {}
   try {
@@ -528,6 +474,7 @@ export async function createFinalReport(results, originalUrl = "") {
   let seconds = String(now.getSeconds()).padStart(2, "0")
 
   // Create folder name in format D2X_Report_year.month.date.time
+  zip = new JSZip()
   let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
   let formData = {}
@@ -792,21 +739,21 @@ export function getFilename(contentURL, uid) {
   return `screenshot-${shortUID}-${name}-${Date.now()}.png`
 }
 
-export async function downloadallfullfilesZip() {
-  // Generate the zip Blob
-  // Generate the zip Blob
-  // Generate the zip Blob
-  const zipBlob = await zip.generateAsync({ type: "blob" })
+// export async function downloadallfullfilesZip() {
+//   // Generate the zip Blob
+//   // Generate the zip Blob
+//   // Generate the zip Blob
+//   const zipBlob = await zip.generateAsync({ type: "blob" })
 
-  // Create a download link
-  const url = URL.createObjectURL(zipBlob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = "archive.zip"
-  document.body.appendChild(a)
-  a.click()
-  URL.revokeObjectURL(url)
-}
+//   // Create a download link
+//   const url = URL.createObjectURL(zipBlob)
+//   const a = document.createElement("a")
+//   a.href = url
+//   a.download = "archive.zip"
+//   document.body.appendChild(a)
+//   a.click()
+//   URL.revokeObjectURL(url)
+// }
 
 export async function downloadZip() {
   // Generate the zip Blob
@@ -854,7 +801,7 @@ async function runPerplexityQuery(query) {
 
       // Set up the API details
       const API_URL = "https://api.perplexity.ai/chat/completions"
-      const MODEL = "llama-3.1-70b-instruct"
+      const MODEL = "llama-3.1-sonar-huge-128k-online"
 
       // Set up request headers and body
       const headers = {

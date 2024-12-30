@@ -16,10 +16,10 @@ import {
   addToZip,
   callPerplexity,
   createFinalReport,
-  downloadZip,
-  fetchEvaluation,
   downloadpostreport,
-  downloadprofilereport
+  downloadprofilereport,
+  downloadZip,
+  fetchEvaluation
 } from "./utility.js"
 import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils.js"
 
@@ -449,7 +449,9 @@ async function processContent(messages) {
     let finalreports
     // Capture screenshots for reportable posts and user profiles
     if (reportablePosts.length > 0) {
-      sendMessageToPopup(`${reportablePosts.length} reportable tweets found..`)
+      sendMessageToPopup(
+        `Ich habe ${reportablePosts.length} anzeigbare Posts identifiziert.`
+      )
       finalreports = await captureReportablePostScreenshots(reportablePosts)
     }
 
@@ -525,7 +527,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
         await new Promise((resolve) => setTimeout(resolve, 10000))
         console.log("going to take screenshort of fullpage")
-        sendMessageToPopup("screenshoting reportable tweets...")
+        sendMessageToPopup("Ich mache Screenshots der anzeigbaren Posts..")
         const reportablepostscreenshots = await requestinitialScreenshotCapture(
           post.Post_URL,
           `post_${post.ID}.png`,
@@ -550,6 +552,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
             })
             await waitForTabToLoad(originalTab.id)
           }
+          sendMessageToPopup("Extrahieren von Benutzerprofilinformationen..")
           await delay(3000)
           scrapedData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
@@ -579,7 +582,9 @@ async function captureReportablePostScreenshots(reportablePosts) {
           console.log("scrapedprofileData", scrapedData)
 
           await new Promise((resolve) => setTimeout(resolve, 3000))
-          sendMessageToPopup("screenshoting reportable x profiles...")
+          sendMessageToPopup(
+            "Ich mache Screenshots der Profile zur Beweissicherung..."
+          )
           profileScreenshot = await requestScreenshotCapture(
             post.User_Profil_URL,
             `profile_${post.Username}.png`,
@@ -613,17 +618,41 @@ async function captureReportablePostScreenshots(reportablePosts) {
         console.log("perplexityresponse", perplexityresponse)
 
         if (perplexityresponse) {
-          const response = JSON.parse(perplexityresponse)
-          postReport = {
-            ...post,
-            // post.anteige_entwurf: perplexityresponse
-            scrapedData: scrapedData,
-            perplexityresponse: response,
-            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
-            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+          try {
+            // Find the JSON part of the response
+            const jsonStart = perplexityresponse.indexOf("{")
+            const jsonEnd = perplexityresponse.lastIndexOf("}") + 1
+
+            if (jsonStart !== -1 && jsonEnd !== -1) {
+              // Extract only the JSON part
+              const jsonStr = perplexityresponse.substring(jsonStart, jsonEnd)
+              const response = JSON.parse(jsonStr)
+
+              postReport = {
+                ...post,
+                scrapedData: scrapedData,
+                perplexityresponse: response,
+                postScreenshot: reportablepostscreenshots,
+                profileScreenshot: profileScreenshot
+              }
+            }
+            // else {
+            //   // If no JSON found, store the raw response
+            //   postReport = {
+            //     ...post,
+            //     scrapedData: scrapedData,
+            //     perplexityresponse: { raw: perplexityresponse },
+            //     postScreenshot: reportablepostscreenshots,
+            //     profileScreenshot: profileScreenshot
+            //   };
+            // }
+          } catch (error) {
+            console.error("Error parsing perplexity response:", error)
           }
         } else {
-          sendMessageToPopup()
+          sendMessageToPopup(
+            "Perplexity Toggle ist ausgeschaltet, daher wird nicht nach der Online-Präsenz des Benutzers gesucht.."
+          )
           postReport = {
             ...post,
             scrapedData: scrapedData,
@@ -965,18 +994,65 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           )
 
           const perplexityresponse = await callPerplexity(perplexityQuery)
+          let response
+          if (perplexityresponse) {
+            try {
+              // Find the JSON part of the response
+              const jsonStart = perplexityresponse.indexOf("{")
+              const jsonEnd = perplexityresponse.lastIndexOf("}") + 1
 
-          const response = JSON.parse(perplexityresponse)
-          const profileinfo = extractTwitterProfileData(knownProfileInfo)
+              if (jsonStart !== -1 && jsonEnd !== -1) {
+                // Extract only the JSON part
+                const jsonStr = perplexityresponse.substring(jsonStart, jsonEnd)
+                response = JSON.parse(jsonStr)
+                // Parse the known_info string into an object
+                const knownInfoLines = response.known_info.split("\n")
+                const knowninfo = {}
 
-          // Define a regular expression to match profile URLs in the format https://x.com/[username]
-          //extract the user profile information from perplexity response known_info field
-          sendResponse({
-            analysisId: getActiveAnalysisId(),
-            perplexityresponse: response,
-            userprofileinfo: profileinfo
-          })
-          break
+                knownInfoLines.forEach((line) => {
+                  if (line.includes(": ")) {
+                    const [key, value] = line.replace("- ", "").split(": ")
+                    knowninfo[key] = value
+                  }
+                })
+
+                // Extract follower and following counts and convert to numbers
+                const followingCount =
+                  parseInt(
+                    knowninfo["Anzahl Konten denen dieser User folgt"]
+                  ) || 0
+                const followerCount =
+                  parseInt(knowninfo["Anzahl Konten die diesem User folgen"]) ||
+                  0
+
+                const profileinfo = {
+                  screenname: knowninfo["User-Name"],
+                  username: knowninfo["User-Handle"],
+                  profilebiodata: knowninfo["Beschreibung"],
+                  userlocation: knowninfo["Ort"],
+                  userJoindate: knowninfo["Konto erstellt"],
+                  followingCount: followingCount,
+                  followersCount: followerCount
+                }
+
+                sendResponse({
+                  analysisId: getActiveAnalysisId(),
+                  perplexityresponse: response,
+                  userprofileinfo: profileinfo
+                })
+                break
+              } else {
+                console.log(
+                  "response found from perplexity is not in correct format"
+                )
+              
+              }
+            } catch (error) {
+              console.error("Error parsing perplexity response:", error)
+            }
+          } else {
+            console.log("no response found from perplexity")
+          }
 
         case "SEARCH_POST":
           const results = []
@@ -1181,6 +1257,22 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((error) => console.error(error))
+})
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "sidePanel") {
+    console.log(port.sender)
+    port.onDisconnect.addListener(() => {
+      console.log("disconnected")
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.id) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: "enableTwitterHeader"
+          })
+        }
+      })
+    })
+  }
 })
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

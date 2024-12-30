@@ -135,11 +135,28 @@ async function universalScrape(screenshotData, analysisId) {
   return []
 }
 
+// XPath selector for the target element
+const targetXPath = '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div[2]/div/div[2]/div/a/div[4]/div';
+
+// Function to find element by XPath
+function getElementByXPath(xpath) {
+    return document.evaluate(
+        xpath, 
+        document, 
+        null, 
+        XPathResult.FIRST_ORDERED_NODE_TYPE, 
+        null
+    ).singleNodeValue;
+}
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log("Message received in content script:", request)
   // Handle the disableTwitterHeader and enableTwitterHeader actions
   const headerElement = document.querySelector('header[role="banner"]')
   //localStorage event save and action based on event
+
+  const element = getElementByXPath(targetXPath);
+  console.log("profilelem>>>>>>>", element)
 
   if (request.action === "disableTwitterHeader") {
     if (headerElement) {
@@ -147,6 +164,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       console.log("Twitter header disabled")
       chrome.storage.local.set({ disableTwitterHeader: true }) // Save setting to chrome.storage
     }
+    if (element) {
+      // Disable the element
+      element.style.pointerEvents = 'none';
+  }
     sendResponse({ status: "Twitter header disabled" })
   } else if (request.action === "enableTwitterHeader") {
     if (headerElement) {
@@ -166,14 +187,24 @@ function checkTwitterHeaderVisibility() {
       chrome.storage.local.get("disableTwitterHeader", (result) => {
         console.log("Inside the header visibility function")
         const disableTwitterHeader = result.disableTwitterHeader || false
+         // Find the profile link element - using the specific selectors from your example
+        const element = getElementByXPath(targetXPath);
+        console.log("profilelem>>>>>>>", element)
         console.log("disableTwitterHeader:", disableTwitterHeader)
         console.log("headerElement found:", headerElement)
         if (disableTwitterHeader) {
           headerElement.style.display = "none" // Hide the header
           console.log("Twitter header is hidden (based on chrome.storage)")
+          if (element) {
+            // Disable the element
+            element.style.pointerEvents = 'none';
+        }
+
         } else {
           headerElement.style.display = "" // Show the header
           console.log("Twitter header is visible (based on chrome.storage)")
+          profileLink.style.display = "";
+          console.log("Profile link is visible");
         }
       })
     } else {
@@ -187,7 +218,6 @@ function checkTwitterHeaderVisibility() {
   waitForHeader()
 }
 
-// Run the function to check header visibility on page load
 checkTwitterHeaderVisibility()
 
 chrome.runtime.onConnect.addListener(function (port) {

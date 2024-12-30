@@ -7,20 +7,37 @@ ${user_info}
 Antworte ausschließlich im folgenden JSON-Format:
 
 {
-  "known_info": "TEXT IN MARKDOWN HERE",
-  "online_praesenz": "TEXT IN MARKDOWN HERE",
-  "weitere_informationen_zur_person": "TEXT IN MARKDOWN HERE",
-  "allgemeine_anmerkungen": "TEXT IN MARKDOWN HERE"
+  "known_info": "STICHPUNKTLISTE (als ein String)",
+  "online_praesenz": "TEXT IN MARKDOWN HERE (als ein String)",
+  "weitere_informationen_zur_person": "TEXT IN MARKDOWN HERE (als ein String)",
+  "allgemeine_anmerkungen": "TEXT IN MARKDOWN HERE (als ein String)"
 }
 
 known_info:
-Enthält alle bereits bekannten Informationen zum User, also Informationen, die bereits in der Frage enthalten waren.
+Enthält alle bereits bekannten Informationen zum User, also Informationen, die bereits in der Frage enthalten waren. Stelle diese bekennten Informationen in einer Stichpunktliste wie dieser da - diese Liste ist ein Text String "..." kein Array oder ähnliches: 
+"- User-Name: 
+- User-Handle: 
+- Beschreibung: 
+- Ort: 
+- URL: 
+- Konto erstellt: 
+- Anzahl Konten denen dieser User folgt: 
+- Anzahl Konten die diesem User folgen: 
+- (weitere Stichpunkte für weitere bekannte Informationen)"
 
 online_praesenz:
-Enthält Informationen zur Online-Aktivität und insbesondere zu anderen Online-Profilen, falls vorhanden. Füge konkrete Links und Usernamen hinzu, wenn vorhanden. Verwende Markdown-Format. Wenn passend, nutze Bullet Points (-) und \n für Zeilenumbrüche zur Formatierung.
+Enthält Informationen zur Online-Aktivität und insbesondere zu anderen Online-Profilen, falls vorhanden. Füge konkrete Links und Usernamen hinzu, wenn vorhanden. Verwende Markdown-Format. Wenn passend, nutze Stichpunkte (- ) und \n für Zeilenumbrüche zur Formatierung. - diese Liste ist ein Text String "..." kein Array oder ähnliches
+Beispiel:
+"- Info und Link zur ersten verifizierten Online präsentz (nur wenn vorhanden!)
+- Info und Link zur zweiten verifizierten Online präsentz (nur wenn vorhanden!)
+- usw. (nur wenn vorhanden!)"
+
 
 weitere_informationen_zur_person:
-Hier werden zusätzliche relevante Informationen zur Person erfasst, die nicht in die oben genannten Kategorien fallen, z. B. bestimmte Einstellungen oder Aktivitäten. Verwende Markdown-Format. Wenn passend, nutze Bullet Points (-) und \n für Zeilenumbrüche zur Formatierung.
+Hier werden zusätzliche relevante Informationen zur Person erfasst, die nicht in die oben genannten Kategorien fallen, z. B. bestimmte Einstellungen oder Aktivitäten. Verwende Markdown-Format. Wenn passend, nutze Stichpunkte (- ) und \n für Zeilenumbrüche zur Formatierung. - diese Liste ist ein Text String "..." kein Array oder ähnliches:
+"- Erste Info zur Person (nur wenn vorhanden!)
+- Zweite Info zur Person (nur wenn vorhanden!)
+- usw. (nur wenn vorhanden!)"
 
 allgemeine_anmerkungen:
 Enthält allgemeine Kommentare oder Anmerkungen, die nicht direkt mit der Person selbst in Verbindung stehen, sondern z. B. bezogen auf die Antwort berücksichtigt werden sollten.
@@ -29,7 +46,9 @@ Wichtig: Es darf kein Text außerhalb des JSON-Formats zurückgegeben werden. In
 
 Wichtig: Wenn zu einem Thema der JSON-Keys "online_praesenz" und/oder "weitere_informationen_zur_person" keine wesentlichen neuen Informationen gefunden wurden, die nicht schon in der Frage enthalten waren, dann muss der entsprechende "value" ein leerer String sein (""), also keinen Text enthalten.
 
-Wichtig: Wenn die Antwort Links enthält, dürfen diese nur verifizierte Links aus den Quellen sein. Halluzination von Informationen muss unter allen Umständen verhindert werden.`
+Wichtig: Wenn die Antwort Links enthält, dürfen diese nur verifizierte Links aus den Quellen sein. Halluzination von Informationen muss unter allen Umständen verhindert werden.
+
+Wichtig: Links zu Quellen immer direkt im text ausschreiben! Keinen Verweis auf ein Quellenverzeichnis sondern nicht: [#] sondern: https://...!!`
 }
 
 

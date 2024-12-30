@@ -2,7 +2,6 @@ import { CaptureAPI } from "capture-api"
 import React, { useEffect, useState } from "react"
 import {
   addTimestampToScreenshots,
-  addToZip,
   capturereportablessandchangetoURLs,
   downloadScreenshots,
   getFilename
@@ -112,8 +111,8 @@ function SidePanel() {
     openaiApiKey: false,
     perplexityApiKey: false
   })
-  const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(true) // Default is on (header visible)
-  const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(true)
+  const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(false) // Default is on (header visible)
+  const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(false)
 
   // const [darkMode, setDarkMode] = useState(false); // Track dark mode state
   // useEffect(() => {
@@ -166,7 +165,9 @@ function SidePanel() {
 
     setShowProgressBar(true)
     setProgress(10)
-    setprojectStatus("processing the profile info from perplexity")
+    setprojectStatus(
+      "Überprüfung der Online-Präsenz des Profils mit Perplexity"
+    )
     setAnalysisData((prevState) => ({
       ...prevState,
       profilesdata: null,
@@ -228,7 +229,7 @@ function SidePanel() {
 
     setShowProgressBar(true)
     setProgress(10)
-    setprojectStatus("post is analysed by openai")
+    setprojectStatus("Entschuldigung, Tweets werden von OpenAI analysiert.")
     setAnalysisData((prevState) => ({
       ...prevState,
       post: null
@@ -260,8 +261,10 @@ function SidePanel() {
     console.log("openairesponse>>>>>>", openairesponse)
 
     if (!(openairesponse.length > 0)) {
-      setprojectStatus("post is not found reportable by openai")
-      setShowProgressBar(false)
+      setprojectStatus("Der Beitrag wurde von OpenAI nicht als meldewürdig befunden...")
+      setTimeout(() => {
+        setShowProgressBar(false)
+      }, 1000)
       return
     }
 
@@ -431,10 +434,10 @@ function SidePanel() {
       // Send message to background.js
       try {
         const response = await chrome.runtime.sendMessage({
-          action:  "SavepostReport",
+          action: "SavepostReport",
           payload: finalreport
         })
-        
+
         console.log("Response from background:", response)
       } catch (error) {
         console.error("Error sending message:", error)
@@ -474,8 +477,10 @@ function SidePanel() {
         console.error("Error sending message:", error)
       }
     }
-
-    clearAllStates()
+    setTimeout(() => {
+      clearAllStates()
+    }, 1200)
+    
   }
 
   const toggleSettingsSection = () => {
@@ -501,15 +506,7 @@ function SidePanel() {
   ) => {
     const isChecked = e.target.checked
     setIsTwitterHeaderDisabled(isChecked)
-
-    // Send message to content script
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: isChecked ? "disableTwitterHeader" : "enableTwitterHeader"
-        })
-      }
-    })
+    chrome.storage.local.set({ IsTwitterHeaderDisabled: isChecked })
   }
 
   const handlePerplexityToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -525,16 +522,26 @@ function SidePanel() {
 
   useEffect(() => {
     // By default, send message to show the Twitter header
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]?.id) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: isTwitterHeaderDisabled
-            ? "disableTwitterHeader"
-            : "enableTwitterHeader"
+    const port = chrome.runtime.connect({ name: "sidePanel" })
+    setInterval(() => port.postMessage("sidePanelPing"), 25e3) // keeping the background script alive while the side panel is open
+
+    chrome.storage.local.get(["IsTwitterHeaderDisabled"], (result) => {
+      // If we have a stored value, use it to update our state
+      if (result.IsTwitterHeaderDisabled !== undefined) {
+        console.log("resultoff=toggle>>>>>>>", result.IsTwitterHeaderDisabled)
+        setIsTwitterHeaderDisabled(result.IsTwitterHeaderDisabled)
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]?.id) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              action: isTwitterHeaderDisabled
+                ? "disableTwitterHeader"
+                : "enableTwitterHeader"
+            })
+          }
         })
       }
     })
-  }, [])
+  }, [isTwitterHeaderDisabled])
 
   // Load the saved state when the component mounts
   useEffect(() => {
@@ -723,12 +730,7 @@ function SidePanel() {
   const takefullpagess = async () => {
     try {
       setShowProgressBar(true)
-      //loader should load
-
-      // required things > fullpagess > ss + date + url + analysisId
-      //get analysisId, time from background
-      //
-      setprojectStatus("taking the full screenshots of this page")
+      setprojectStatus("Erstellen von vollständigen Screenshots dieser Seite")
       // First clear the existing screenshot
       setAnalysisData((prevState) => ({
         ...prevState,
@@ -791,7 +793,7 @@ function SidePanel() {
   const visiblepagess = async () => {
     setShowProgressBar(true)
     updateProgressBar(10)
-    setprojectStatus("screenshoting the user profile")
+    setprojectStatus("Erstellen eines Screenshots des Benutzerprofils")
     setAnalysisData((prevState) => ({
       ...prevState,
       visiblescreenshot: null
@@ -1064,7 +1066,7 @@ function SidePanel() {
                 byteNumbers[i] = byteCharacters.charCodeAt(i)
               }
               const byteArray = new Uint8Array(byteNumbers)
-              const zipBlob = new Blob([byteArray], { type: "application/zip" })
+              let zipBlob = new Blob([byteArray], { type: "application/zip" })
 
               // Create a URL for the Blob and download it
               const url = URL.createObjectURL(zipBlob)
@@ -1077,6 +1079,9 @@ function SidePanel() {
 
               // Clean up the URL after download
               URL.revokeObjectURL(url)
+
+                // Clear the blob
+              zipBlob = null
               break
 
             case "processUpdate":
@@ -1660,7 +1665,7 @@ function SidePanel() {
                 id="searchProfile"
                 title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
                 onClick={handlePostSearch}>
-                Profil recherchieren
+                Kommentar analysieren
               </button>
             </div>
           </details>
