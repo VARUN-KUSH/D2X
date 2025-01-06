@@ -135,89 +135,156 @@ async function universalScrape(screenshotData, analysisId) {
   return []
 }
 
-// XPath selector for the target element
-const targetXPath =
-  '//*[@id="react-root"]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[2]/div/div/div/div/div/div[2]/div[2]/div/div/div/div[1]/div/div[2]/div/div[2]/div/a/div[4]/div'
-
-// Function to find element by XPath
-function getElementByXPath(xpath) {
-  return document.evaluate(
-    xpath,
-    document,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  ).singleNodeValue
-}
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log("Message received in content script:", request)
+  console.log("Message received in content script:", request);
+  
   // Handle the disableTwitterHeader and enableTwitterHeader actions
-  const headerElement = document.querySelector('header[role="banner"]')
-  //localStorage event save and action based on event
+  const headerElement = document.querySelector('header[role="banner"]');
+  if (!headerElement) {
+    console.log("Header element not found");
+    sendResponse({ status: "Header element not found" });
+    return;
+  }
 
-  const element = getElementByXPath(targetXPath)
-  console.log("profilelem>>>>>>>", element)
+  // Safely get the profile element and its child element
+  let element = null;
+  try {
+    const profileelem = document.querySelector('div[data-testid="inline_reply_offscreen"]');
+    console.log("profilelem>>>>>>>", profileelem);
+    
+    // Only try to query the child element if profileelem exists
+    if (profileelem) {
+      element = profileelem.querySelector('div[data-testid^="UserAvatar-Container-"]');
+      console.log("elem>>>>>>>", element);
+    } else {
+      console.log("Profile element not found in DOM");
+    }
+  } catch (error) {
+    console.log("Error while finding elements:", error);
+  }
 
   if (request.action === "disableTwitterHeader") {
-    if (headerElement) {
-      headerElement.style.display = "none" // Hide the header
-      console.log("Twitter header disabled")
-      chrome.storage.local.set({ disableTwitterHeader: true }) // Save setting to chrome.storage
-    }
+    // Always handle the header element
+    headerElement.style.display = "none";
+    console.log("Twitter header disabled");
+    chrome.storage.local.set({ disableTwitterHeader: true });
+
+    // Only handle the profile element if it exists
     if (element) {
-      // Disable the element
-      element.style.display = "none"
+      element.style.display = "none";
+      console.log("Profile element disabled");
     }
-    sendResponse({ status: "Twitter header disabled" })
+
+    sendResponse({ 
+      status: "Twitter header disabled",
+      profileElementFound: !!element
+    });
+
   } else if (request.action === "enableTwitterHeader") {
-    if (headerElement) {
-      headerElement.style.display = "" // Show the header
-      console.log("Twitter header enabled")
-      chrome.storage.local.set({ disableTwitterHeader: false })
+    // Always handle the header element
+    headerElement.style.display = "";
+    console.log("Twitter header enabled");
+    chrome.storage.local.set({ disableTwitterHeader: false });
+
+    // Only handle the profile element if it exists
+    if (element) {
+      element.style.display = "";
+      console.log("Profile element enabled");
     }
-    sendResponse({ status: "Twitter header enabled" })
+
+    sendResponse({ 
+      status: "Twitter header enabled",
+      profileElementFound: !!element
+    });
   }
-})
-// to disable twitter header every time tab updates
+});
+
 function checkTwitterHeaderVisibility() {
+  // Function to find profile element with retries
+  async function findProfileElement(maxAttempts = 5, intervalMs = 1000) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const profileelem = document.querySelector('div[data-testid="inline_reply_offscreen"]');
+      if (profileelem) {
+        console.log(`Profile element found on attempt ${attempt}`);
+        return profileelem;
+      }
+      console.log(`Profile element not found, attempt ${attempt}/${maxAttempts}`);
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+      }
+    }
+    return null;
+  }
+
+  // Function to handle header visibility
+  function updateHeaderVisibility(headerElement, disableTwitterHeader) {
+    if (disableTwitterHeader) {
+      headerElement.style.display = "none";
+      console.log("Twitter header is hidden (based on chrome.storage)");
+    } else {
+      headerElement.style.display = "";
+      console.log("Twitter header is visible (based on chrome.storage)");
+    }
+  }
+
   // Function to recursively wait for the header element to load
-  function waitForHeader() {
-    const headerElement = document.querySelector('header[role="banner"]')
+  async function waitForHeader() {
+    const headerElement = document.querySelector('header[role="banner"]');
+   
     if (headerElement) {
-      chrome.storage.local.get("disableTwitterHeader", (result) => {
-        console.log("Inside the header visibility function")
-        const disableTwitterHeader = result.disableTwitterHeader || false
-        // Find the profile link element - using the specific selectors from your example
-        const element = getElementByXPath(targetXPath)
-        console.log("profilelem>>>>>>>", element)
-        console.log("disableTwitterHeader:", disableTwitterHeader)
-        console.log("headerElement found:", headerElement)
-        if (disableTwitterHeader) {
-          headerElement.style.display = "none" // Hide the header
-          console.log("Twitter header is hidden (based on chrome.storage)")
-          if (element) {
-            // Disable the element
-            element.style.display = "none"
-          }
-        } else {
-          headerElement.style.display = "" // Show the header
-          console.log("Twitter header is visible (based on chrome.storage)")
-          
+      chrome.storage.local.get("disableTwitterHeader", async (result) => {
+        console.log("Inside the header visibility function");
+        const disableTwitterHeader = result.disableTwitterHeader || false;
+        
+        // Try to find the profile element with retries
+        const profileelem = await findProfileElement();
+        
+        // Handle the case where only header exists (no profile element)
+        if (!profileelem) {
+          console.log("Profile element not found - page only contains header");
+          updateHeaderVisibility(headerElement, disableTwitterHeader);
+          return;
         }
-      })
+
+        // If profile element exists, try to find the avatar container
+        const element = profileelem.querySelector(
+          'div[data-testid^="UserAvatar-Container-"]'
+        );
+        
+        if (!element) {
+          console.log("UserAvatar container not found - updating header only");
+          // updateHeaderVisibility(headerElement, disableTwitterHeader);
+          // return;
+        }
+             
+        console.log("disableTwitterHeader:", disableTwitterHeader);
+        console.log("headerElement and profile element found:", headerElement);
+        
+        // Update both header and profile element visibility
+        if (disableTwitterHeader) {
+          headerElement.style.display = "none";
+          element.style.display = "none";
+          console.log("Twitter header and profile element are hidden");
+        } else {
+          headerElement.style.display = "";
+          element.style.display = "";
+          console.log("Twitter header and profile element are visible");
+        }
+      });
     } else {
       // If headerElement is not found, wait a little and try again
-      console.log("Waiting for headerElement to be available...")
-      setTimeout(waitForHeader, 100) // Check every 100 milliseconds
+      console.log("Waiting for headerElement to be available...");
+      setTimeout(waitForHeader, 100); // Check every 100 milliseconds
     }
   }
 
   // Run the wait function on page load or reload
-  waitForHeader()
+  waitForHeader();
 }
 
-checkTwitterHeaderVisibility()
+// Use addEventListener instead of direct assignment for better practice
+window.addEventListener('load', () => checkTwitterHeaderVisibility());
 
 chrome.runtime.onConnect.addListener(function (port) {
   if (port.name === "scrapingChannel") {

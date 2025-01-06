@@ -57,19 +57,27 @@ class TwitterScraper {
     return text
   }
 
-
   parseTweets(analysisId = "", targetUrl = null) {
-    const alltweetsection = document.querySelector('section[role="region"]')
-    console.log("alltweetsection>>>>>>", alltweetsection)
-    const tweetContainers = alltweetsection.querySelectorAll(
-      "article[role='article']"
+    const alltweetsection = document.querySelector(
+      'section[role="region"] > div[aria-label="Timeline: Conversation'
     )
-    console.log("tweetContainers>>>>>>>>>>>", tweetContainers)
+    console.log("alltweetsection>>>>>>", alltweetsection)
+    const tweetsParent = alltweetsection.querySelectorAll(
+      ":scope > div > div[data-testid='cellInnerDiv']"
+    )
+   
+    console.log("tweetspARENT>>>>", tweetsParent)
+
     const tweetsData = []
     let counter = 1
 
-    for (const container of tweetContainers) {
+    for (const tweet of tweetsParent) {
       try {
+        const container = tweet.querySelector('article[role="article"]')
+        console.log("Containers>>>>>>>>>>>", container)
+        if(!container) {
+          continue;
+        }
         const screennameElement = container.querySelector("div[dir='ltr']")
         console.log("screennameElement>>>>>>>>>>", screennameElement)
         if (screennameElement) {
@@ -101,10 +109,10 @@ class TwitterScraper {
           console.log("time>>>>>>>>>>", time)
           const tweetTextElement = container.querySelector(
             "div[data-testid='tweetText']"
-          );
+          )
           const text = tweetTextElement
             ? this.extractTextWithEmojis(tweetTextElement)
-            : "No text found";
+            : "No text found"
 
           console.log("text>>>>>>>>>>", text)
           const showMoreLinkElement = container.querySelector(
@@ -113,7 +121,7 @@ class TwitterScraper {
           console.log("showMoreLinkElement>>>>>>>>>>", showMoreLinkElement)
           const isTruncated = !!showMoreLinkElement
           console.log("isTruncated>>>>>>>>>>", isTruncated)
-        
+
           const tweetIdElement = container.querySelector(
             "a[role='link'][href*='/status/']"
           )
@@ -167,7 +175,8 @@ class TwitterScraper {
   async getTweets(analysisId) {
     console.log(`Getting tweets for analysis ID: ${analysisId}`)
     let tweets = this.parseTweets(analysisId)
-    console.log(`Initial parsed tweets: ${JSON.stringify(tweets)}`)
+    console.log("tweetslength>>>>", tweets.length)
+    // console.log(`Initial parsed tweets: ${JSON.stringify(tweets)}`)
 
     const truncatedTweets = tweets.filter((tweet) => tweet.isTruncated)
     console.log(`Number of truncated tweets: ${truncatedTweets.length}`)
@@ -216,7 +225,7 @@ class TwitterScraper {
   }
 
   async getFullPost(url) {
-    console.log(`Requesting full post content for URL: ${url}`);
+    console.log(`Requesting full post content for URL: ${url}`)
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         { action: "scrapePostURL", url: url },
@@ -224,33 +233,33 @@ class TwitterScraper {
           if (chrome.runtime.lastError) {
             console.error(
               `Error in getFullPost: ${chrome.runtime.lastError.message}`
-            );
-            reject(chrome.runtime.lastError);
+            )
+            reject(chrome.runtime.lastError)
           } else {
             console.log(
               `Received response for URL ${url}: ${JSON.stringify(response)}`
-            );
+            )
             if (Array.isArray(response) && response.length > 0) {
-              const fullPost = response.find((post) => post.postUrl === url);
+              const fullPost = response.find((post) => post.postUrl === url)
               if (fullPost) {
                 console.log(
                   `Found matching full post: ${JSON.stringify(fullPost)}`
-                );
-                resolve(fullPost);
+                )
+                resolve(fullPost)
               } else {
                 console.log(
                   `No matching post found in response for URL: ${url}`
-                );
-                resolve(null);
+                )
+                resolve(null)
               }
             } else {
-              console.log(`Invalid response format for URL ${url}`);
-              resolve(null);
+              console.log(`Invalid response format for URL ${url}`)
+              resolve(null)
             }
           }
         }
-      );
-    });
+      )
+    })
   }
 }
 

@@ -261,7 +261,9 @@ function SidePanel() {
     console.log("openairesponse>>>>>>", openairesponse)
 
     if (!(openairesponse.length > 0)) {
-      setprojectStatus("Der Beitrag wurde von OpenAI nicht als meldewürdig befunden...")
+      setprojectStatus(
+        "Der Beitrag wurde von OpenAI nicht als meldewürdig befunden..."
+      )
       setTimeout(() => {
         setShowProgressBar(false)
       }, 1000)
@@ -325,12 +327,11 @@ function SidePanel() {
   const toggleHelpSection = () => {
     chrome.runtime.sendMessage({
       action: "openNewTab",
-      url: "tabs/Anzeigen_neu_generieren.html"
+      url: "tabs/Uber_D2X.html"
     })
   }
 
   const toggledownloadSection = async () => {
-    // setupMessageListener()
     // Helper function to clear all states
     const clearAllStates = () => {
       setAnalysisData({
@@ -480,7 +481,6 @@ function SidePanel() {
     setTimeout(() => {
       clearAllStates()
     }, 1200)
-    
   }
 
   const toggleSettingsSection = () => {
@@ -607,9 +607,9 @@ function SidePanel() {
           `Fehler beim Speichern des ${keyType} API-Schlüssels: ${chrome.runtime.lastError.message}`
         )
       } else {
-        alert(
-          `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API-Schlüssel erfolgreich gespeichert!`
-        )
+        // alert(
+        //   `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API-Schlüssel erfolgreich gespeichert!`
+        // )
 
         // Mark the key as saved
         setSavedKeys((prev) => ({ ...prev, [keyName]: true }))
@@ -628,7 +628,6 @@ function SidePanel() {
     // }
 
     chrome.storage.local.set({ backgroundInfo: backgroundInfo }, function () {
-      alert("Hintergrundinformationen erfolgreich gespeichert!")
       setbackgroundInfopresent(true)
     })
   }
@@ -660,16 +659,9 @@ function SidePanel() {
   }, [])
 
   const editBackgroundInfo = () => {
-    // Remove the assistant ID from chrome.storage.local
-    // chrome.storage.local.remove("Assistantid", function () {
-    //   console.log("Assistant ID removed from local storage.")
-    // })
-
-    // chrome.storage.local.remove("backgroundInfo", () => {
-    //   console.log("Background info removed.")
-    //   setbackgroundInfo("")
+   
     setbackgroundInfopresent(false)
-    // })
+   
   }
 
   const editaddress = () => {
@@ -686,10 +678,7 @@ function SidePanel() {
           `Error deleting ${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key: ${chrome.runtime.lastError.message}`
         )
       } else {
-        alert(
-          `${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key deleted successfully!`
-        )
-
+      
         // Clear the key from state
         setApiKeys((prevKeys) => ({
           ...prevKeys,
@@ -965,7 +954,7 @@ function SidePanel() {
   const handleLinkClick = () => {
     chrome.runtime.sendMessage({
       action: "openNewTab",
-      url: "tabs/Uber_D2X.html"
+      url: "tabs/Anzeigen_neu_generieren.html"
     })
   }
 
@@ -1081,7 +1070,7 @@ function SidePanel() {
               // Clean up the URL after download
               URL.revokeObjectURL(url)
 
-                // Clear the blob
+              // Clear the blob
               zipBlob = null
               break
 
@@ -1143,6 +1132,7 @@ function SidePanel() {
           <span
             id="mainLinkIcon"
             role="img"
+            title="Berichterstellungswerkzeug"
             aria-label="link"
             onClick={handleLinkClick}
             style={{
@@ -1457,7 +1447,7 @@ function SidePanel() {
                         onMouseUp={(e) =>
                           (e.currentTarget.style.transform = "scale(1)")
                         }>
-                        edit
+                        Bearbeiten
                       </button>
                     ) : (
                       <button
@@ -1520,7 +1510,7 @@ function SidePanel() {
                       onMouseUp={(e) =>
                         (e.currentTarget.style.transform = "scale(1)")
                       }>
-                      edit
+                      Bearbeiten
                     </button>
                   ) : (
                     <button
