@@ -84,7 +84,7 @@ export async function addTimestampToScreenshots(
           const canvas = document.createElement("canvas")
           const ctx = canvas.getContext("2d")
 
-          const bannerHeight = 120
+          const bannerHeight = 250
           canvas.width = img.width
           canvas.height = img.height + bannerHeight
 
@@ -93,7 +93,7 @@ export async function addTimestampToScreenshots(
           ctx.fillStyle = "#f0f0f0"
           ctx.fillRect(0, 0, canvas.width, bannerHeight)
           ctx.fillStyle = "#000000"
-          ctx.font = "20px Arial"
+          ctx.font = "44px Arial"
           ctx.textAlign = "left"
           ctx.textBaseline = "middle"
 
@@ -535,7 +535,8 @@ export async function createFinalReport(results, originalUrl = "") {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `${post.perplexityresponse?.online_praesenz || ""}`
+      `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
+      ${post.perplexityresponse?.online_praesenz || ""}`
     )
     userFolder.file(
       `profilUrl.txt`,
@@ -543,10 +544,16 @@ export async function createFinalReport(results, originalUrl = "") {
     )
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `Biografie: ${post.scrapedData?.profilebiodata}
-      ${post.scrapedData?.userJoindate}
-      Folgt: ${post.scrapedData?.followingCount}
-      Follower: ${post.scrapedData?.followersCount} `
+      `
+      - User-Name: ${post.Screenname}
+      - User-Handle: ${post.Username}
+      - Beschreibung: ${post.scrapedData?.profilebiodata}
+      - Konto erstellt: ${post.scrapedData?.userJoindate}
+      - Ort: ${post.scrapedData.userlocation}
+      - URL: ${post.scrapedData.userUrl}
+      - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
+      - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount} 
+      - Geboren am ${post.scrapedData.userBirthdate}`
     )
     userFolder.file(
       `userHandle.txt`,
@@ -557,9 +564,7 @@ export async function createFinalReport(results, originalUrl = "") {
       `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
     )
 
-    // profileScreenshot: [
-    //   "blob:chrome-extension://hnaaheihinnakbnfianoeifkiledcegi/b9a33aa3-b6b1-47d1-96fb-0968401d8069"
-    // ]
+   
     const response = await fetch(post.profileScreenshot[0])
   
     if (response.ok) {
@@ -651,7 +656,7 @@ export async function createFinalReport(results, originalUrl = "") {
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
-        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}:${minutes} Uhr`
+        `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt} Uhr`
       )
       const dateString = `${date}.${month}.${year}`
       if (!post.Username || !tweetID || !dateString || !post.Verfolgungsart) {
@@ -673,18 +678,26 @@ export async function createFinalReport(results, originalUrl = "") {
           Screenshot des Kommentars und Kontext:`,
           AnalyseZeitpunkt: `${date}.${month}.${year}`,
           Post: `${post.Inhalt}`,
-          Zeitpunkt: `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}.${minutes}.${seconds}`,
+          Zeitpunkt: `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt}`,
           userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
           screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
           profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
           postUrl: `URL des Kommentars: ${post.Post_URL}`,
           initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
-          UserInfo: `Biografie: ${post.scrapedData?.profilebiodata}
-      ${post.scrapedData?.userJoindate}
-      Folgt: ${post.scrapedData?.followingCount}
-      Follower: ${post.scrapedData?.followersCount} `,
-          ExtraUserInfo: `${post.perplexityresponse?.online_praesenz}`
-        }
+          UserInfo:  `
+          
+          - User-Name: ${post.Screenname}
+          - User-Handle: ${post.Username}
+          - Beschreibung: ${post.scrapedData?.profilebiodata}
+          - Konto erstellt: ${post.scrapedData?.userJoindate}
+          - Ort: ${post.scrapedData.userlocation}
+          - URL: ${post.scrapedData.userUrl}
+          - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
+          - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount} 
+          - Geboren am ${post.scrapedData.userBirthdate}`,
+          ExtraUserInfo: `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
+          ${post.perplexityresponse?.online_praesenz || ""}`
+          }
 
         const htmlreport = generateHtmlReport(
           post.Username,
@@ -847,40 +860,6 @@ async function runPerplexityQuery(query) {
   })
 }
 
-// export async function fetchEvaluation(apiKey, promptText, jsonSchema, posts) {
-//   try {
-//     const response = await fetch("https://api.openai.com/v1/chat/completions", {
-//       method: "POST",
-//       headers: {
-//         Authorization: `Bearer ${apiKey}`,
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify({
-//         model: "gpt-4o",
-//         messages: [
-//           { role: "system", content: promptText },
-//           { role: "user", content: JSON.stringify({ posts }) }
-//         ],
-//         response_format: {
-//           type: "json_schema",
-//           json_schema: jsonSchema
-//         }
-//       })
-//     })
-
-//     if (!response.ok) {
-//       const errorData = await response.json()
-//       throw new Error(
-//         `API request failed: ${response.status} - ${JSON.stringify(errorData)}`
-//       )
-//     }
-
-//     return await response.json()
-//   } catch (error) {
-//     console.error("OpenAI API error:", error)
-//     throw error
-//   }
-// }
 
 export async function fetchEvaluation(
   apiKey,

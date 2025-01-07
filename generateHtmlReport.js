@@ -293,7 +293,7 @@ function generateHtmlReport(
       "iframe-profilUrl": 45,
       "iframe-postUrl": 45,
       "iframe-initialPostUrl": 45,
-      "iframe-UserInfo": 170,
+      "iframe-UserInfo": 230,
       "iframe-ExtraUserInfo": 170
     }
   

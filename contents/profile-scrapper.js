@@ -75,6 +75,9 @@ export async function profileScrape() {
         
         const userJoindate = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]')?.innerText || "";
         console.log("userJoindate:", userJoindate);
+
+        const userUrl = otherbiodetails?.querySelector(':scope > div[data-testid="UserProfileHeader_Items"] > a[data-testid="UserUrl"]')?.innerText || "";
+        console.log("userUrl>>>>>>>", userUrl)
         //screenname scrape
         // Check if necessary data has been found
         if (
@@ -87,7 +90,8 @@ export async function profileScrape() {
             followersCount,
             followingCount,
             userlocation,
-            userBirthdate
+            userBirthdate,
+            userUrl
           };
           console.log("Scraped data:", scrapedData);
           resolve(scrapedData);

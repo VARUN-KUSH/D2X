@@ -419,13 +419,68 @@ async function processContent(messages) {
     console.log("systemprompts", systemPromptWithContext)
     const results = []
     console.log("messages>>>>>>>", messages)
+
+    // Map to store original user information
+    const userInfoMap = new Map()
+    let userCounter = 1
+
+    function anonymizeMessages(messages) {
+      const anonymizedMessages = messages.map((message) => {
+        // Use Post_URL as a unique identifier
+        const postUrl = message.postUrl || message.Post_URL;
+        
+        // Store original information with Post_URL as key
+        userInfoMap.set(postUrl, {
+          originalScreenname: message.screenname || message.Screenname,
+          originalUsername: message.handle || message.Username,
+          anonymousScreenname: `Username${userCounter}`,
+          anonymousUsername: `user${userCounter}123`,
+          postUrl: postUrl
+        });
+        
+        userCounter++;
+        // Return anonymized message
+        return {
+          ...message,
+          screenname: `Username${userCounter}`,
+          handle: `user${userCounter}123`,
+          Screenname: `Username${userCounter}`,
+          Username: `user${userCounter}123`
+        };
+        
+        
+      });
+      
+      return anonymizedMessages;
+    }
+    
+    function restoreOriginalInfo(reportablePosts) {
+      return reportablePosts.map((post) => {
+        // Get original info using Post_URL
+        const originalInfo = userInfoMap.get(post.Post_URL);
+        
+        if (originalInfo) {
+          return {
+            ...post,
+            Screenname: originalInfo.originalScreenname,
+            Username: originalInfo.originalUsername
+          };
+        }
+        
+        return post;
+      });
+    }
+    
     try {
+      const anonymizedMessages = anonymizeMessages(messages)
+      console.log("anonymizedMessages>>>", anonymizedMessages)
       const postresults = await fetchEvaluation(
         API_KEY,
         systemPromptWithContext,
         jsonSchema,
-        messages
+        anonymizedMessages
       )
+
       // Parse and use the structured output as needed
       console.log("Structured Response:", postresults)
       postresults.map((post) => {
@@ -438,21 +493,27 @@ async function processContent(messages) {
       console.error("Error fetching evaluation:", error)
     }
 
-    // Identify reportable posts
-    // todo: improve the loggic to identify
-
     const reportablePosts = results.filter(
       (post) => post.Post_selbst_ist_anzeigbar_flag === true
     )
 
     console.log("Reportable posts:", reportablePosts)
+
+    // Restore original information only for reportable posts
+    const reportablePostsWithOriginalInfo = restoreOriginalInfo(reportablePosts)
+
+    console.log(
+      "Reportable posts with original info:",
+      reportablePostsWithOriginalInfo
+    )
+
     let finalreports
     // Capture screenshots for reportable posts and user profiles
-    if (reportablePosts.length > 0) {
+    if (reportablePostsWithOriginalInfo.length > 0) {
       sendMessageToPopup(
-        `Ich habe ${reportablePosts.length} anzeigbare Posts identifiziert.`
+        `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`
       )
-      finalreports = await captureReportablePostScreenshots(reportablePosts)
+      finalreports = await captureReportablePostScreenshots(reportablePostsWithOriginalInfo)
     }
 
     updateAnalysisStatus(uid, "completed")
@@ -767,49 +828,6 @@ async function requestScreenshotCapture(url, filename, directory) {
       }
     })
   })
-
-  // chrome.tabs.query(
-  //   { active: true, currentWindow: true },
-  //   async function (tabs) {
-  //     const currentTab = tabs[0]
-
-  //     if (!currentTab) {
-  //       reject(new Error("No active tab found"))
-  //       return
-  //     }
-
-  //     // Ensure we're on the correct page
-  //     if (currentTab.url !== url) {
-  //       reject(new Error("Current tab URL does not match target URL."))
-  //       return
-  //     }
-  //     console.log("currentTab>>>>>>>>>>", currentTab, "filename>>>>>", filename)
-
-  //     try {
-  //       let blobURLs = await new Promise((resolve, reject) => {
-  //         capturereportablessandchangetoURLs(
-  //           currentTab,
-  //           filename || getFilename(url, analysisId),
-  //           resolve,
-  //           reject,
-  //           (progress) => updateProgressBar(progress * 100) // Update the progress bar
-  //         )
-  //       })
-  //       console.log("blobreportable>>>>>>>>>>>>>", blob)
-  //       const time = await getCurrentTime()
-  //       const analysisId = getActiveAnalysisId()
-  //       const processedScreenshots = await addTimestampToScreenshots(
-  //         blobURLs,
-  //         time,
-  //         url,
-  //         analysisId
-  //       )
-  //     } catch(error) {
-  //       console.error("Error capturing and storing screenshot:", error)
-  //       reject(error)
-  //     }
-  //   }
-  // )
 }
 
 // Utility function to get the current date in DD.MM.YYYY format
@@ -1045,7 +1063,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 console.log(
                   "response found from perplexity is not in correct format"
                 )
-              
               }
             } catch (error) {
               console.error("Error parsing perplexity response:", error)

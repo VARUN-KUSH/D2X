@@ -59,7 +59,7 @@ class TwitterScraper {
 
   parseTweets(analysisId = "", targetUrl = null) {
     const alltweetsection = document.querySelector(
-      'section[role="region"] > div[aria-label="Timeline: Conversation'
+      'section[role="region"] > div[aria-label^="Timeline:'
     )
     console.log("alltweetsection>>>>>>", alltweetsection)
     const tweetsParent = alltweetsection.querySelectorAll(
@@ -81,11 +81,11 @@ class TwitterScraper {
         const screennameElement = container.querySelector("div[dir='ltr']")
         console.log("screennameElement>>>>>>>>>>", screennameElement)
         if (screennameElement) {
-          const screenname = screennameElement
+          const Screenname = screennameElement
             ? this.extractTextWithEmojis(screennameElement)
             : "Unknown"
 
-          console.log("screenname>>>>>>>>>>", screenname)
+          console.log("screenname>>>>>>>>>>", Screenname)
 
           const handleElement = container.querySelector(
             "a[role='link'][href*='/']"
@@ -93,11 +93,11 @@ class TwitterScraper {
 
           console.log("handleElement>>>>>>>>>>", handleElement)
 
-          const handle = handleElement
+          const Username = handleElement
             ? "@" + handleElement.href.split("/").pop()
             : "Unknown"
 
-          console.log("handle>>>>>>>>>>", handle)
+          console.log("handle>>>>>>>>>>", Username)
 
           const timeElement = container.querySelector("time")
           console.log("timeElement>>>>>>>>>>", timeElement)
@@ -146,8 +146,8 @@ class TwitterScraper {
           const postId = analysisId ? `${analysisId}-${counter}` : `${counter}`
 
           const tweetData = {
-            screenname,
-            handle,
+            Screenname,
+            Username,
             time,
             text,
             postUrl,
