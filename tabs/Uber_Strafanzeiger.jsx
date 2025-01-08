@@ -381,11 +381,12 @@ function App() {
 
         <h3 id="rechtlicher-hinweis">Rechtlicher Hinweis</h3>
         <ul>
+        <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
           <li>
             Strafanzeiger erstellt nur Entwürfe für Anzeigen - keine
             rechtsverbindlichen Dokumente
           </li>
-          <li>Die Analyse ersetzt keine juristische Beratung</li>
+          <li>Strafanzeiger ersetzt keine juristische Beratung</li>
           <li>
             Du bist selbst dafür verantwortlich:
             <ul>
@@ -417,7 +418,7 @@ function App() {
           <li>
             Alternativen:
             <ol>
-              <li>Nutzung der X API (erfordert Developer Account)</li>
+              <li>Nutzung der X API (erfordert Developer Account - und wird erst in einer zukünftigen Version unterstützt)</li>
               <li>Manuelles Kopieren der relevanten Inhalte</li>
             </ol>
           </li>
@@ -477,6 +478,7 @@ function App() {
                 Deine für die KI hinterlegten Informationen aus dem Bereich{" "}
                 <em>Hintergrundinformationen</em>
               </li>
+              <li>Bei manueller Kommentaranalyse werden alle dort angegebenen Informationen an OpenAI geschickt. Inklusive ggf. von dir dort angegebener Nutzernamen/Handle.</li>
             </ul>
           </li>
           <li>

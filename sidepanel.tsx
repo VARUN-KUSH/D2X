@@ -1355,6 +1355,7 @@ function SidePanel() {
                       id="senderAddress"
                       name="senderAddress"
                       value={formData.senderAddress}
+                      placeholder="Mein Name, c/o ..., Straße 1, 12345 Meine Stadt"
                       onChange={handleChange}
                       disabled={isaddress}
                     />
@@ -1371,7 +1372,7 @@ function SidePanel() {
                       id="recipientAddress"
                       name="recipientAddress"
                       value={formData.recipientAddress}
-                      placeholder="John Smith, MyStreet 123, 12345 Berlin"
+                      placeholder="Polizeidirektion, Straße 1, 12345 Meine Stadt"
                       onChange={handleChange}
                       disabled={isaddress}
                     />
@@ -1388,7 +1389,7 @@ function SidePanel() {
                       id="senderContact"
                       name="senderContactdetails"
                       value={formData.senderContactdetails}
-                      placeholder="+49 123 45678, Me@example.com"
+                      placeholder="+49 123 45678, mein.name@e-mail.de"
                       onChange={handleChange}
                       disabled={isaddress}
                     />
@@ -1406,7 +1407,7 @@ function SidePanel() {
                       name="city"
                       type="text"
                       value={formData.city}
-                      placeholder="Berlin"
+                      placeholder="Meine Stadt"
                       onChange={handleChange}
                       disabled={isaddress}
                     />
@@ -1424,7 +1425,7 @@ function SidePanel() {
                       name="fullName"
                       type="text"
                       value={formData.fullName}
-                      placeholder="John Smith"
+                      placeholder="Mein Name"
                       onChange={handleChange}
                       disabled={isaddress}
                     />
@@ -1482,7 +1483,7 @@ function SidePanel() {
                     Hintergrundinformationen:
                     <span
                       className="help-icon"
-                      title="Geben Sie hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden.">
+                      title="Geben Sie hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
                       ⓘ
                     </span>
                   </label>
