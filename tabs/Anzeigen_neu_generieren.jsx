@@ -589,23 +589,19 @@ const Anzeigen_neu_generieren = () => {
       <div className="sidebar">
         <h2>Anleitung zur Nutzung des Anzeigengenerators</h2>
 
+        <h3>Wozu dient das Tool zum Anzeigen-Neu-Generieren?</h3>
+        <p>
+        Dieses Tool benötigst du, wenn du Texte aus heruntergeladenen Strafanzeigenentwürfen bearbeitet hast. Es aktualisiert die Entwürfe, sodass die Änderungen korrekt angezeigt und gedruckt werden können.
+        </p>
+
         <h3>Voraussetzungen</h3>
         <ul>
           <li>
             <strong>ZIP-Datei entpackt:</strong>
             <ul>
               <li>
-                Sie haben die ZIP-Datei mit den erforderlichen Ordnerstrukturen
+                Du hast die ZIP-Datei mit den erforderlichen Ordnerstrukturen
                 bereits entpackt.
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Tool geöffnet:</strong>
-            <ul>
-              <li>
-                Sie haben die Datei <strong>Anzeige_neu_generieren.html</strong>{" "}
-                im entpackten Ordner in Ihrem Webbrowser geöffnet.
               </li>
             </ul>
           </li>
@@ -614,16 +610,15 @@ const Anzeigen_neu_generieren = () => {
         <h3>1. Auswahl des Hauptverzeichnisses</h3>
         <ol>
           <li>
-            <strong>Klicken Sie auf „Wähle das Hauptverzeichnis“. </strong>
+            <strong>Klicke auf „Wähle das Hauptverzeichnis“.</strong>
           </li>
           <li>
-            <strong>Wählen Sie den Ordner aus</strong>, in dem sich die
-            entpackten Dateien und <strong>Anzeige_neu_generieren.html</strong>{" "}
-            befinden.
+            <strong>Wähle den Ordner aus</strong>, in dem sich die entpackten Dateien
+            und die Anzeigenentwürfe befinden.
           </li>
           <li>
-            <strong>Bestätigen Sie die Auswahl.</strong> Eine Statusmeldung
-            zeigt an, dass das Verzeichnis erfolgreich geladen wurde.
+            <strong>Bestätige die Auswahl.</strong> Eine Statusmeldung zeigt an, dass
+            das Verzeichnis erfolgreich geladen wurde.
           </li>
         </ol>
 
@@ -631,23 +626,22 @@ const Anzeigen_neu_generieren = () => {
         <ol>
           <li>
             <strong>
-              Nach der Verzeichniswahl erscheint eine Liste von Nutzernamen und
-              deren Posts, für die Sie Anzeigen erzeugen können.
+              Nach der Verzeichniswahl erscheint eine Liste von Nutzernamen und deren
+              Posts, für die du Anzeigen erzeugen kannst.
             </strong>
           </li>
           <li>
-            <strong>Standardmäßig sind alle ausgewählt.</strong> Möchten Sie nur
+            <strong>Standardmäßig sind alle ausgewählt.</strong> Möchtest du nur
             bestimmte Anzeigen generieren:
             <ul>
               <li>
                 <strong>
-                  Halten Sie die Strg-Taste (Windows) oder Cmd-Taste (Mac)
-                  gedrückt.
+                  Halte die Strg-Taste (Windows) oder Cmd-Taste (Mac) gedrückt.
                 </strong>
               </li>
               <li>
-                <strong>Klicken Sie auf die gewünschten Anzeigen</strong>, um
-                die Auswahl zu ändern.
+                <strong>Klicke auf die gewünschten Anzeigen</strong>, um die Auswahl
+                zu ändern.
               </li>
             </ul>
           </li>
@@ -656,38 +650,38 @@ const Anzeigen_neu_generieren = () => {
         <h3>3. Generierung der Anzeigen</h3>
         <ol>
           <li>
-            <strong>Klicken Sie auf „Generiere Anzeige“. </strong>
+            <strong>Klicke auf „Generiere Anzeige“.</strong>
           </li>
           <li>
-            <strong>Warten Sie, bis der Prozess abgeschlossen ist.</strong> Eine
-            Statusmeldung informiert Sie über den Fortschritt und den Abschluss
-            der Generierung.
+            <strong>Warte, bis der Prozess abgeschlossen ist.</strong> Eine
+            Statusmeldung informiert dich über den Fortschritt und den Abschluss der
+            Generierung.
           </li>
           <li>
             <strong>Wichtiger Hinweis:</strong> Bereits vorhandene Anzeigen mit
-            demselben Namen werden automatisch vom Tool{" "}
-            <strong>überschrieben</strong> und aktualisiert.
+            demselben Namen werden automatisch vom Tool 
+            <strong> überschrieben</strong> und aktualisiert.
           </li>
         </ol>
 
         <h3>4. Abschluss und Speicherort</h3>
         <ol>
           <li>
-            <strong>Nach erfolgreicher Generierung</strong> erhalten Sie eine
-            Bestätigung im Statusbereich, dass die Anzeigen erfolgreich erstellt
-            und im Hauptverzeichnis gespeichert wurden.
+            <strong>Nach erfolgreicher Generierung</strong> erhältst du eine
+            Bestätigung im Statusbereich, dass die Anzeigen erfolgreich erstellt und
+            im Hauptverzeichnis gespeichert wurden.
           </li>
         </ol>
 
         <h3>5. Zugriff auf die generierten Anzeigen</h3>
         <ol>
           <li>
-            <strong>Öffnen Sie den Hauptordner auf Ihrem Computer</strong>, den
-            Sie in Schritt 1 ausgewählt haben.
+            <strong>Öffne den Hauptordner auf deinem Computer</strong>, den du in
+            Schritt 1 ausgewählt hast.
           </li>
           <li>
-            <strong>Öffnen Sie die gewünschten Anzeigen</strong> in Ihrem
-            Webbrowser, um sie anzusehen oder auszudrucken.
+            <strong>Öffne die gewünschten Anzeigen</strong> in deinem Webbrowser, um
+            sie anzusehen oder auszudrucken.
           </li>
         </ol>
 
@@ -696,23 +690,21 @@ const Anzeigen_neu_generieren = () => {
         <h2>Zusätzliche Hinweise</h2>
         <ul>
           <li>
-            <strong>Browserkompatibilität:</strong> Verwenden Sie einen modernen
-            Browser wie <strong>Google Chrome</strong> oder{" "}
-            <strong>Microsoft Edge</strong>, da das Tool die File System Access
-            API nutzt.
+            <strong>Browserkompatibilität:</strong> Verwende einen modernen Browser
+            wie <strong>Google Chrome</strong> oder <strong>Microsoft Edge</strong>,
+            da das Tool die File System Access API nutzt.
           </li>
           <li>
-            <strong>Dateistruktur:</strong> Stellen Sie sicher, dass alle
-            erforderlichen Dateien und Unterordner im Hauptverzeichnis vorhanden
-            sind, damit das Tool korrekt funktioniert.
+            <strong>Dateistruktur:</strong> Stelle sicher, dass alle erforderlichen
+            Dateien und Unterordner im Hauptverzeichnis vorhanden sind, damit das
+            Tool korrekt funktioniert.
           </li>
           <li>
             <strong>Probleme beheben:</strong>
             <ul>
               <li>
-                <strong>Fehlermeldungen:</strong> Überprüfen Sie die
-                Dateistruktur und stellen Sie sicher, dass Sie die richtigen
-                Ordner ausgewählt haben.
+                <strong>Fehlermeldungen:</strong> Überprüfe die Dateistruktur und
+                stelle sicher, dass du die richtigen Ordner ausgewählt hast.
               </li>
             </ul>
           </li>

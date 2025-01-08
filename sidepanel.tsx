@@ -1116,6 +1116,7 @@ function SidePanel() {
             AnalysisData.profilesdata) && (
             <span
               className="main-icon"
+              title="Daten herunterladen"
               onClick={toggledownloadSection}
               style={{
                 cursor: "pointer",
@@ -1132,7 +1133,7 @@ function SidePanel() {
           <span
             id="mainLinkIcon"
             role="img"
-            title="Berichterstellungswerkzeug"
+            title="Werkzeug um Strafanzeigen in einem Ordner neu zu generieren"
             aria-label="link"
             onClick={handleLinkClick}
             style={{
@@ -1148,7 +1149,7 @@ function SidePanel() {
           <span
             id="mainHelpIcon"
             className="main-icon"
-            title="Über Strafanzeiger"
+            title="Anleitung, wichtige Hinweise und Infos"
             onClick={toggleHelpSection}
             onMouseDown={(e) =>
               (e.currentTarget.style.transform = "scale(0.9)")
@@ -1547,7 +1548,7 @@ function SidePanel() {
 
               <button
                 onClick={triggerFullAnalysis}
-                title="Führt eine automatische Auswertung der Seite aus, inklusive Screenshots, Profilsuchen und Beweissicherungen, und stellt die Ergebnisse zum Download bereit.">
+                title="Führt eine automatische Auswertung der Posts auf der aktuellen Seite durch. Erstellt für anzeigbare Posts Strafanzeigeentwürfe inklusive Beweissicherungen mit Screenshots und Profilsuchen und speichert die Ergebnisse im Download-Ordner.">
                 Seite auswerten
               </button>
             </div>
@@ -1563,7 +1564,7 @@ function SidePanel() {
               {/* disable button until process is going */}
               <button
                 id="fullPageScreenshot"
-                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich der Bereiche, die aktuell nicht sichtbar sind."
+                title="Erstellt einen Screenshot der gesamten Webseite, einschließlich des Scrollens in Bereiche, die aktuell nicht sichtbar sind."
                 onClick={takefullpagess}>
                 Ganze Seite
               </button>
@@ -1611,7 +1612,7 @@ function SidePanel() {
                 onChange={handleInputChanges}></textarea>
               <button
                 id="searchProfile"
-                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
+                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai. Die angegebenen Daten werden an Perplexity gesendet."
                 onClick={handleProfileSearch}>
                 Profil recherchieren
               </button>
@@ -1627,7 +1628,7 @@ function SidePanel() {
                 ULR des Kommentars:{" "}
                 <span
                   className="help-icon"
-                  title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll.">
+                  title="Gib hier die URL des Kommentars ein, der untersucht werden soll.">
                   ⓘ
                 </span>
               </label>
@@ -1642,7 +1643,7 @@ function SidePanel() {
                 Bekannte Postinformationen:{" "}
                 <span
                   className="help-icon"
-                  title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
+                  title="Füge hier den Post ein, für den (mit OpenAI) geprüft werden soll, ob er angezeigt werden kann. Wichtig: Gib auch den Screennamen, das Userhandle und das Datum des Posts an, wie sie über oder unter dem Post stehen.">
                   ⓘ
                 </span>
               </label>
@@ -1653,7 +1654,7 @@ function SidePanel() {
                 onChange={handleInputPostChanges}></textarea>
               <button
                 id="searchProfile"
-                title="Startet eine Recherche des angegebenen Profils mithilfe von Perplexity.ai."
+                title="Startet die Prüfung des Kommentars mithilfe von OpenAI. Die angegebenen Daten werden an OpenAI gesendet."
                 onClick={handlePostSearch}>
                 Kommentar analysieren
               </button>
