@@ -24,7 +24,6 @@
     "typescript": "5.3.3"
   },
   "manifest": {
-   
     "host_permissions": [
       "<all_urls>",
       "https://api.openai.com/",
@@ -51,7 +50,7 @@
       {
         "resources": [
           "tabs/Anzeigen_neu_generieren.html",
-          "tabs/Uber_D2X.html"
+          "tabs/Uber_Strafanzeiger.html"
         ],
         "matches": [
           "<all_urls>"

@@ -1,5 +1,5 @@
 {
-  "name": "D2X_response_schema",
+  "name": "Strafanzeiger_response_schema",
   "strict": true,
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema#",

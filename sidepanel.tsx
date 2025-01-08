@@ -327,7 +327,7 @@ function SidePanel() {
   const toggleHelpSection = () => {
     chrome.runtime.sendMessage({
       action: "openNewTab",
-      url: "tabs/Uber_D2X.html"
+      url: "tabs/Uber_Strafanzeiger.html"
     })
   }
 
@@ -1060,7 +1060,7 @@ function SidePanel() {
 
               // Create a URL for the Blob and download it
               const url = URL.createObjectURL(zipBlob)
-              const downloadName = "D2X_Report.zip"
+              const downloadName = "Strafanz_Report.zip"
 
               const a = document.createElement("a")
               a.href = url
@@ -1148,7 +1148,7 @@ function SidePanel() {
           <span
             id="mainHelpIcon"
             className="main-icon"
-            title="Über D2X"
+            title="Über Strafanzeiger"
             onClick={toggleHelpSection}
             onMouseDown={(e) =>
               (e.currentTarget.style.transform = "scale(0.9)")
@@ -1177,22 +1177,21 @@ function SidePanel() {
       <main>
         {showHelpSection && (
           <section id="mainHelpSection">
-            <h2>Über D2X</h2>
+            <h2>Über Strafanzeiger</h2>
             <p>
-              D2X ist eine Erweiterung zur automatischen Auswertung von
-              Social-Media-Beiträgen und zur Erstellung von Berichten über
-              potenziell illegale Inhalte zur Einreichung bei Behörden.
+              Strafanzeiger ist eine Chrome Erweiterung zur automatischen Auswertung 
+              von X/Twitter Posts und ggf. Erstellung von Strafanzeigen 
+              für Posts, die vermutlich gegen deutsches Recht verstoßen.
             </p>
             <p>Die Erweiterung führt folgende Schritte aus:</p>
             <ol>
               <li>Erfassung von Screenshots der aktuellen Seite</li>
-              <li>Extraktion relevanter Inhalte</li>
-              <li>KI-gestützte Analyse der Inhalte</li>
-              <li>Erstellung eines Berichts mit Empfehlungen</li>
-              <li>Zusammenstellung aller Beweise in einer ZIP-Datei</li>
+              <li>Ggf. extraktion relevanter Inhalte</li>
+              <li>KI-gestützte Analyse der Inhalte (Posts und Profile)</li>
+              <li>Erstellung Strafanzeigeentwürfen in einer ZIP Datei</li>
             </ol>
             <p>
-              Alle sensitiven Daten werden lokal in Ihrem Browser verarbeitet
+              Sensitiven Daten werden lokal in Ihrem Browser verarbeitet
               und nur die für die Analyse notwendigen Informationen an die
               KI-Dienste übermittelt.
             </p>

@@ -1044,7 +1044,7 @@ function App() {
         <h2 id="die-zip-datei">Die ZIP-Datei</h2>
         <p>
           Nach jeder Analyse erstellt Strafanzeiger einen ZIP-Ordner mit dem
-          Namen "Strafanzeiger_Report" und einem Zeitstempel. Dieser wird:
+          Namen "Strafanz_Report" und einem Zeitstempel. Dieser wird:
         </p>
         <ul>
           <li>Bei automatischer Analyse: Direkt heruntergeladen</li>

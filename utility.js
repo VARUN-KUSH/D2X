@@ -2,7 +2,7 @@ import JSZip from "jszip.min.js"
 
 import { generateHtmlReport } from "./generateHtmlReport.js"
 
-let zip = null; 
+let zip = null
 
 function modifyUrl(url) {
   // Find the base URL by splitting at the first "/status/" or anything after "https://x.com/"
@@ -145,7 +145,6 @@ export async function addTimestampToScreenshots(
 //   await downloadallfullfilesZip()
 // }
 
-
 async function getFormData() {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get("formData", (result) => {
@@ -166,9 +165,9 @@ export async function downloadprofilereport(results) {
   let hours = String(now.getHours()).padStart(2, "0")
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
-  zip = null;
+  zip = null
   zip = new JSZip()
-  let mainFolder = zip.folder('D2X_Report') // Main folder
+  let mainFolder = zip.folder("Strafanz_Report") // Main folder
   let formData = {}
   try {
     formData = await getFormData()
@@ -194,10 +193,7 @@ export async function downloadprofilereport(results) {
   }
 
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
-  mainFolder.file(
-    "initialPostUrl.txt",
-    `URL des Ausgangsposts: ${""}`
-  )
+  mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${""}`)
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
 
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
@@ -259,11 +255,11 @@ export async function downloadpostreport(results, originalUrl) {
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
 
-  // // Create folder name in format D2X_Report_year.month.date.time
-  // let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
-  zip = null;
+  // // Create folder name in format Strafanz_Report_year.month.date.time
+  // let folderName = `Strafanz_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
+  zip = null
   zip = new JSZip()
-  let mainFolder = zip.folder('D2X_Report') // Main folder
+  let mainFolder = zip.folder("Strafanz_Report") // Main folder
   let formData = {}
   try {
     formData = await getFormData()
@@ -344,8 +340,6 @@ export async function downloadpostreport(results, originalUrl) {
       `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
     )
 
-    
-
     // Filter results for the current username
     let userPosts = results.filter((item) => item.Username === username)
     console.log("userPosts>>>>>>>>>>>", userPosts)
@@ -410,7 +404,6 @@ export async function downloadpostreport(results, originalUrl) {
         `Zeitpunkt.txt`,
         `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}:${minutes} Uhr`
       )
-      
     }
   }
 }
@@ -473,9 +466,9 @@ export async function createFinalReport(results, originalUrl = "") {
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
 
-  // Create folder name in format D2X_Report_year.month.date.time
+  // Create folder name in format Strafanzeiger_Report_year.month.date.time
   zip = new JSZip()
-  let folderName = `D2X_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
+  let folderName = `Strafanz_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   let mainFolder = zip.folder(folderName) // Main folder
   let formData = {}
   try {
@@ -564,9 +557,8 @@ export async function createFinalReport(results, originalUrl = "") {
       `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname}`
     )
 
-   
     const response = await fetch(post.profileScreenshot[0])
-  
+
     if (response.ok) {
       const blobData = await response.blob()
       console.log("blobData>>>>..", blobData)
@@ -684,7 +676,7 @@ export async function createFinalReport(results, originalUrl = "") {
           profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
           postUrl: `URL des Kommentars: ${post.Post_URL}`,
           initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
-          UserInfo:  `
+          UserInfo: `
           
           - User-Name: ${post.Screenname}
           - User-Handle: ${post.Username}
@@ -697,7 +689,7 @@ export async function createFinalReport(results, originalUrl = "") {
           - Geboren am ${post.scrapedData.userBirthdate}`,
           ExtraUserInfo: `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
           ${post.perplexityresponse?.online_praesenz || ""}`
-          }
+        }
 
         const htmlreport = generateHtmlReport(
           post.Username,
@@ -859,7 +851,6 @@ async function runPerplexityQuery(query) {
     })
   })
 }
-
 
 export async function fetchEvaluation(
   apiKey,
