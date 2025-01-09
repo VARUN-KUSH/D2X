@@ -300,9 +300,7 @@ async function startFullAnalysis() {
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
-      sendMessageToPopup(
-        "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
-      )
+      sendMessageToPopup("Ich habe keine anzeigbaren Tweets gefunden.")
       return
     }
     // After processing, add analysis results to the ZIP Folder

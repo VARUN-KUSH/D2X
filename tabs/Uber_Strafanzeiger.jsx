@@ -557,7 +557,7 @@ function App() {
             Funktioniert eventuell auch mit anderen Chromium-basierten Browsern
             (Edge, Opera)
           </li>
-          <li>Für das Drucken wird Firefox empfohlen (beste Formatierung)</li>
+          <li>Für das Drucken wird Firefox empfohlen (Erfahrungsgemäß beste Formatierung)</li>
         </ul>
 
         <h3 id="performance-nutzung">Performance & Nutzung</h3>
