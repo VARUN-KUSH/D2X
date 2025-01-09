@@ -427,8 +427,8 @@ async function processContent(messages) {
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
         // Use Post_URL as a unique identifier
-        const postUrl = message.postUrl || message.Post_URL;
-        
+        const postUrl = message.postUrl || message.Post_URL
+
         // Store original information with Post_URL as key
         userInfoMap.set(postUrl, {
           originalScreenname: message.screenname || message.Screenname,
@@ -436,9 +436,9 @@ async function processContent(messages) {
           anonymousScreenname: `Username${userCounter}`,
           anonymousUsername: `user${userCounter}123`,
           postUrl: postUrl
-        });
-        
-        userCounter++;
+        })
+
+        userCounter++
         // Return anonymized message
         return {
           ...message,
@@ -446,31 +446,29 @@ async function processContent(messages) {
           handle: `user${userCounter}123`,
           Screenname: `Username${userCounter}`,
           Username: `user${userCounter}123`
-        };
-        
-        
-      });
-      
-      return anonymizedMessages;
+        }
+      })
+
+      return anonymizedMessages
     }
-    
+
     function restoreOriginalInfo(reportablePosts) {
       return reportablePosts.map((post) => {
         // Get original info using Post_URL
-        const originalInfo = userInfoMap.get(post.Post_URL);
-        
+        const originalInfo = userInfoMap.get(post.Post_URL)
+
         if (originalInfo) {
           return {
             ...post,
             Screenname: originalInfo.originalScreenname,
             Username: originalInfo.originalUsername
-          };
+          }
         }
-        
-        return post;
-      });
+
+        return post
+      })
     }
-    
+
     try {
       const anonymizedMessages = anonymizeMessages(messages)
       console.log("anonymizedMessages>>>", anonymizedMessages)
@@ -513,7 +511,9 @@ async function processContent(messages) {
       sendMessageToPopup(
         `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`
       )
-      finalreports = await captureReportablePostScreenshots(reportablePostsWithOriginalInfo)
+      finalreports = await captureReportablePostScreenshots(
+        reportablePostsWithOriginalInfo
+      )
     }
 
     updateAnalysisStatus(uid, "completed")
