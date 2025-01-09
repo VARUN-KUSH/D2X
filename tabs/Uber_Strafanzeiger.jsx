@@ -441,7 +441,7 @@ function App() {
             Die Ergebnisse sind nicht garantiert konsistent:
             <ul>
               <li>
-                Die gleiche Analyse kann unterschiedliche Ergebnisse liefern
+                Die gleiche Analyse kann unterschiedliche Ergebnisse liefern, wenn du sie z.B. erneut durchführst.
               </li>
               <li>
                 Gerade Grenzfälle werden manchmal unterschiedlich bewertet
@@ -471,8 +471,8 @@ function App() {
           <li>
             An OpenAI werden zur Analyse gesendet:
             <ul>
-              <li>Tweetinhalte mit Zeitstempel</li>
-              <li>Anonymisierte Nutzernamen/Handles</li>
+              <li>Textinhalte des zu untersuchenden Post mit Zeitstempel</li>
+              <li>Anonymisierte: Nutzernamen, User-Handles (auch in den URLs)</li>
               <li>Dein OpenAI API-Key</li>
               <li>
                 Deine für die KI hinterlegten Informationen aus dem Bereich{" "}
@@ -582,8 +582,8 @@ function App() {
             Du bist selbst verantwortlich für:
             <ul>
               <li>Einhaltung der X.com Nutzungsbedingungen</li>
-              <li>Korrekte Einreichung von Anzeigen</li>
               <li>Prüfung der generierten Dokumente</li>
+              <li>Korrekte Einreichung von Anzeigen</li>
             </ul>
           </li>
         </ul>
@@ -719,7 +719,7 @@ function App() {
             Anzeige unterschreibst
           </li>
           <li>
-            <strong>Kontaktdaten</strong> (optional): E-Mail und/oder Telefon
+            <strong>Kontaktdaten</strong> (optional): E-Mail und/oder Telefon für schnelle Erreichbarkeit
           </li>
           <li>
             <strong>Empfängeradresse</strong>: Adresse der zuständigen
@@ -748,23 +748,23 @@ function App() {
 
         <ul>
           <li>
-            <strong>Ladungsfähige Adresse</strong>:
+            <strong>Anzeigen benötigen eine "ladungsfähige" Adresse von dir</strong>:
             <ul>
-              <li>Muss nicht deine private Adresse sein</li>
+              <li>Es muss nicht deine private Adresse sein</li>
               <li>
-                Kann z.B. die Adresse eines Anwalts oder einer Beratungsstelle
-                sein. Ggf. der Anzeige eine Einverständniserklärung der
-                angegebenen Person beifügen.
+                Wichtig ist: An dieser Adresse müssen Behördenschreiben
+                zugestellt werden können. <em>E-Mail-Adresse oder Postfach reichen
+                nicht aus.</em>
               </li>
               <li>
-                Wichtig ist nur: An dieser Adresse müssen Behördenschreiben
-                zugestellt werden können. E-Mail-Adresse oder Postfach reichen
-                nicht aus.
+                Es kann z.B. die Adresse eines Anwalts oder einer Beratungsstelle
+                sein. Ggf. der Anzeige eine Einverständniserklärung der
+                angegebenen Person beifügen.
               </li>
             </ul>
           </li>
           <li>
-            <strong>Alternative Kontaktdaten</strong>:
+            <strong>Alternative Kontaktdaten - Wenn Du gerne Kontaktdaten angeben willst</strong>:
             <ul>
               <li>Separate E-Mail-Adresse für behördliche Kommunikation</li>
               <li>
@@ -780,6 +780,7 @@ function App() {
                 )
               </li>
               <li>Diese Daten können später einfach deaktiviert werden</li>
+              <li>Grundsätzlich musst du E-Mail oder Telefonnummer nicht angeben</li>
             </ul>
           </li>
           <li>
@@ -816,11 +817,10 @@ function App() {
           </li>
           <li>
             💡 <strong>Tipp</strong>: Wenn bestimmte Daten nicht auf dem Brief
-            erscheinen sollen, lass die entsprechenden Felder einfach leer.
+            erscheinen sollen, lass die entsprechenden Felder in den Einstellungen einfach leer. 
+            Denk daran, nach dem Eintragen auf "Speichern" zu klicken.
           </li>
         </ul>
-
-        <p>Denk daran, nach dem Eintragen auf "Speichern" zu klicken.</p>
 
         <h2 id="3-weitere-einstellungen">3. Weitere Einstellungen</h2>
 

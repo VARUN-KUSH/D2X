@@ -1037,7 +1037,7 @@ function SidePanel() {
               break
             case "requestAPIKey":
               alert(
-                "Bitte setzen Sie Ihren API-Schlüssel unter Einstellungen > API Keys."
+                "Bitte setze deinen API-Schlüssel unter Einstellungen > API Keys."
               )
               setShowProgressBar(false)
               break
@@ -1255,7 +1255,7 @@ function SidePanel() {
                       OpenAI API-Schlüssel:
                       <span
                         className="help-icon"
-                        title="Der API-Key wird benötigt, um die KI-Services von OpenAI zu nutzen. Er wird lokal im Browser gespeichert und bei Anfragen an OpenAI gesendet.">
+                        title="Der API-Key wird benötigt, um die KI-Services von OpenAI zu nutzen. Er wird lokal im Browser gespeichert und bei Anfragen an OpenAI gesendet. Wie Du einen API-Key bekommst kannst Du unter Erste Schritte in der Anleitung lesen.">
                         ⓘ
                       </span>
                     </label>
@@ -1297,7 +1297,7 @@ function SidePanel() {
                       Perplexity API-Schlüssel:
                       <span
                         className="help-icon"
-                        title="Der API-Key wird benötigt, um die KI-Services von Perplexity.ai zu nutzen. Er wird lokal im Browser gespeichert und bei Anfragen an Perplexity.ai gesendet.">
+                        title="Der API-Key wird benötigt, um die KI-Services von Perplexity.ai zu nutzen. Er wird lokal im Browser gespeichert und bei Anfragen an Perplexity.ai gesendet. Wie Du einen API-Key bekommst kannst Du unter Erste Schritte in der Anleitung lesen.">
                         ⓘ
                       </span>
                     </label>
@@ -1347,7 +1347,7 @@ function SidePanel() {
                       Absender:
                       <span
                         className="help-icon"
-                        title="Geben Sie hier die Adresse des Absenders ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        title="Gib hier eine ladungsfähige Adresse von dir als Absender ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet. Mehr Informationen dazu was eine ladungsfähige Adresse ist findest Du in der Anleitung">
                         ⓘ
                       </span>
                     </label>
@@ -1364,7 +1364,7 @@ function SidePanel() {
                       Empfänger:
                       <span
                         className="help-icon"
-                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        title="Gib hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
                         ⓘ
                       </span>
                     </label>
@@ -1381,7 +1381,7 @@ function SidePanel() {
                       Meine Kontakdaten:
                       <span
                         className="help-icon"
-                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        title="Gib hier die Adresse des Empfängers (Polizeiwache oder Staatsanwaltschaft) ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
                         ⓘ
                       </span>
                     </label>
@@ -1398,7 +1398,7 @@ function SidePanel() {
                       Stadt für Datumszeile im Brief:
                       <span
                         className="help-icon"
-                        title="Geben Sie hier die Adresse des Absenders ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        title="Gib deine Stadt ein, wie Sie in der Datumszeile des Anzeigebriefs erscheinen soll. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
                         ⓘ
                       </span>
                     </label>
@@ -1416,7 +1416,7 @@ function SidePanel() {
                       Name der unterzeichnenden Person:
                       <span
                         className="help-icon"
-                        title="Geben Sie hier die Adresse des Empfängers ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
+                        title="Gib hier die Adresse des Empfängers (Polizeiwache oder Staatsanwaltschaft) ein. Diese Daten werden nur lokal in Ihrem Browser gespeichert und ausschließlich lokal verarbeitet.">
                         ⓘ
                       </span>
                     </label>
@@ -1483,7 +1483,7 @@ function SidePanel() {
                     Hintergrundinformationen:
                     <span
                       className="help-icon"
-                      title="Geben Sie hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
                       ⓘ
                     </span>
                   </label>
@@ -1587,7 +1587,7 @@ function SidePanel() {
                 Profil-URL:{" "}
                 <span
                   className="help-icon"
-                  title="Geben Sie hier die URL des Benutzerprofils ein, das untersucht werden soll.">
+                  title="Gib hier die URL des Benutzerprofils ein, das untersucht werden soll.">
                   ⓘ
                 </span>
               </label>
@@ -1602,7 +1602,7 @@ function SidePanel() {
                 Bekannte Profilinformationen:{" "}
                 <span
                   className="help-icon"
-                  title="Geben Sie hier zusätzliche Informationen ein, die als Ergänzung für die Recherche an Perplexity.ai gesendet werden.">
+                  title="Gib hier Informationen zum user ein: User Name, @User Handle, weitere infos aus dem user Profil die Dir bekannt sind. Diese Daten werden für die Recherche an Perplexity.ai gesendet.">
                   ⓘ
                 </span>
               </label>
