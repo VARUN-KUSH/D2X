@@ -158,7 +158,7 @@ function SidePanel() {
       })
     })
     if (!usePerplexity) {
-      setShowMessage("Perplexity toggle is disabled")
+      setShowMessage("Perplexity Toggle ist ausgeschaltet, daher wird nicht nach der Online-Präsenz des Benutzers gesucht..")
       setTimeout(() => setShowMessage(""), 1000)
       return
     }
