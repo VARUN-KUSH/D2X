@@ -16,7 +16,7 @@ const sections = [
     title: "🆘 Hilfe in akuten Situationen",
     links: [
       {
-        name: "Du bist nicht allein – Hol dir Unterstützung",
+        name: "Du bist nicht allein. Hol dir Unterstützung",
         href: "#du-bist-nicht-allein-hol-dir-unterstutzung",
       },
       {
@@ -49,7 +49,6 @@ const sections = [
       },
       { name: "KI-gestützte Analyse", href: "#ki-gestützte-analyse" },
       { name: "Datenschutz & Privatsphäre", href: "#datenschutz-privatsphäre" },
-      // Entfernt: { name: "Schutz privater Daten", href: "#schutz-privater-daten" },
       {
         name: "Technische Voraussetzungen",
         href: "#technische-voraussetzungen",
@@ -196,13 +195,13 @@ function App() {
         <p>
           <strong>Bleib ruhig, atme tief durch und handle überlegt.</strong>
           <br />
-          Es ist normal, dass du Dich in einer solchen Situation überwältigt
+          Es ist normal, dass du dich in einer solchen Situation überwältigt
           fühlst. Nimm dir einen Moment Zeit, um zur Ruhe zu kommen. Atme tief
           ein und aus, bevor du die nächsten Schritte gehst.
         </p>
 
         <h3 id="du-bist-nicht-allein-hol-dir-unterstutzung">
-          du bist nicht allein – Hol dir Unterstützung
+          Du bist nicht allein. Hol dir Unterstützung
         </h3>
         <p>
           Du musst diese Situation nicht alleine bewältigen. Es gibt Menschen
@@ -237,7 +236,7 @@ function App() {
               Meldestelle REspect! – Unterstützung bei Hetze im Netz
             </strong>
             <br />
-            Diese Stelle hilft dir , Hass und Hetze zu melden und gibt konkrete
+            Diese Stelle hilft dir, Hass und Hetze zu melden und gibt konkrete
             Hilfestellungen.
             <br />
             👉{" "}
@@ -551,8 +550,6 @@ function App() {
             </ul>
           </li>
         </ul>
-
-        {/* Ersetzte erste Instanz von "Schutz privater Daten" durch einen prominenten Link */}
         <p>
           👉 Wie du deine privaten Daten bei einer Anzeige schützen kannst,
           findest du{" "}
@@ -657,7 +654,7 @@ function App() {
               <li>Wähle "View API Keys"</li>
               <li>Klicke "Create New Secret Key"</li>
               <li>
-                <strong>Wichtig</strong>: Kopiere den Key sofort - er wird nur
+                <strong>Wichtig</strong>: Kopiere den Key sofort — er wird nur
                 einmal angezeigt!
               </li>
             </ul>
@@ -762,8 +759,6 @@ function App() {
           💡 <strong>Tipp</strong>: Wenn bestimmte Daten nicht auf dem Brief
           erscheinen sollen, lass die entsprechenden Felder einfach leer.
         </p>
-
-        {/* Ersetzte erste Instanz von "Schutz privater Daten" */}
         <p>
           Wie du deine privaten Daten bei einer Anzeige schützen kannst, findest
           du <a href="#schutz-privater-daten">hier: Schutz privater Daten</a>.
@@ -846,14 +841,14 @@ function App() {
           </li>
         </ul>
         <h2 id="3-hintergrundinformationen">3. Hintergrundinformationen</h2>
-        <p>Diese Informationen Helfen der OpenAI KI bei der Bewertung der Posts:</p>
+        <p>Diese Informationen helfen der OpenAI KI bei der Bewertung der Posts:</p>
         <ul>
           <li>
             <strong>Daten die du am besten angeben solltest:</strong>:
             <ul>
               <li>Dein Name, Screen-Name und @User-Handle (kannst du aus deinem x Profil kopieren)</li>
               <li>Der Post auf den die Leute reagieren</li>
-              <li>Weitere Informationen die Helfen die Reaktionen auf deine Posts zu verstehen</li>
+              <li>Weitere Informationen, die helfen, die Reaktionen auf deine Posts zu verstehen</li>
             </ul>
             </li>
             </ul>
@@ -1404,7 +1399,7 @@ function App() {
             <li>Versuch mental Abstand von den Inhalten zu halten, um dich nicht zu sehr zu belasten</li>
             <li>Hole dir bei Bedarf Unterstützung</li>
             <ul> <li>Siehe <em>Hilfe in akuten Situationen</em> am Anfang dieser Anleitung</li> <li>Jemand der die Anzeigen mit dir oder für dich bearbeiten kann.</li></ul>
-            <li>Denk daran: <strong>Du tust etwas Wichtiges gegen Hass im Netz!</strong></li>
+            <li>Denk daran: <strong>Du tust etwas wichtiges gegen Hass im Netz!</strong></li>
           </ul>
         </p>
         <h2 id="einschränkungen-die-du-kennen-solltest">Einschränkungen die du kennen solltest</h2>
