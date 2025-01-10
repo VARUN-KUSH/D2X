@@ -1107,7 +1107,7 @@ function SidePanel() {
   return (
     <div>
       <header>
-        <h1>Strafanzeiger</h1>
+        <h1><em>Strafanzeiger</em></h1>
         {/* Display the message if it exists */}
         <div className="header-icons">
           {(AnalysisData.visiblescreenshot ||
@@ -1178,9 +1178,9 @@ function SidePanel() {
       <main>
         {showHelpSection && (
           <section id="mainHelpSection">
-            <h2>Über Strafanzeiger</h2>
+            <h2>Über <em>Strafanzeiger</em></h2>
             <p>
-              Strafanzeiger ist eine Chrome Erweiterung zur automatischen Auswertung 
+              <em>Strafanzeiger</em> ist eine Chrome Erweiterung zur automatischen Auswertung 
               von X/Twitter Posts und ggf. Erstellung von Strafanzeigen 
               für Posts, die vermutlich gegen deutsches Recht verstoßen.
             </p>

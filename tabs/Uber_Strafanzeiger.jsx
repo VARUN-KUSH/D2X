@@ -6,22 +6,25 @@ const sections = [
   {
     title: "Willkommen bei Strafanzeiger!",
     links: [
-      // Wenn es Unterpunkte gibt, hier hinzufügen
+      {
+        name: "Willkommen",
+        href: "#willkommen",
+      },
     ],
   },
   {
     title: "🆘 Hilfe in akuten Situationen",
     links: [
       {
-        name: "Du bist nicht allein – Hol Dir Unterstützung",
+        name: "Du bist nicht allein – Hol dir Unterstützung",
         href: "#du-bist-nicht-allein-hol-dir-unterstutzung",
       },
       {
-        name: "Wenn Du gerade dringend jemanden zum Reden brauchst",
+        name: "Wenn du gerade dringend jemanden zum Reden brauchst",
         href: "#wenn-du-gerade-dringend-jemanden-zum-reden-brauchst",
       },
       {
-        name: "Nächste Schritte, die Du jetzt gehen kannst",
+        name: "Nächste Schritte, die du jetzt gehen kannst",
         href: "#nächste-schritte-die-du-jetzt-gehen-kannst",
       },
     ],
@@ -64,10 +67,11 @@ const sections = [
       },
       { name: "1. API-Keys einrichten", href: "#1-api-keys-einrichten" },
       {
-        name: "2. Grundeinstellungen vornehmen",
-        href: "#2-grundeinstellungen-vornehmen",
+        name: "2. Adressdaten eingeben",
+        href: "#2-adressdaten-eingeben",
       },
-      { name: "3. Weitere Einstellungen", href: "#3-weitere-einstellungen" },
+      { name: "3. Hintergrundinformationen", href: "#3-hintergrundinformationen" },
+      { name: "4. Weitere Einstellungen", href: "#4-weitere-einstellungen" },
     ],
   },
   {
@@ -87,7 +91,7 @@ const sections = [
     links: [
       { name: "Die ZIP-Datei", href: "#die-zip-datei" },
       { name: "Struktur und Inhalte", href: "#struktur-und-inhalte" },
-      { name: "Anzeigen anpassen", href: "#anzeigen-anpassen" },
+      { name: "Anzeigenentwürfe anpassen", href: "#anzeigenentwürfe-anpassen" },
       { name: "Anzeigen neu generieren", href: "#anzeigen-neu-generieren" },
       { name: "Anzeigen drucken", href: "#anzeigen-drucken" },
       { name: "Strafanzeigen Einreichen", href: "#strafanzeigen-einreichen" },
@@ -97,12 +101,22 @@ const sections = [
     title: "Fehlerbehebung",
     links: [
       { name: "Allgemeine Probleme", href: "#allgemeine-probleme" },
-      { name: "Analyse-Besonderheiten", href: "#analyse-besonderheiten" },
-      { name: "Best Practices", href: "#best-practices" },
-      { name: "Bekannte Einschränkungen", href: "#bekannte-einschränkungen" },
       {
         name: "Wenn etwas nicht funktioniert",
         href: "#wenn-etwas-nicht-funktioniert",
+      },
+      { name: "Besonderheiten", href: "#besonderheiten" },
+    ],
+  },
+  {
+    title: "Praxis Tipps",
+    links: [
+      { name: "Für bessere Ergebnisse", href: "#für-bessere-ergebnisse" },
+      { name: "Für die Bedienung", href: "#für-die-bedienung" },
+      { name: "Für das Arbeiten mit den Ergebnissen", href: "#für-das-arbeiten-mit-den-ergebnissen" },
+      {
+        name: "Einschränkungen",
+        href: "#einschränkungen-die-du-kennen-solltest",
       },
     ],
   },
@@ -157,12 +171,13 @@ function App() {
 
       <div className="content">
         <h1 id="strafanzeiger_chrome_extension">
-          Strafanzeiger Chrome Extension
+          <em>Strafanzeiger</em> Chrome Extension
         </h1>
 
-        <h2 id="willkommen-bei-strafanzeiger">Willkommen bei Strafanzeiger!</h2>
+        <h2 id="willkommen">Willkommen bei <em>Strafanzeiger</em>!</h2>
+        <p> <strong>Je mehr wir uns mit Anzeigen gegen Hass wehren, desto stärker wird die Strafverfolgung, desto klarer die Grenze für akzeptables Verhalten und desto deutlicher das Signal gegen Hass.</strong> </p>
         <p>
-          Strafanzeiger ist dein digitaler Assistent für den Umgang mit
+          <em>Strafanzeiger</em> ist dein digitaler Assistent für den Umgang mit
           strafrechtlich relevanten Kommentaren auf X (ehemals Twitter). Die
           Extension hilft dir, Hasskommentare und andere illegale Inhalte zu
           dokumentieren und rechtliche Schritte einzuleiten.
@@ -181,27 +196,27 @@ function App() {
         <p>
           <strong>Bleib ruhig, atme tief durch und handle überlegt.</strong>
           <br />
-          Es ist normal, dass Du Dich in einer solchen Situation überwältigt
-          fühlst. Nimm Dir einen Moment Zeit, um zur Ruhe zu kommen. Atme tief
-          ein und aus, bevor Du die nächsten Schritte gehst.
+          Es ist normal, dass du Dich in einer solchen Situation überwältigt
+          fühlst. Nimm dir einen Moment Zeit, um zur Ruhe zu kommen. Atme tief
+          ein und aus, bevor du die nächsten Schritte gehst.
         </p>
 
         <h3 id="du-bist-nicht-allein-hol-dir-unterstutzung">
-          Du bist nicht allein – Hol Dir Unterstützung
+          du bist nicht allein – Hol dir Unterstützung
         </h3>
         <p>
           Du musst diese Situation nicht alleine bewältigen. Es gibt Menschen
-          und Organisationen, die für Dich da sind und Dir jetzt helfen können.
+          und Organisationen, die für Dich da sind und dir jetzt helfen können.
         </p>
 
         <h4 id="hier-findest-du-unterstutzung">
-          Hier findest Du Unterstützung:
+          Hier findest du Unterstützung:
         </h4>
         <ul>
           <li>
             <strong>HateAid – Unterstützung bei digitaler Gewalt</strong>
             <br />
-            HateAid bietet Dir praktische Hinweise, persönliche Beratung und
+            HateAid bietet dir praktische Hinweise, persönliche Beratung und
             Unterstützung bei rechtlichen Schritten.
             <br />
             👉{" "}
@@ -222,7 +237,7 @@ function App() {
               Meldestelle REspect! – Unterstützung bei Hetze im Netz
             </strong>
             <br />
-            Diese Stelle hilft Dir, Hass und Hetze zu melden und gibt konkrete
+            Diese Stelle hilft dir , Hass und Hetze zu melden und gibt konkrete
             Hilfestellungen.
             <br />
             👉{" "}
@@ -254,13 +269,13 @@ function App() {
         </ul>
 
         <h3 id="wenn-du-gerade-dringend-jemanden-zum-reden-brauchst">
-          Wenn Du gerade dringend jemanden zum Reden brauchst:
+          Wenn du gerade dringend jemanden zum Reden brauchst:
         </h3>
         <ul>
           <li>
             <strong>Telefonseelsorge (24/7 erreichbar)</strong>
             <br />
-            Hier kannst Du anonym und kostenlos mit jemandem sprechen, der Dir
+            Hier kannst du anonym und kostenlos mit jemandem sprechen, der dir 
             zuhört.
             <br />
             📞 Telefon: 0800 111 0 111 oder 0800 111 0 222
@@ -298,13 +313,13 @@ function App() {
         </ul>
 
         <h3 id="nächste-schritte-die-du-jetzt-gehen-kannst">
-          Nächste Schritte, die Du jetzt gehen kannst:
+          Nächste Schritte, die du jetzt gehen kannst:
         </h3>
         <ol>
           <li>
             <strong>Beweise sichern</strong>
             <br />
-            Die Strafanzeiger Extension hilft Dir dabei, Screenshots mit
+            Die <em>Strafanzeiger</em> Extension hilft dir dabei, Screenshots mit
             Zeitstempeln und andere Dokumente automatisch zu erstellen, um
             strafrechtlich relevante Kommentare zur Anzeige zu bringen.
           </li>
@@ -314,12 +329,12 @@ function App() {
             Viele Plattformen wie X bieten Funktionen, um rechtswidrige Inhalte
             zu melden. Nutze diese Option, um Hasspostings zu melden.
             <br />
-            ⚠️ Stelle sicher, dass Du vorher alle Beweise gesichert hast.
+            ⚠️ Stelle sicher, dass du vorher alle Beweise gesichert hast.
           </li>
           <li>
             <strong>Rechtliche Schritte prüfen</strong>
             <br />
-            Mit der Extension kannst Du Entwürfe für Strafanzeigen erstellen.
+            Mit der Extension kannst du Entwürfe für Strafanzeigen erstellen.
             Diese kannst Du:
             <ul>
               <li>
@@ -337,9 +352,9 @@ function App() {
           </li>
         </ol>
 
-        <h2 id="was-ist-strafanzeiger">Was ist Strafanzeiger?</h2>
+        <h2 id="was-ist-strafanzeiger">Was ist <em>Strafanzeiger</em>?</h2>
         <p>
-          Strafanzeiger ist dein digitaler Assistent für den Umgang mit
+          <em>Strafanzeiger</em> ist dein digitaler Assistent für den Umgang mit
           problematischen Kommentaren auf X (ehemals Twitter). Die Extension
           analysiert Kommentare auf mögliche Rechtsverstöße gegen deutsches
           Recht, erstellt automatisch die notwendige Dokumentation und generiert
@@ -364,7 +379,7 @@ function App() {
         </p>
         <ul>
           <li>
-            Strafanzeiger kann aktuell nur Texte und Emojis in Kommentaren
+            <em>Strafanzeiger</em> kann aktuell nur Texte und Emojis in Kommentaren
             analysieren
           </li>
           <li>
@@ -383,10 +398,10 @@ function App() {
         <ul>
         <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
           <li>
-            Strafanzeiger erstellt nur Entwürfe für Anzeigen - keine
+            <em>Strafanzeiger</em> erstellt nur Entwürfe für Anzeigen - keine
             rechtsverbindlichen Dokumente
           </li>
-          <li>Strafanzeiger ersetzt keine juristische Beratung</li>
+          <li><em>Strafanzeiger</em> ersetzt keine juristische Beratung</li>
           <li>
             Du bist selbst dafür verantwortlich:
             <ul>
@@ -464,7 +479,7 @@ function App() {
             Die Verarbeitung erfolgt größtenteils lokal auf deinem Rechner
           </li>
           <li>
-            Deine persönlichen Daten, die Du im <em>Adressdaten</em>-Bereich der
+            Deine persönlichen Daten, die du im <em>Adressdaten</em>-Bereich der
             Einstellungen hinterlegst, werden für das Anschreiben der Anzeige
             genutzt und ausschließlich lokal gespeichert und lokal verarbeitet.
           </li>
@@ -520,7 +535,7 @@ function App() {
             Datenweitergabe durch die Anzeige:
             <ul>
               <li>
-                Bedenke, dass Du durch die Anzeige Daten weiter gibst (z.B. die
+                Bedenke, dass du durch die Anzeige Daten weiter gibst (z.B. die
                 Absenderadresse, Kontaktdaten und Namen)
               </li>
               <li>
@@ -595,7 +610,7 @@ function App() {
         </h2>
         <p>
           Klicke in der Extension auf das ⚙️-Symbol, um zu den Einstellungen zu
-          gelangen. Hier richtest du alles ein, was Strafanzeiger für die Arbeit
+          gelangen. Hier richtest du alles ein, was <em>Strafanzeiger</em> für die Arbeit
           benötigt.
         </p>
 
@@ -626,6 +641,16 @@ function App() {
             </ul>
           </li>
           <li>
+            <p>Zahlungsinformationen hinzufügen</p>
+            <ul>
+              <li>Klicke auf dein Profilsymbol (oben rechts)</li>
+              <li>Wähle "Manage Account"</li>
+              <li>Gehe zum Bereich "Billing"</li>
+              <li>Klicke auf "Add Payment Method"</li>
+              <li>Gib deine Kreditkarteninformationen ein und speichere sie</li>
+            </ul>
+          </li>
+          <li>
             <p>API-Key generieren</p>
             <ul>
               <li>Klicke auf dein Profilsymbol (oben rechts)</li>
@@ -638,7 +663,7 @@ function App() {
             </ul>
           </li>
           <li>
-            <p>Key in Strafanzeiger einfügen</p>
+            <p>Key in <em>Strafanzeiger</em> einfügen</p>
             <ul>
               <li>Füge den kopierten Key in das Feld "OpenAI API Key" ein</li>
               <li>Klicke auf "Speichern"</li>
@@ -676,13 +701,13 @@ function App() {
             <ul>
               <li>Gehe zu den Kontoeinstellungen</li>
               <li>Suche nach "API" oder "API-Einstellungen"</li>
-              <li>Generiere einen neuen API-Key</li>
               <li>Füge eine Zahlungsmethode hinzu</li>
               <li>Erwerbe Guthaben nach Bedarf</li>
+              <li>Generiere einen neuen API-Key</li>
             </ul>
           </li>
           <li>
-            <p>Key in Strafanzeiger einfügen</p>
+            <p>Key in <em>Strafanzeiger</em> einfügen</p>
             <ul>
               <li>Füge den Key in das Feld "Perplexity API Key" ein</li>
               <li>Klicke auf "Speichern"</li>
@@ -693,10 +718,11 @@ function App() {
           💡 <strong>Hinweis zu Kosten</strong>: Auch die Nutzung der Perplexity
           API verursacht geringe Kosten im Cent-Bereich pro Profilrecherche.
           Über die Perplexity-Platform kannst du dein Budget verwalten.
+          Wenn du zeitweise Perplexity nicht verwenden willst, kannst du in den Einstellungen "Profilsuche mit Perplexity" deaktivieren.
         </p>
 
-        <h2 id="2-grundeinstellungen-vornehmen">
-          2. Grundeinstellungen vornehmen
+        <h2 id="2-adressdaten-eingeben">
+          2. Adressdaten eingeben
         </h2>
 
         <h3 id="persönliche-daten">Persönliche Daten</h3>
@@ -764,7 +790,7 @@ function App() {
             </ul>
           </li>
           <li>
-            <strong>Alternative Kontaktdaten - Wenn Du gerne Kontaktdaten angeben willst</strong>:
+            <strong>Alternative Kontaktdaten - Wenn du gerne Kontaktdaten angeben willst</strong>:
             <ul>
               <li>Separate E-Mail-Adresse für behördliche Kommunikation</li>
               <li>
@@ -779,27 +805,30 @@ function App() {
                 </a>
                 )
               </li>
-              <li>Diese Daten können später einfach deaktiviert werden</li>
+              <li>Diese Kontaktmöglichkeiten können dann später einfach deaktiviert werden</li>
               <li>Grundsätzlich musst du E-Mail oder Telefonnummer nicht angeben</li>
             </ul>
           </li>
+          <p>
+            💡 <strong>Tipp</strong>: Wenn bestimmte Daten nicht auf dem Brief
+            erscheinen sollen, lass die entsprechenden Felder in den Einstellungen einfach leer. 
+            Denk daran, nach dem Eintragen auf "Speichern" zu klicken. 
+            Falls du schon die Anzeigenentwürfe heruntergeladen hast, kannst du die Adressdaten auch einfach in den Dateien
+            im Ordner Anschreiben_Basis_Daten ändern - diese werden dann in die Anzeigenentwürfe übernommen.
+          </p>
           <li>
             <strong>Screenshots Anpassen</strong>:
             <ul>
               <li>
                 Auch wenn du die Menüleiste von X.com in den Einstellungen
-                ausblendest, können Screenshots Hinweise auf Deinen Account
-                enhalten z.B. Dein Profilbild
+                ausblendest, können Screenshots Hinweise auf den Account
+                enhalten, der für die Screenshots genutzt wurde z.B. das Profilbild
               </li>
               <li>
-                Wenn nötig kannst du die Screenshot-Dateien in einem
-                Grafikprogramm öffnen und den untenen Teil wegschneiden, wenn er
-                nicht benötigt wird. Nur in dringenden Fällen solltest Du etwas
-                schwärzen - aber so das es offensichtlich ist und Der Screenshot
-                noch als unverändertes Beweismittel gelten kann. Änderungen
-                werden dann auch automatisch in den Anzeigen übernommen.
+              Wenn nötig, kannst du die Screenshot-Dateien in einem Grafikprogramm öffnen und den unteren Teil wegschneiden, falls er nicht benötigt wird. Damit niemand das Beweismittel infrage stellen kann, solltest du nur in dringenden Fällen etwas selbst schwärzen – und dann so, dass es offensichtlich ist und der Screenshot noch als unverändertes Beweismittel gelten kann. Änderungen werden dann auch automatisch in den Anzeigen übernommen.
               </li>
               <li>Achte darauf den Inhalt nicht zu verändern</li>
+              <li>Wenn du Dich entscheidest Screenshots anzupassen behalte eine Kopie des Originals</li>
             </ul>
           </li>
           <li>
@@ -815,30 +844,39 @@ function App() {
               </li>
             </ul>
           </li>
-          <li>
-            💡 <strong>Tipp</strong>: Wenn bestimmte Daten nicht auf dem Brief
-            erscheinen sollen, lass die entsprechenden Felder in den Einstellungen einfach leer. 
-            Denk daran, nach dem Eintragen auf "Speichern" zu klicken.
-          </li>
         </ul>
-
-        <h2 id="3-weitere-einstellungen">3. Weitere Einstellungen</h2>
+        <h2 id="3-hintergrundinformationen">3. Hintergrundinformationen</h2>
+        <p>Diese Informationen Helfen der OpenAI KI bei der Bewertung der Posts:</p>
+        <ul>
+          <li>
+            <strong>Daten die du am besten angeben solltest:</strong>:
+            <ul>
+              <li>Dein Name, Screen-Name und @User-Handle (kannst du aus deinem x Profil kopieren)</li>
+              <li>Der Post auf den die Leute reagieren</li>
+              <li>Weitere Informationen die Helfen die Reaktionen auf deine Posts zu verstehen</li>
+            </ul>
+            </li>
+            </ul>
+            <p>💡 <strong>Tipp</strong>: Schreib einfach so, als würdest du eine Person informieren, die die Kommentare für dich prüfen soll und dich nicht kennt.</p>
+            <p>⚠️ <strong>Hinweise</strong>: Die Daten werden an OpenAI gesendet.
+        </p>
+        <h2 id="4-weitere-einstellungen">4. Weitere Einstellungen</h2>
 
         <h3 id="menü-auf-xcom-ausblenden">Menü auf X.com ausblenden</h3>
         <ul>
           <li>
             <strong>Was</strong>: Blendet die linke Menüleiste von X.com in
-            Screenshots aus
+            Screenshots aus. Auch dein Profilbild wird im der Liste der Posts in der Regel ausgeblendet.
           </li>
           <li>
             <strong>Warum</strong>:
             <ul>
               <li>Macht die Screenshots übersichtlicher</li>
-              <li>Hilft bei der Anonymisierung</li>
+              <li>Hilft bei der Anonymisierung mit welchen Account die Screenshots gemacht wurden</li>
             </ul>
           </li>
           <li>
-            <strong>Tipp</strong>: Auch wenn das Menü ausgeblendet ist, können
+          💡 <strong>Tipp</strong>: Auch wenn das Menü und Profilbilder im Verlauf ausgeblendet werden, können
             dein Profilbild oder Username an anderen Stellen auftauchen
           </li>
         </ul>
@@ -861,7 +899,7 @@ function App() {
         <h1 id="grundfunktionen">Grundfunktionen</h1>
 
         <h2 id="die-benutzeroberfläche">Die Benutzeroberfläche</h2>
-        <p>Strafanzeiger ist einfach aufgebaut:</p>
+        <p><em>Strafanzeiger</em> ist einfach aufgebaut:</p>
         <ul>
           <li>
             <strong>Strafanzeiger</strong>: Titel der Extension
@@ -877,7 +915,7 @@ function App() {
           </li>
           <li>
             <strong>Analysis ID</strong>: Automatisch generierte ID für deine
-            aktuelle Analyse
+            aktuelle Analyse. Taucht in den Screenshot-Zeitstempeln auf.
           </li>
           <li>
             <strong>Hauptmenü</strong>:
@@ -898,14 +936,14 @@ function App() {
           dokumentieren:
         </p>
         <ol>
-          <li>Öffne den Tweet mit den Kommentaren auf X.com</li>
+          <li>Öffne deinen Post mit den Kommentaren auf X.com</li>
           <li>Klappe "Seite auswerten" auf</li>
           <li>Klicke auf den Button "Seite auswerten"</li>
         </ol>
 
         <h3 id="was-passiert-dann">Was passiert dann?</h3>
         <ol>
-          <li>Strafanzeiger analysiert alle Kommentare auf der Seite</li>
+          <li><em>Strafanzeiger</em> analysiert alle Kommentare auf der Seite</li>
           <li>
             Bei problematischen Kommentaren:
             <ul>
@@ -929,10 +967,10 @@ function App() {
             Der Vorgang kann einige Zeit dauern:
             <ul>
               <li>Initial Screenshots: ~10 Sekunden</li>
-              <li>Tweet-Analyse: ~15 Sekunden pro Tweet</li>
+              <li>Post-Analyse: ~15 Sekunden pro Post (aber es werden mehrere gleichzeitig bearbeitet)</li>
               <li>
                 Screenshots & Profilanalyse: ~10 Sekunden pro relevantem
-                Profil/Tweet
+                Profil/Kommentar
               </li>
             </ul>
           </li>
@@ -952,7 +990,7 @@ function App() {
 
         <h2 id="manuelle-funktionen">Manuelle Funktionen</h2>
         <p>
-          Manchmal möchtest du gezielt einzelne Tweets oder Profile untersuchen.
+          Manchmal möchtest du gezielt einzelne Posts oder Profile untersuchen.
           Dafür gibt es diese Optionen:
         </p>
 
@@ -1004,10 +1042,10 @@ function App() {
             Füge die URL des Kommentars ein (Format:
             https://x.com/userhandle/status/Zahlen) 💡 <strong>Tipp</strong>:
             Die URL findest du in der Adresszeile deines Browsers, wenn du den
-            Tweet geöffnet hast
+            Kommentar geöffnet hast
           </li>
           <li>
-            Kopiere den kompletten Kommentar mit Kontext in das zweite Feld:
+            Kopiere den kompletten Kommentar mit Kontext in das zweite Feld. <strong>User Name, @User Handle, Datum/Uhrzeit sind zwingend notwendig.</strong>
             <pre>
               Max Beispielmann
               <br />
@@ -1018,10 +1056,10 @@ function App() {
               11:42 vorm. · 1. Januar 2024
             </pre>
             💡 <strong>Tipp</strong>: Markiere und kopiere einfach alles rund um
-            den Tweet - je mehr Kontext, desto besser!
+            den Kommentar - je mehr Kontext, desto besser!
           </li>
         </ol>
-
+        <p>💡 <strong>Tipp</strong>: Wenn du zu einem anzeigbaren Post alle manuellen Schritte durchgeführt hast (Screenshots von Post und Profil, Profilrecherche und Kommentaranalyse), wird beim Download automatisch ein Strafanzeigenentwurf erstellt.</p>
         <h2 id="nach-der-analyse">Nach der Analyse</h2>
         <ul>
           <li>
@@ -1045,7 +1083,7 @@ function App() {
 
         <h2 id="die-zip-datei">Die ZIP-Datei</h2>
         <p>
-          Nach jeder Analyse erstellt Strafanzeiger einen ZIP-Ordner mit dem
+          Nach jeder Analyse erstellt <em>Strafanzeiger</em> einen ZIP-Ordner mit dem
           Namen "Strafanz_Report" und einem Zeitstempel. Dieser wird:
         </p>
         <ul>
@@ -1093,31 +1131,32 @@ function App() {
           <li>userHandle.txt: @handle des Users</li>
           <li>screenname.txt: Anzeigename</li>
           <li>profilUrl.txt: Link zum Profil</li>
-          <li>UserInfo[@handle][Datum].txt: Profilinformationen</li>
+          <li>UserInfo_[@handle][Datum].txt: Profilinformationen</li>
           <li>
-            ExtraUserInfo[@handle][Datum].txt: Zusatzinfos (z.B. von Perplexity)
+            ExtraUserInfo_[@handle][Datum].txt: Zusatzinfos (z.B. von Perplexity)
           </li>
           <li>
-            screenshotprofile[@handle]_[Datum].png: Screenshot des Profils
+            screenshotprofile_[@handle]_[Datum].png: Screenshot des Profils
           </li>
         </ul>
 
-        <h4 id="für-jeden-problematischen-tweet-ein-unterordner-tweetid">
-          Für jeden problematischen Tweet ein Unterordner (TweetID):
+        <h4 id="für-jeden-problematischen-kommentar-ein-unterordner-tweetid">
+          Für jeden problematischen Kommentar ein Unterordner (TweetID):
         </h4>
-        <p>Details zum spezifischen Tweet:</p>
+        <p>Details zum spezifischen Kommentar:</p>
         <ul>
           <li>Verfolgungsart.txt: Antrags- oder Offizialdelikt</li>
           <li>
-            AnzeigenEntwurf[@handle]_[TweetID]_[Datum].txt: Text für die Anzeige
+            AnzeigenEntwurf_[@handle]_[TweetID]_[Datum].txt: Text für die Anzeige
           </li>
-          <li>Post[@handle]_[TweetID]_[Datum].txt: Original Tweet/Kommentar</li>
+          <li>Post_[@handle]_[TweetID]_[Datum].txt: Original Kommentartext</li>
           <li>Zeitpunkt.txt: Zeitpunkt des Posts</li>
-          <li>postUrl.txt: Link zum Tweet</li>
-          <li>screenshot[@handle]_[TweetID].png: Screenshot des Tweets</li>
+          <li>postUrl.txt: Link zum Kommentar</li>
+          <li>screenshot_[@handle]_[TweetID].png: Screenshot des Kommentars</li>
+          <li>BegründungDerAnzeige_[@handle]_[TweetID]_[Datum].txt: Begründung warum die KI von OpenAI eine Anzeige für gegeben hält.</li>
         </ul>
 
-        <h2 id="anzeigen-anpassen">Anzeigen anpassen</h2>
+        <h2 id="anzeigenentwürfe-anpassen">Anzeigenentwürfe anpassen</h2>
         <p>Du kannst alle Inhalte der Anzeigen bearbeiten:</p>
 
         <h3 id="texte-ändern">Texte ändern</h3>
@@ -1135,9 +1174,9 @@ function App() {
           <li>Erstelle einen neuen Screenshot</li>
           <li>Speichere ihn mit dem exakt gleichen Dateinamen wie der alte</li>
         </ol>
-        <p>
+        <h3 id="wichtige-regeln-beim-arbeiten-mit-anzeigeentwürfen">
           ⚠️ <strong>Wichtige Regeln</strong>:
-        </p>
+        </h3>
         <ul>
           <li>Dateinamen nicht ändern</li>
           <li>Dateien nicht verschieben</li>
@@ -1151,9 +1190,9 @@ function App() {
         </p>
 
         <h2 id="anzeigen-neu-generieren">Anzeigen neu generieren</h2>
-        <p>Nach Änderungen müssen die Anzeigen neu generiert werden:</p>
+        <p><strong>Nach Änderungen müssen die Anzeigen neu generiert werden</strong>, damit die Inhalte beim Drucken richtig angezeigt werden:</p>
         <ol>
-          <li>Öffne die Strafanzeiger Extension</li>
+          <li>Öffne die <em>Strafanzeiger</em> Extension</li>
           <li>Klicke auf das 🔗-Symbol in der oberen Leiste</li>
           <li>
             Folge den Anweisungen auf der Seite:
@@ -1181,7 +1220,7 @@ function App() {
 
         <h2 id="anzeigen-drucken">Anzeigen drucken</h2>
         <ol>
-          <li>Öffne die Anzeige (.html-Datei) in Firefox</li>
+          <li>Öffne die Anzeige (.html-Datei) möglichst in Firefox</li>
           <li>Wähle im Browser-Menü "Drucken" (oder Strg+P)</li>
           <li>
             Passe die Druckeinstellungen an:
@@ -1216,7 +1255,7 @@ function App() {
         {/* Neuer Unterabschnitt "Strafanzeigen Einreichen" */}
         <h2 id="strafanzeigen-einreichen">Strafanzeigen Einreichen</h2>
         <p>
-          Nachdem du die Anzeigenentwürfe erstellt hast, kannst du diese wie
+          Nachdem du deine Anzeigen erstellt hast, kannst du diese wie
           folgt einreichen:
         </p>
         <ul>
@@ -1254,7 +1293,7 @@ function App() {
         </h3>
         <ol>
           <li>
-            Strafanzeiger versucht die ZIP-Datei automatisch im Download-Ordner
+            <em>Strafanzeiger</em> versucht die ZIP-Datei automatisch im Download-Ordner
             zu speichern. Je nach Browsereinstellungen kann es sein, dass der
             Browser dich fragt, wo du die Datei speichern möchtest.
           </li>
@@ -1275,98 +1314,6 @@ function App() {
           <li>Scrolle einmal durch die gesamte Seite</li>
           <li>Erstelle den Screenshot erneut</li>
         </ol>
-
-        <h2 id="analyse-besonderheiten">Analyse-Besonderheiten</h2>
-
-        <h3 id="unterschiedliche-ergebnisse-bei-gleichen-kommentaren">
-          Unterschiedliche Ergebnisse bei gleichen Kommentaren
-        </h3>
-        <ul>
-          <li>
-            Die KI-Analyse arbeitet wie ein Mensch nicht 100% deterministisch
-          </li>
-          <li>Bei Grenzfällen können unterschiedliche Bewertungen entstehen</li>
-          <li>
-            Lösung: Analysiere kritische Fälle mehrfach und prüfe die Ergebnisse
-            sorgfältig
-          </li>
-        </ul>
-
-        <h3 id="lange-analysezeiten">Lange Analysezeiten</h3>
-        <ul>
-          <li>
-            Die Verarbeitung erfolgt nacheinander und braucht pro Tweet etwa:
-            <ul>
-              <li>15 Sekunden für die Analyse</li>
-              <li>10 Sekunden für Screenshots und Profilanalyse</li>
-            </ul>
-          </li>
-          <li>
-            Bei vielen Kommentaren kann der Vorgang entsprechend lange dauern
-          </li>
-          <li>Tipp: Lass die Extension einfach ihre Arbeit machen</li>
-        </ul>
-
-        <h2 id="best-practices">Best Practices</h2>
-
-        <h3 id="für-zuverlässige-ergebnisse">Für zuverlässige Ergebnisse</h3>
-        <ul>
-          <li>
-            Gib der KI möglichst viel Kontext in den Hintergrundinformationen
-          </li>
-          <li>
-            Kopiere bei manueller Analyse immer den kompletten Kontext eines
-            Tweets
-          </li>
-          <li>Prüfe die generierten Anzeigen vor dem Versand</li>
-          <li>Dokumentiere wichtige Änderungen in den Anzeigenentwürfen</li>
-        </ul>
-
-        <h3 id="für-bessere-performance">Für bessere Performance</h3>
-        <ul>
-          <li>Führe immer nur eine Analyse gleichzeitig durch</li>
-          <li>Vermeide Browser-Interaktionen während der Analyse</li>
-          <li>Halte die Browsertabs mit X.com aktuell</li>
-        </ul>
-
-        <h2 id="bekannte-einschränkungen">Bekannte Einschränkungen</h2>
-
-        <h3 id="browser-interaktion">Browser-Interaktion</h3>
-        <ul>
-          <li>
-            Während der automatischen Analyse steuert die Extension den Browser
-          </li>
-          <li>Keine manuelle Navigation oder Interaktion in dieser Zeit</li>
-          <li>Die Extension kehrt automatisch zur Ausgangsseite zurück</li>
-        </ul>
-
-        <h3 id="dateimanagement">Dateimanagement</h3>
-        <ul>
-          <li>Anzeigen können nur im vorgegebenen Format gespeichert werden</li>
-          <li>Ordnerstruktur und Dateinamen müssen beibehalten werden</li>
-          <li>Leere Dateien statt Löschen verwenden</li>
-        </ul>
-
-        <h3 id="ki-analyse">KI-Analyse</h3>
-        <ul>
-          <li>Nicht jeder problematische Kommentar wird eindeutig erkannt</li>
-          <li>Die Analyse kann bei Grenzfällen unterschiedlich ausfallen</li>
-          <li>Perplexity findet nicht immer zusätzliche Informationen</li>
-        </ul>
-        <p>
-          💡 <strong>Profi-Tipp</strong>: Wenn du unsicher bist, ob ein
-          Kommentar relevant ist:
-          <ul>
-            <li>Analysiere ihn manuell</li>
-            <li>
-              Gib der KI zusätzlichen Kontext in den Hintergrundinformationen -
-              z.B. auch eine Beschreibung des Bildes wenn der Kommentar eines
-              enthält.
-            </li>
-            <li>Im Zweifel: Lieber einmal mehr dokumentieren als zu wenig</li>
-          </ul>
-        </p>
-
         <h2 id="wenn-etwas-nicht-funktioniert">
           Wenn etwas nicht funktioniert
         </h2>
@@ -1389,19 +1336,116 @@ function App() {
             </ul>
           </li>
         </ol>
+
+        <h2 id="besonderheiten">Besonderheiten</h2>
+
+        <h3 id="unterschiedliche-ergebnisse-bei-gleichen-kommentaren">
+          Unterschiedliche Ergebnisse bei gleichen Kommentaren
+        </h3>
+        <ul>
+          <li>
+            Die KI-Analyse arbeitet wie ein Mensch nicht 100% deterministisch
+          </li>
+          <li>Bei Grenzfällen können unterschiedliche Bewertungen entstehen</li>
+          <li>
+            Analysiere kritische Fälle ggf. mehrfach und prüfe die Ergebnisse
+            sorgfältig. 
+            <ul><li>Dabei kann dir u.a. die Datei <em>BegründungDerAnzeige</em> helfen, die du
+            in jedem Ordner (userhandle/TweetID) zu jedem Kommentar mit Anzeigenentwurf findest.</li> 
+            <li>Die Datei enthält die Argumentationskette mit der das KI Modell 
+            von OpenAI, zu seiner Entscheidung gekommen ist.</li></ul>
+          </li>
+        </ul>
+
+        <h3 id="lange-analysezeiten">Lange Analysezeiten</h3>
+        <ul>
+          <li>
+            Die Verarbeitung erfolgt nacheinander (bzw. bei der Kommentar Analyse auch teilweise parallel) und braucht pro Kommentar etwa:
+            <ul>
+              <li>15 Sekunden für die Analyse</li>
+              <li>10 Sekunden für Screenshots und Profilanalyse</li>
+            </ul>
+          </li>
+          <li>
+            Bei vielen Kommentaren kann der Vorgang entsprechend lange dauern
+          </li>
+          <li>💡 <strong>Tipp</strong>: Lass die Extension einfach ihre Arbeit machen und verwende den Browser in der Zeit nicht. Achte darauf, dass du vom Betriebssystem nicht automatisch abgemeldet wirst.</li>
+        </ul>
+        <h1 id="best-practices">Praxis Tipps</h1>
+
+        <h2 id="für-bessere-ergebnisse">Für bessere Ergebnisse</h2>
+        <ul>
+          <li>
+            Gib der KI möglichst viel Kontext in den Hintergrundinformationen
+          </li>
+          <li>
+            Kopiere bei manueller Analyse immer den kompletten Kontext eines
+            Kommentars
+          </li>
+        </ul>
+
+        <h2 id="für-die-bedienung">Für die Bedienung</h2>
+        <ul>
+          <li>Führe immer nur eine Analyse gleichzeitig durch</li>
+          <li>Vermeide Browser-Interaktionen während der Analyse</li>
+          <li>Achte darauf, dass das Browser-Tab mit x.com das du auswerten willst das aktive Tab ist</li>
+          <li>Achte darauf, dass du während der Analyse vom Betriebssystem nicht automatisch abgemeldet wirst.</li>
+        </ul>
+        <h2 id="für-das-arbeiten-mit-den-ergebnissen">Für das Arbeiten mit den Ergebnissen</h2>
+        <ul>
+          <li>Prüfe die generierten Anzeigen vor dem Versand</li>
+          <li>Dokumentiere wichtige Änderungen in den Anzeigenentwürfen</li>
+          <li>Wenn du dich entscheidest Screenshots anzupassen behalte eine Kopie des Originals</li>
+        </ul>
         <p>
-          💡 <strong>Letzter Tipp</strong>: Wenn du mehrere problematische
-          Kommentare bearbeitest:
+          ⚠️ <strong>Schütze dich:</strong>
           <ul>
             <li>Mache regelmäßige Pausen</li>
-            <li>Lass dich von den Inhalten nicht zu sehr belasten</li>
-            <li>
-              Hole dir bei Bedarf Unterstützung (siehe Krisenunterstützung am
-              Anfang dieser Anleitung)
-            </li>
-            <li>Denk daran: Du tust etwas Wichtiges gegen Hass im Netz!</li>
+            <li>Versuch mental Abstand von den Inhalten zu halten, um dich nicht zu sehr zu belasten</li>
+            <li>Hole dir bei Bedarf Unterstützung</li>
+            <ul> <li>Siehe <em>Hilfe in akuten Situationen</em> am Anfang dieser Anleitung</li> <li>Jemand der die Anzeigen mit dir oder für dich bearbeiten kann.</li></ul>
+            <li>Denk daran: <strong>Du tust etwas Wichtiges gegen Hass im Netz!</strong></li>
           </ul>
         </p>
+        <h2 id="einschränkungen-die-du-kennen-solltest">Einschränkungen die du kennen solltest</h2>
+        <h3 id="browser-interaktion">Browser-Interaktion</h3>
+        <ul>
+          <li>
+            Während der automatischen Analyse steuert die Extension den Browser
+          </li>
+          <li>Keine manuelle Navigation oder Interaktion in dieser Zeit</li>
+          <li>Die Extension kehrt automatisch zur Ausgangsseite zurück</li>
+        </ul>
+
+        <h3 id="dateimanagement">Dateimanagement</h3>
+        <ul>
+          <li>Anzeigen können nur im vorgegebenen Format gespeichert werden</li>
+          <li>Ordnerstruktur und Dateinamen müssen beibehalten werden</li>
+          <li>Speichere leere Dateien statt Dateien zu löschen</li>
+        </ul>
+
+        <h3 id="ki-analyse">KI-Analyse</h3>
+        <ul>
+          <li>Nicht jeder problematische Kommentar wird eindeutig erkannt</li>
+          <li>Die Analyse kann gerade bei Grenzfällen unterschiedlich ausfallen</li>
+          <li>Bilde dir immer ein eigenes Urteil, ob du eine Anzeige gerechtfertigt findest - auch hier kann das Modell falsch liegen</li>
+          <ul><li>Das Lesen der jeweiligen <em>BegründungDerAnzeige</em> Datei kann dir ggf. dabei helfen</li></ul>
+          <li>Perplexity findet nicht immer zusätzliche Informationen</li>
+          <li>Prüfe Links die die KI ggf. ausgibt. Diese können u.U. falsch sein. Außerdem kann im Netz nie ausgeschlossen werden dass ein Link bösartig ist.</li>
+        </ul>
+        <p>
+          💡 <strong>Tipp</strong>: Wenn du unsicher bist, ob ein
+          Kommentar relevant ist:
+          <ul><ul>
+            <li>Analysiere ihn erneut manuell</li>
+            <li>
+              Gib der KI zusätzlichen Kontext in den <em>Hintergrundinformationen</em> -
+              z.B. auch eine Beschreibung des Bildes wenn der Kommentar eines
+              enthält.
+            </li>
+            </ul></ul>
+        </p>
+
       </div>
     </div>
   );
