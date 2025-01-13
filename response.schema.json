@@ -13,6 +13,10 @@
         "items": {
           "type": "object",
           "properties": {
+            "_messageKey": {
+              "type": "string",
+              "description": "The exact unique _messageKey that was given by the user - do not confuse this with the ID. This is the exact copy of field _messageKey. Only If you did not receiver the _messageKey return an empty string."
+            },
             "ID": {
               "type": "string",
               "description": "A unique identifier for the post as given by the user."
@@ -159,6 +163,7 @@
             }
           },
           "required": [
+            "_messageKey",
             "ID",
             "Post_URL",
             "Username",
