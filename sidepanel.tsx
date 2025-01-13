@@ -229,7 +229,7 @@ function SidePanel() {
 
     setShowProgressBar(true)
     setProgress(10)
-    setprojectStatus("Entschuldigung, Tweets werden von OpenAI analysiert.")
+    setprojectStatus("Posts werden von OpenAI analysiert.")
     setAnalysisData((prevState) => ({
       ...prevState,
       post: null
@@ -1079,7 +1079,7 @@ function SidePanel() {
               if (
                 request.data === "Dokumente erfolgreich heruntergeladen." ||
                 request.data ===
-                  "Entschuldigung, ich habe keine anzeigbaren Tweets gefunden."
+                  "Entschuldigung, ich habe keine anzeigbaren Posts gefunden."
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
