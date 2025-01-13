@@ -39,7 +39,7 @@
             },
             "Veröffentlichungszeitpunkt": {
               "type": "string",
-              "description": "The timestamp when the post was published (must be in ISO date-time format, e.g., '2024-03-21T14:30:00Z')."
+              "description": "The timestamp when the post was published (must be in ISO 8601 date-time format, so year-month-dayThour:minutes:secondsZ which is yyyy-mm-ddThh:mm:ssZ e.g., '2024-03-21T14:30:00Z')."
             },
             "Inhalt": {
               "type": "string",

@@ -250,7 +250,7 @@ export async function downloadpostreport(results, originalUrl) {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
-  let date = String(now.getDate()).padStart(2, "0")
+  let day = String(now.getDate()).padStart(2, "0")
   let hours = String(now.getHours()).padStart(2, "0")
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
@@ -289,7 +289,7 @@ export async function downloadpostreport(results, originalUrl) {
     "initialPostUrl.txt",
     `URL des Ausgangsposts: ${originalUrl || ""}`
   )
-  mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
+  mainFolder.file("AnalyseZeitpunkt.txt", `${day}.${month}.${year}`)
 
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
 
@@ -304,7 +304,7 @@ export async function downloadpostreport(results, originalUrl) {
     `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`
   )
   folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
-  folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
+  folder1.file("Datumszeile.txt", `${city}, den ${day}.${month}.${year}`)
   folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
 
   // number of folders depends on uniques username
@@ -317,7 +317,7 @@ export async function downloadpostreport(results, originalUrl) {
     const post = results.find((item) => item.Username === username)
 
     userFolder.file(
-      `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `ExtraUserInfo_${post.Username}_${day}.${month}.${year}.txt`,
       `${post.perplexityresponse?.online_praesenz || ""}`
     )
     userFolder.file(
@@ -325,7 +325,7 @@ export async function downloadpostreport(results, originalUrl) {
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
     )
     userFolder.file(
-      `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+      `UserInfo_${post.Username}_${day}.${month}.${year}.txt`,
       `Biografie: ${post.scrapedData?.profilebiodata}
       ${post.scrapedData?.userJoindate}
       Folgt: ${post.scrapedData?.followingCount}
@@ -349,12 +349,12 @@ export async function downloadpostreport(results, originalUrl) {
       let folder2 = userFolder.folder(tweetID)
       const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
       folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `AnzeigenEntwurf_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
         formattedText
       )
 
       folder2.file(
-        `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `Post_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
@@ -394,7 +394,7 @@ export async function downloadpostreport(results, originalUrl) {
 
       // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
       folder2.file(
-        `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `BegründungDerAnzeige_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
         formattedTextBegründung
       )
 
@@ -402,7 +402,15 @@ export async function downloadpostreport(results, originalUrl) {
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
-        `Zeitpunkt des Kommentars: ${month}.${date}.${year} um ${hours}:${minutes} Uhr`
+        // `Zeitpunkt des Kommentars: ${day}.${month}.${year} um ${hours}:${minutes} Uhr`
+        `Zeitpunkt des Kommentars: ${new Date(post.Veröffentlichungszeitpunkt)
+          .toISOString()
+          .replace(/T/, " ")
+          .replace(/Z/, "")
+          .replace(
+            /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+            (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+          )} Uhr`
       )
     }
   }
@@ -648,7 +656,15 @@ export async function createFinalReport(results, originalUrl = "") {
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
-        `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt} Uhr`
+        // `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt} Uhr`
+        `Zeitpunkt des Kommentars: ${new Date(post.Veröffentlichungszeitpunkt)
+          .toISOString()
+          .replace(/T/, " ")
+          .replace(/Z/, "")
+          .replace(
+            /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+            (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+          )} Uhr`
       )
       const dateString = `${date}.${month}.${year}`
       if (!post.Username || !tweetID || !dateString || !post.Verfolgungsart) {
@@ -670,7 +686,17 @@ export async function createFinalReport(results, originalUrl = "") {
           Screenshot des Kommentars und Kontext:`,
           AnalyseZeitpunkt: `${date}.${month}.${year}`,
           Post: `${post.Inhalt}`,
-          Zeitpunkt: `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt}`,
+          // Zeitpunkt: `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt} Uhr`,
+          Zeitpunkt: `Zeitpunkt des Kommentars: ${new Date(
+            post.Veröffentlichungszeitpunkt
+          )
+            .toISOString()
+            .replace(/T/, " ")
+            .replace(/Z/, "")
+            .replace(
+              /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+              (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+            )} Uhr`,
           userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
           screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
           profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
