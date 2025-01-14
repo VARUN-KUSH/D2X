@@ -289,18 +289,18 @@ async function startFullAnalysis() {
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
     console.log("Scraping content for URL:", url)
-    sendMessageToPopup("Ich lese die Tweets....")
+    sendMessageToPopup("Ich lese die Posts....")
     const scrapedContent = await scrapeContent(uid, tabId)
     console.log("Scraped content:", scrapedContent)
 
     updateAnalysisStatus(uid, "processing")
     //change the lang to german
-    sendMessageToPopup("Ich beginne mit der Verarbeitung der Tweets...")
+    sendMessageToPopup("Ich beginne mit der Verarbeitung der Posts...")
     const results = await processContent(scrapedContent)
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
-      sendMessageToPopup("Ich habe keine anzeigbaren Tweets gefunden.")
+      sendMessageToPopup("Ich habe keine anzeigbaren Posts gefunden.")
       return
     }
     // After processing, add analysis results to the ZIP Folder
@@ -377,7 +377,7 @@ async function processContent(messages) {
       )
     }
 
-    sendMessageToPopup("Ich bewerte die Tweets mit Hilfe von OpenAI...")
+    sendMessageToPopup("Ich bewerte die Posts mit Hilfe von OpenAI...")
 
     let backgroundInfo = ""
     try {
@@ -611,7 +611,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
             })
             await waitForTabToLoad(originalTab.id)
           }
-          sendMessageToPopup("Extrahieren von Benutzerprofilinformationen..")
+          sendMessageToPopup("ich lese Benutzerprofilinformationen..")
           await delay(3000)
           scrapedData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
@@ -850,7 +850,7 @@ function generateFilename(url) {
       const twitterUserHandle = pathSegments[0]
       const tweetURLNumber = pathSegments[2]
 
-      directory = `${twitterUserHandle}/tweets/${tweetURLNumber}`
+      directory = `${twitterUserHandle}/${tweetURLNumber}`
       filename = `screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`
     }
 
