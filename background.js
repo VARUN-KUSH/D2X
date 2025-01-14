@@ -293,18 +293,18 @@ async function startFullAnalysis() {
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
     console.log("Scraping content for URL:", url)
-    sendMessageToPopup("Ich lese die Posts....")
+    sendMessageToPopup("Ich lese die Posts....", 10)
     const scrapedContent = await scrapeContent(uid, tabId)
     console.log("Scraped content:", scrapedContent)
 
     updateAnalysisStatus(uid, "processing")
     //change the lang to german
-    sendMessageToPopup("Ich beginne mit der Verarbeitung der Posts...")
+    sendMessageToPopup("Ich beginne mit der Verarbeitung der Posts...", 20)
     const results = await processContent(scrapedContent)
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
-      sendMessageToPopup("Ich habe keine anzeigbaren Posts gefunden.")
+      sendMessageToPopup("Ich habe keine anzeigbaren Posts gefunden.", 100)
       return
     }
     // After processing, add analysis results to the ZIP Folder
@@ -313,9 +313,9 @@ async function startFullAnalysis() {
       results.Report.reportablePostsArray,
       results.Report.originalUrl
     )
-    sendMessageToPopup("Dokumente werden heruntergeladen...", 100)
+    sendMessageToPopup("Dokumente werden heruntergeladen...", 95)
     await initiateDownload()
-    sendMessageToPopup("Dokumente erfolgreich heruntergeladen.")
+    sendMessageToPopup("Dokumente erfolgreich heruntergeladen.", 100)
     // Signal completion to trigger ZIP download
     // chrome.runtime.sendMessage({ action: "analysisComplete", analysisId: uid })
 
@@ -381,7 +381,7 @@ async function processContent(messages) {
       )
     }
 
-    sendMessageToPopup("Ich bewerte die Posts mit Hilfe von OpenAI...")
+    sendMessageToPopup("Ich bewerte die Posts mit Hilfe von OpenAI...", 40)
 
     let backgroundInfo = ""
     try {
@@ -601,7 +601,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
         await new Promise((resolve) => setTimeout(resolve, 10000))
         console.log("going to take screenshort of fullpage")
-        sendMessageToPopup("Ich mache Screenshots der anzeigbaren Posts..")
+        sendMessageToPopup("Ich mache Screenshots der anzeigbaren Posts..", 65)
         const reportablepostscreenshots = await requestinitialScreenshotCapture(
           post.Post_URL,
           `post_${post.ID}.png`,

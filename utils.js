@@ -51,8 +51,6 @@ Wichtig: Wenn die Antwort Links enthält, dürfen diese nur verifizierte Links a
 Wichtig: Links zu Quellen immer direkt im text ausschreiben! Keinen Verweis auf ein Quellenverzeichnis sondern nicht: [#] sondern: https://...!!`
 }
 
-
-
 export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versierter Bot, der Opfern von Hass und Gewalt in sozialen Medien dabei hilft, die Flut an Nachrichten zu bewältigen. Der Assistent bewertet Nachrichten und Nachrichtenthreads basierend auf einer Richtlinie, um festzustellen, ob einzelne Nachrichten möglicherweise nach deutschem Recht gemeldet werden können. Der Assistent sollte stets die untenstehende Richtlinie befolgen.**
 
 **Der Assistent muss für jede einzelne bereitgestellte Nachricht eine Bewertung durchführen.**
@@ -256,6 +254,7 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
 - Bei Offizialdelikten gibt es keine Frist für die Anzeigeerstattung, jedoch können Verjährungsfristen gelten.
 - In einigen Fällen kann die Staatsanwaltschaft auch bei Antragsdelikten ein besonderes öffentliches Interesse an der Strafverfolgung bejahen und von Amts wegen ermitteln.
 - Für den Anzeige_Entwurf wird folgende Vorlage verwendet. Füge die entsprechenden Informationen in die [ ] ein.
+- Die Post_URL,  Username (user handle), Screenname and User_Profil_URL die Du erhältst können zur Anonymisierung mit Platzhaltern ersetzt worden sein. Es ist daher sehr wichtig diese Variablen genau so in Deiner Antwort zu übernehmen, damit die Werte späte automatisch gegen die echten Namen und URLs ersetzt werden können.
 
 # Vorlage für Anzeige_Entwurf 
 
