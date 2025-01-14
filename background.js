@@ -611,7 +611,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
             })
             await waitForTabToLoad(originalTab.id)
           }
-          sendMessageToPopup("ich lese Benutzerprofilinformationen..")
+          sendMessageToPopup("Ich lese die Benutzerprofilinformationen..")
           await delay(3000)
           scrapedData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
