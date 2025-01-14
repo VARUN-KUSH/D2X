@@ -57,115 +57,133 @@ class TwitterScraper {
     return text
   }
 
-  parseTweets(analysisId = "", targetUrl = null) {
+  async extractTweetData(tweet, analysisId, counter) {
+    try {
+      const container = tweet.querySelector("article[role='article']")
+      if (!container) return null
+
+      const screennameElement = container.querySelector("div[dir='ltr']")
+      const Screenname = screennameElement
+        ? this.extractTextWithEmojis(screennameElement)
+        : "Unknown"
+
+      const handleElement = container.querySelector("a[role='link'][href*='/']")
+      const Username = handleElement
+        ? "@" + handleElement.href.split("/").pop()
+        : "Unknown"
+
+      const timeElement = container.querySelector("time")
+      const time = timeElement
+        ? timeElement.getAttribute("datetime")
+        : "Unknown"
+
+      const tweetTextElement = container.querySelector(
+        "div[data-testid='tweetText']"
+      )
+      const text = tweetTextElement
+        ? this.extractTextWithEmojis(tweetTextElement)
+        : "No text found"
+
+      const showMoreLinkElement = container.querySelector(
+        "div[data-testid='tweet-text-show-more-link']"
+      )
+      const isTruncated = !!showMoreLinkElement
+
+      const tweetIdElement = container.querySelector(
+        "a[role='link'][href*='/status/']"
+      )
+      const tweetId = tweetIdElement
+        ? tweetIdElement.href.split("/").pop()
+        : "Unknown"
+
+      const postUrl = handleElement
+        ? `https://x.com/${handleElement.href.split("/")[3]}/status/${tweetId}`
+        : "Unknown"
+
+      const userProfileUrl = handleElement
+        ? `https://x.com/${handleElement.href.split("/")[3]}`
+        : "Unknown"
+
+      const postId = analysisId ? `${analysisId}-${counter}` : `${counter}`
+
+      return {
+        Screenname,
+        Username,
+        time,
+        text,
+        postUrl,
+        isTruncated,
+        userProfileUrl,
+        postId
+      }
+    } catch (error) {
+      console.error("Error extracting tweet data:", error)
+      return null
+    }
+  }
+
+  async parseTweets(analysisId = "", targetUrl = null) {
     const alltweetsection = document.querySelector(
-      'section[role="region"] > div[aria-label^="Timeline:'
+      'section[role="region"] > div[aria-label^="Timeline:"]'
     )
-    console.log("alltweetsection>>>>>>", alltweetsection)
-    const tweetsParent = alltweetsection.querySelectorAll(
-      ":scope > div > div[data-testid='cellInnerDiv']"
-    )
-   
-    console.log("tweetspARENT>>>>", tweetsParent)
+    if (!alltweetsection) {
+      console.error("Tweet section not found.")
+      return []
+    }
 
     const tweetsData = []
+    const uniqueTweets = new Set()
     let counter = 1
+    let previousTweetCount = 0 // Tracks visible tweets in the current viewport
+    let idleCount = 0 // Tracks consecutive iterations with no new tweets
 
-    for (const tweet of tweetsParent) {
-      try {
-        const container = tweet.querySelector('article[role="article"]')
-        console.log("Containers>>>>>>>>>>>", container)
-        if(!container) {
-          continue;
-        }
-        const screennameElement = container.querySelector("div[dir='ltr']")
-        console.log("screennameElement>>>>>>>>>>", screennameElement)
-        if (screennameElement) {
-          const Screenname = screennameElement
-            ? this.extractTextWithEmojis(screennameElement)
-            : "Unknown"
+    // Helper function to extract tweet data
 
-          console.log("screenname>>>>>>>>>>", Screenname)
+    // Scroll and scrape
+    while (true) {
+      // Extract tweets in the visible section
+      const tweetsParent = alltweetsection.querySelectorAll(
+        ":scope > div > div[data-testid='cellInnerDiv']"
+      )
 
-          const handleElement = container.querySelector(
-            "a[role='link'][href*='/']"
-          )
-
-          console.log("handleElement>>>>>>>>>>", handleElement)
-
-          const Username = handleElement
-            ? "@" + handleElement.href.split("/").pop()
-            : "Unknown"
-
-          console.log("handle>>>>>>>>>>", Username)
-
-          const timeElement = container.querySelector("time")
-          console.log("timeElement>>>>>>>>>>", timeElement)
-
-          const time = timeElement
-            ? timeElement.getAttribute("datetime")
-            : "Unknown"
-
-          console.log("time>>>>>>>>>>", time)
-          const tweetTextElement = container.querySelector(
-            "div[data-testid='tweetText']"
-          )
-          const text = tweetTextElement
-            ? this.extractTextWithEmojis(tweetTextElement)
-            : "No text found"
-
-          console.log("text>>>>>>>>>>", text)
-          const showMoreLinkElement = container.querySelector(
-            "div[data-testid='tweet-text-show-more-link']"
-          )
-          console.log("showMoreLinkElement>>>>>>>>>>", showMoreLinkElement)
-          const isTruncated = !!showMoreLinkElement
-          console.log("isTruncated>>>>>>>>>>", isTruncated)
-
-          const tweetIdElement = container.querySelector(
-            "a[role='link'][href*='/status/']"
-          )
-          console.log("tweetIdElement>>>>>>>>>>", tweetIdElement)
-          const tweetId = tweetIdElement
-            ? tweetIdElement.href.split("/").pop()
-            : "Unknown"
-          console.log("tweetId>>>>>>>>>>", tweetId)
-
-          const postUrl = handleElement
-            ? `https://x.com/${
-                handleElement.href.split("/")[3]
-              }/status/${tweetId}`
-            : "Unknown"
-          console.log("postUrl>>>>>>>>>>", postUrl)
-
-          const userProfileUrl = handleElement
-            ? `https://x.com/${handleElement.href.split("/")[3]}`
-            : "Unknown"
-          console.log("userProfileUrl>>>>>>>>>>", userProfileUrl)
-
-          const postId = analysisId ? `${analysisId}-${counter}` : `${counter}`
-
-          const tweetData = {
-            Screenname,
-            Username,
-            time,
-            text,
-            postUrl,
-            isTruncated,
-            userProfileUrl,
-            postId
-          }
-
+      console.log("tweetsParent>>>>", tweetsParent)
+      for (const tweet of tweetsParent) {
+        const tweetData = await this.extractTweetData(
+          tweet,
+          analysisId,
+          counter
+        )
+        console.log("tweetsData>>>>>>>>.", tweetData)
+        if (tweetData && !uniqueTweets.has(tweetData.postUrl)) {
+          uniqueTweets.add(tweetData.postUrl)
           tweetsData.push(tweetData)
-
-          // if (targetUrl && tweetData.postUrl === targetUrl) {
-          //   break;
-          // }
+          counter++
         }
+      }
 
-        counter++
-      } catch (error) {
-        console.error("Error parsing tweet:", error)
+      // Scroll down
+      alltweetsection.scrollIntoView({ behavior: "smooth", block: "end" })
+
+      // Wait for new tweets to load
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Check if new tweets are loaded
+      const currentTweetCount = alltweetsection.querySelectorAll(
+        ":scope > div > div[data-testid='cellInnerDiv']"
+      ).length
+
+      if (currentTweetCount === previousTweetCount) {
+        idleCount++
+        console.log("No new tweets loaded. Idle count:", idleCount)
+      } else {
+        idleCount = 0 // Reset idle count when new tweets are loaded
+        previousTweetCount = currentTweetCount
+      }
+
+      // Exit loop if no new tweets are loaded after multiple attempts
+      if (idleCount >= 3) {
+        console.log("Reached the end of the page. Exiting loop.")
+        break
       }
     }
 

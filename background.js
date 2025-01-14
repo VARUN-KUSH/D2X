@@ -425,26 +425,29 @@ async function processContent(messages) {
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
         // Use Post_URL as a unique identifier
-        const postUrl = message.postUrl || message.Post_URL
-
-        // Store original information with Post_URL as key
-        userInfoMap.set(postUrl, {
-          originalScreenname: message.screenname || message.Screenname,
-          originalUsername: message.handle || message.Username,
-          anonymousScreenname: `Username${userCounter}`,
-          anonymousUsername: `user${userCounter}123`,
-          postUrl: postUrl
-        })
-
-        userCounter++
-        // Return anonymized message
-        return {
-          ...message,
-          screenname: `Username${userCounter}`,
-          handle: `user${userCounter}123`,
-          Screenname: `Username${userCounter}`,
-          Username: `user${userCounter}123`
-        }
+         // Generate a unique key for this message
+         const uniqueKey = generateUniqueKey();
+        
+         // Store original information with Post_URL as key
+         userInfoMap.set(uniqueKey, {
+           originalScreenname: message.screenname || message.Screenname,
+           originalUsername: message.handle || message.Username,
+           originalpostUrl: message.postUrl,
+           originalProfileUrl: message.userProfileUrl
+         });
+         
+         userCounter++;
+         // Return anonymized message
+         return {
+           ...message,
+           // screenname: `Username${userCounter}`,
+           // handle: `user${userCounter}123`,
+           Screenname: `Username${userCounter}`,
+           Username: `user${userCounter}123`,
+           postUrl: `https://anonymous.post/${userCounter}`,
+           userProfileUrl: `https://anonymous.profileurl/${userCounter}`,
+           _messageKey: uniqueKey
+         };
       })
 
       return anonymizedMessages
@@ -453,14 +456,17 @@ async function processContent(messages) {
     function restoreOriginalInfo(reportablePosts) {
       return reportablePosts.map((post) => {
         // Get original info using Post_URL
-        const originalInfo = userInfoMap.get(post.Post_URL)
-
+        const originalInfo = userInfoMap.get(post._messageKey);
+        
         if (originalInfo) {
           return {
             ...post,
             Screenname: originalInfo.originalScreenname,
-            Username: originalInfo.originalUsername
-          }
+            Username: originalInfo.originalUsername,
+            postUrl: originalInfo.originalpostUrl,
+            userProfileUrl: originalInfo.originalProfileUrl,
+            _messageKey: undefined  // Remove the temporary key
+          };
         }
 
         return post
