@@ -259,8 +259,8 @@ async function initiateDownload() {
 }
 
 // Function to send messages to the popup
-export function sendMessageToPopup(message) {
-  chrome.runtime.sendMessage({ action: "processUpdate", data: message })
+export function sendMessageToPopup(message, progress=null) {
+  chrome.runtime.sendMessage({ action: "processUpdate", data: message, currentloaderprogress: progress })
 }
 
 // ## Main analysis functions
@@ -278,24 +278,24 @@ async function startFullAnalysis() {
     // Capture initial screenshot without navigation
     //send status of project to popup
     //chnage this to german language
-    sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
-    const screenshot = await requestinitialScreenshotCapture(
-      url,
-      "initial_page.png",
-      ""
-    )
-    console.log("initialscreenshot>>>>>>>>>", screenshot)
+    // sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
+    // const screenshot = await requestinitialScreenshotCapture(
+    //   url,
+    //   "initial_page.png",
+    //   ""
+    // )
+    // console.log("initialscreenshot>>>>>>>>>", screenshot)
 
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
     console.log("Scraping content for URL:", url)
-    sendMessageToPopup("Ich lese die Tweets....")
+    sendMessageToPopup("Ich lese die Tweets....", 10)
     const scrapedContent = await scrapeContent(uid, tabId)
     console.log("Scraped content:", scrapedContent)
 
     updateAnalysisStatus(uid, "processing")
     //change the lang to german
-    sendMessageToPopup("Ich beginne mit der Verarbeitung der Tweets...")
+    sendMessageToPopup("Ich beginne mit der Verarbeitung der Tweets...", 20)
     const results = await processContent(scrapedContent)
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
@@ -304,12 +304,12 @@ async function startFullAnalysis() {
       return
     }
     // After processing, add analysis results to the ZIP Folder
-    sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...")
+    sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente..." , 80)
     await createFinalReport(
       results.Report.reportablePostsArray,
       results.Report.originalUrl
     )
-    sendMessageToPopup("Dokumente werden heruntergeladen...")
+    sendMessageToPopup("Dokumente werden heruntergeladen...", 100)
     await initiateDownload()
     sendMessageToPopup("Dokumente erfolgreich heruntergeladen.")
     // Signal completion to trigger ZIP download
@@ -377,7 +377,7 @@ async function processContent(messages) {
       )
     }
 
-    sendMessageToPopup("Ich bewerte die Tweets mit Hilfe von OpenAI...")
+    sendMessageToPopup("Ich bewerte die Tweets mit Hilfe von OpenAI...", 40)
 
     let backgroundInfo = ""
     try {
@@ -422,6 +422,10 @@ async function processContent(messages) {
     const userInfoMap = new Map()
     let userCounter = 1
 
+    function generateUniqueKey() {
+      return `message_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
         // Use Post_URL as a unique identifier
@@ -463,8 +467,8 @@ async function processContent(messages) {
             ...post,
             Screenname: originalInfo.originalScreenname,
             Username: originalInfo.originalUsername,
-            postUrl: originalInfo.originalpostUrl,
-            userProfileUrl: originalInfo.originalProfileUrl,
+            Post_URL: originalInfo.originalpostUrl,
+            User_Profil_URL: originalInfo.originalProfileUrl,
             _messageKey: undefined  // Remove the temporary key
           };
         }
@@ -513,7 +517,7 @@ async function processContent(messages) {
     // Capture screenshots for reportable posts and user profiles
     if (reportablePostsWithOriginalInfo.length > 0) {
       sendMessageToPopup(
-        `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`
+        `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`, 60
       )
       finalreports = await captureReportablePostScreenshots(
         reportablePostsWithOriginalInfo
@@ -856,7 +860,7 @@ function generateFilename(url) {
       const twitterUserHandle = pathSegments[0]
       const tweetURLNumber = pathSegments[2]
 
-      directory = `${twitterUserHandle}/tweets/${tweetURLNumber}`
+      directory = `${twitterUserHandle}/${tweetURLNumber}`
       filename = `screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`
     }
 
@@ -865,7 +869,7 @@ function generateFilename(url) {
       const twitterUserHandle = pathSegments[0]
       // Create directory structure: username/profile
       directory = `${twitterUserHandle}`
-      filename = `screenshot_userInfo_${twitterUserHandle}_${date}.png`
+      filename = `screenshot_profile_${twitterUserHandle}_${date}.png`
     }
   }
 

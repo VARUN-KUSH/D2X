@@ -192,7 +192,7 @@ class TwitterScraper {
 
   async getTweets(analysisId) {
     console.log(`Getting tweets for analysis ID: ${analysisId}`)
-    let tweets = this.parseTweets(analysisId)
+    let tweets = await this.parseTweets(analysisId)
     console.log("tweetslength>>>>", tweets.length)
     // console.log(`Initial parsed tweets: ${JSON.stringify(tweets)}`)
 
