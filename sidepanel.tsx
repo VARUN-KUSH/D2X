@@ -807,6 +807,7 @@ function SidePanel() {
     })
 
     const { analysisId, url, filename, directory } = response
+    console.log("filename>>>>>", filename)
     let portname = "reportablescreenshotPort"
     updateProgressBar(50)
     const screenshotAnalysisId = AnalysisData.analysisID
@@ -1076,6 +1077,10 @@ function SidePanel() {
 
             case "processUpdate":
               setprojectStatus(request.data)
+              if(request.currentloaderprogress){
+                setProgress(request.currentloaderprogress)
+              }
+             
               if (
                 request.data === "Dokumente erfolgreich heruntergeladen." ||
                 request.data ===

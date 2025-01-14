@@ -259,8 +259,12 @@ async function initiateDownload() {
 }
 
 // Function to send messages to the popup
-export function sendMessageToPopup(message) {
-  chrome.runtime.sendMessage({ action: "processUpdate", data: message })
+export function sendMessageToPopup(message, progress = null) {
+  chrome.runtime.sendMessage({
+    action: "processUpdate",
+    data: message,
+    currentloaderprogress: progress
+  })
 }
 
 // ## Main analysis functions
@@ -278,13 +282,13 @@ async function startFullAnalysis() {
     // Capture initial screenshot without navigation
     //send status of project to popup
     //chnage this to german language
-    sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
-    const screenshot = await requestinitialScreenshotCapture(
-      url,
-      "initial_page.png",
-      ""
-    )
-    console.log("initialscreenshot>>>>>>>>>", screenshot)
+    // sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
+    // const screenshot = await requestinitialScreenshotCapture(
+    //   url,
+    //   "initial_page.png",
+    //   ""
+    // )
+    // console.log("initialscreenshot>>>>>>>>>", screenshot)
 
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
@@ -304,12 +308,12 @@ async function startFullAnalysis() {
       return
     }
     // After processing, add analysis results to the ZIP Folder
-    sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...")
+    sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...", 80)
     await createFinalReport(
       results.Report.reportablePostsArray,
       results.Report.originalUrl
     )
-    sendMessageToPopup("Dokumente werden heruntergeladen...")
+    sendMessageToPopup("Dokumente werden heruntergeladen...", 100)
     await initiateDownload()
     sendMessageToPopup("Dokumente erfolgreich heruntergeladen.")
     // Signal completion to trigger ZIP download
@@ -422,32 +426,36 @@ async function processContent(messages) {
     const userInfoMap = new Map()
     let userCounter = 1
 
+    function generateUniqueKey() {
+      return `message_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }
+
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
         // Use Post_URL as a unique identifier
-         // Generate a unique key for this message
-         const uniqueKey = generateUniqueKey();
-        
-         // Store original information with Post_URL as key
-         userInfoMap.set(uniqueKey, {
-           originalScreenname: message.screenname || message.Screenname,
-           originalUsername: message.handle || message.Username,
-           originalpostUrl: message.postUrl,
-           originalProfileUrl: message.userProfileUrl
-         });
-         
-         userCounter++;
-         // Return anonymized message
-         return {
-           ...message,
-           // screenname: `Username${userCounter}`,
-           // handle: `user${userCounter}123`,
-           Screenname: `Username${userCounter}`,
-           Username: `user${userCounter}123`,
-           postUrl: `https://anonymous.post/${userCounter}`,
-           userProfileUrl: `https://anonymous.profileurl/${userCounter}`,
-           _messageKey: uniqueKey
-         };
+        // Generate a unique key for this message
+        const uniqueKey = generateUniqueKey()
+
+        // Store original information with Post_URL as key
+        userInfoMap.set(uniqueKey, {
+          originalScreenname: message.screenname || message.Screenname,
+          originalUsername: message.handle || message.Username,
+          originalpostUrl: message.postUrl,
+          originalProfileUrl: message.userProfileUrl
+        })
+
+        userCounter++
+        // Return anonymized message
+        return {
+          ...message,
+          // screenname: `Username${userCounter}`,
+          // handle: `user${userCounter}123`,
+          Screenname: `Username${userCounter}`,
+          Username: `user${userCounter}123`,
+          postUrl: `https://anonymous.post/${userCounter}`,
+          userProfileUrl: `https://anonymous.profileurl/${userCounter}`,
+          _messageKey: uniqueKey
+        }
       })
 
       return anonymizedMessages
@@ -456,17 +464,17 @@ async function processContent(messages) {
     function restoreOriginalInfo(reportablePosts) {
       return reportablePosts.map((post) => {
         // Get original info using Post_URL
-        const originalInfo = userInfoMap.get(post._messageKey);
-        
+        const originalInfo = userInfoMap.get(post._messageKey)
+
         if (originalInfo) {
           return {
             ...post,
             Screenname: originalInfo.originalScreenname,
             Username: originalInfo.originalUsername,
-            postUrl: originalInfo.originalpostUrl,
-            userProfileUrl: originalInfo.originalProfileUrl,
-            _messageKey: undefined  // Remove the temporary key
-          };
+            Post_URL: originalInfo.originalpostUrl,
+            User_Profil_URL: originalInfo.originalProfileUrl,
+            _messageKey: undefined // Remove the temporary key
+          }
         }
 
         return post
@@ -513,7 +521,8 @@ async function processContent(messages) {
     // Capture screenshots for reportable posts and user profiles
     if (reportablePostsWithOriginalInfo.length > 0) {
       sendMessageToPopup(
-        `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`
+        `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`,
+        60
       )
       finalreports = await captureReportablePostScreenshots(
         reportablePostsWithOriginalInfo
@@ -865,7 +874,7 @@ function generateFilename(url) {
       const twitterUserHandle = pathSegments[0]
       // Create directory structure: username/profile
       directory = `${twitterUserHandle}`
-      filename = `screenshot_userInfo_${twitterUserHandle}_${date}.png`
+      filename = `screenshot_profile_${twitterUserHandle}_${date}.png`
     }
   }
 
