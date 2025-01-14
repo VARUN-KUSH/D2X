@@ -23,19 +23,19 @@
             },
             "Post_URL": {
               "type": "string",
-              "description": "The URL of the social media post (must be a valid URI)."
+              "description": "The URL of the social media post (must be a valid URI). For anonymization you might be given a placeholder for the Post_URL.  So anywhere in your answer where you want to use the Post_URL you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "Username": {
               "type": "string",
-              "description": "The user handle of the person who made the post."
+              "description": "The user handle of the person who made the post. For anonymization you might be given a placeholder for the Username (the user handle).  So anywhere in your answer where you want to use the Username (the user handle) you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "Screenname": {
               "type": "string",
-              "description": "The display name or screen name of the person who made the post."
+              "description": "The display name or screen name of the person who made the post. For anonymization you might be given a placeholder for the Screenname. So anywhere in your answer where you want to use the Screenname you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "User_Profil_URL": {
               "type": "string",
-              "description": "The URL to the person's profile who made the post (must be a valid URI)."
+              "description": "The URL to the person's profile who made the post (must be a valid URI). For anonymization you might be given a placeholder for the User_Profil_URL.  So anywhere in your answer where you want to use the User_Profil_URL you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "Veröffentlichungszeitpunkt": {
               "type": "string",
