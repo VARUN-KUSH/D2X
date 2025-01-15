@@ -449,62 +449,71 @@ async function processContent(messages) {
         return {
           ...message,
           // screenname: `Username${userCounter}`,
-          // handle: `user${userCounter}123`,
+          // handle: `user${userCounter}-123`,
           Screenname: `Username${userCounter}`,
-          Username: `user${userCounter}123`,
-          postUrl: `https://anonymous.post/${userCounter}`,
-          userProfileUrl: `https://anonymous.profileurl/${userCounter}`,
+          Username: `user${userCounter}-123`,
+          Post_URL: `https://anonymous.post/${userCounter}`,
+          User_Profil_URL: `https://anonymous.profileurl/${userCounter}`,
           _messageKey: uniqueKey
         }
       })
 
       return anonymizedMessages
     }
-
     function restoreOriginalInfo(reportablePosts) {
-      return reportablePosts.map((post) => {
-        // Get original info using Post_URL
+      // 1) Convert the entire array to a single JSON string
+      let bigJsonString = JSON.stringify(reportablePosts)
+
+      // 2) For each post, fetch the original info and replace
+      for (const post of reportablePosts) {
         const originalInfo = userInfoMap.get(post._messageKey)
+        if (!originalInfo) continue
 
-        if (originalInfo) {
+        // We'll do all replacements by searching for the exact anonymized fields
+        const replacements = [
+          {
+            searchValue: post.Screenname,
+            replaceValue: originalInfo.originalScreenname
+          },
+          {
+            searchValue: post.Username,
+            replaceValue: originalInfo.originalUsername
+          },
+          {
+            searchValue: post.Post_URL,
+            replaceValue: originalInfo.originalpostUrl
+          },
+          {
+            searchValue: post.User_Profil_URL,
+            replaceValue: originalInfo.originalProfileUrl
+          }
+        ]
 
-          // Create replacement patterns for anonymized values
-      const replacements = [
-        {
-          pattern: /user\d+/g, // Matches patterns like user3123
-          value: originalInfo.originalUsername
-        },
-        {
-          pattern: /https:\/\/anonymous\.profileurl\/\d+/g,
-          value: originalInfo.originalProfileUrl
-        },
-        {
-          pattern: /https:\/\/anonymous\.post\/\d+/g,
-          value: originalInfo.originalpostUrl
-        }
-      ];
-
-      // Replace anonymized values in Anzeige_Entwurf if it exists
-      let updatedAnzeigeEntwurf = post.Anzeige_Entwurf;
-      if (updatedAnzeigeEntwurf) {
-        replacements.forEach(({ pattern, value }) => {
-          updatedAnzeigeEntwurf = updatedAnzeigeEntwurf.replace(pattern, value);
-        });
-      }
-
-          return {
-            ...post,
-            Screenname: originalInfo.originalScreenname,
-            Username: originalInfo.originalUsername,
-            Post_URL: originalInfo.originalpostUrl,
-            User_Profil_URL: originalInfo.originalProfileUrl,
-            Anzeige_Entwurf: updatedAnzeigeEntwurf,
-            _messageKey: undefined // Remove the temporary key
+        // Go through each replacement
+        for (const { searchValue, replaceValue } of replacements) {
+          if (searchValue && replaceValue) {
+            // Escape special regex chars in searchValue
+            const escapedSearch = searchValue.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              "\\$&"
+            )
+            bigJsonString = bigJsonString.replace(
+              new RegExp(escapedSearch, "g"),
+              replaceValue
+            )
           }
         }
+      }
 
-        return post
+      // 3) Re-parse into objects
+      const updatedPosts = JSON.parse(bigJsonString)
+
+      // 4) Remove the _messageKey
+      updatedPosts.forEach((p) => {
+        delete p._messageKey
       })
+
+      return updatedPosts
     }
 
     try {
@@ -963,7 +972,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "SEARCH_PROFILE":
-
           //call perplexity and the create a folder which contains the report
           const { profileUrl, knownProfileInfo } = request.data
           const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
@@ -1013,7 +1021,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const followerCount =
                   parseInt(knowninfo["Anzahl Konten die diesem User folgen"]) ||
                   0
-                
+
                 const birthdate = parseInt(knowninfo["Konto erstellt"]) || ""
                 const profileinfo = {
                   screenname: knowninfo["User-Name"],
@@ -1195,7 +1203,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "SAVE_REPORT":
           // Handle the finalreport data
           const reports = request.payload
-          
+
           const reportablePostsArray = reports.reportablePostsArray
           await createFinalReport(reportablePostsArray)
           await initiateDownload()
@@ -1212,7 +1220,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "SavepostReport":
           const postreport = request.payload
-          
+
           const reportablePosts = postreport.reportablePostsArray
           await downloadpostreport(reportablePosts)
           await initiateDownload()
