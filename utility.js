@@ -4,6 +4,12 @@ import { generateHtmlReport } from "./generateHtmlReport.js"
 
 let zip = null
 
+// Add safeValue helper function
+const safeValue = (value) => {
+  if (value === null || value === undefined) return ""
+  return value
+}
+
 function modifyUrl(url) {
   // Find the base URL by splitting at the first "/status/" or anything after "https://x.com/"
   const baseUrl = url.split("x.com/")[0] + "x.com/"
@@ -230,11 +236,6 @@ export async function downloadprofilereport(results, originalUrl) {
       .join("\n")
   }
 
-  const safeValue = (value) => {
-    if (value === null || value === undefined) return ""
-    return value
-  }
-
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
   // mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${""}`)
   mainFolder.file(
@@ -317,10 +318,6 @@ export async function downloadpostreport(results, originalUrl) {
   // let folderName = `Strafanz_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   zip = null
   zip = new JSZip()
-  const safeValue = (value) => {
-    if (value === null || value === undefined) return ""
-    return value
-  }
 
   let mainFolder = zip.folder("Strafanz_Report") // Main folder
   let formData = {}
@@ -578,11 +575,6 @@ export async function createFinalReport(results, originalUrl = "") {
   if (!Array.isArray(results)) {
     console.error("Results must be an array")
     return
-  }
-
-  const safeValue = (value) => {
-    if (value === null || value === undefined) return ""
-    return value
   }
 
   // First subfolder: "Anschreiben_Basis_Daten"
