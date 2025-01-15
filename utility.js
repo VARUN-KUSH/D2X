@@ -1059,10 +1059,14 @@ async function runPerplexityQuery(query) {
       const data = {
         model: MODEL,
         messages: [
-          { role: "system", content: "Be precise and concise." },
+          {
+            role: "system",
+            content:
+              "Be precise and concise. Only output valid json as requested by the user. No text outside that json"
+          },
           { role: "user", content: query }
         ],
-        max_tokens: 1024,
+        max_tokens: 2048, // old:1024 - theoretical max:127072
         temperature: 0,
         top_p: 0.9
       }
