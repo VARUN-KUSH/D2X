@@ -14,6 +14,44 @@ function modifyUrl(url) {
   return modifiedUrl
 }
 
+function generateUserInfoContent(post) {
+  // First try Perplexity known_info
+  if (post.perplexityresponse?.known_info) {
+    return post.perplexityresponse.known_info.replace(/\\n/g, "\n")
+  }
+  // Fallback to scraped data
+  return `
+    - User-Name: ${safeValue(post.Screenname)}
+    - User-Handle: ${safeValue(post.Username)}
+    - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
+    - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
+    - Ort: ${safeValue(post.scrapedData?.userlocation)}
+    - URL: ${safeValue(post.scrapedData?.userUrl)}
+    - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
+    - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
+    - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
+}
+
+function generateExtraUserInfoContent(post) {
+  const onlineData = post.perplexityresponse?.online_praesenz
+  const weitereInfo = post.perplexityresponse?.weitere_informationen_zur_person
+
+  // If both are empty, return empty string
+  if (
+    (!onlineData || onlineData.trim() === "") &&
+    (!weitereInfo || weitereInfo.trim() === "")
+  ) {
+    return ""
+  }
+
+  // Combine the information
+  const combinedInfo = [onlineData, weitereInfo]
+    .filter((info) => info && info.trim() !== "")
+    .join("\n\n")
+
+  return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${combinedInfo}`
+}
+
 export async function capturereportablessandchangetoURLs(
   currentTab,
   filename,
@@ -238,26 +276,7 @@ export async function downloadprofilereport(results, originalUrl) {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      (() => {
-        const onlineData = post.perplexityresponse?.online_praesenz
-        const weitereInfo =
-          post.perplexityresponse?.weitere_informationen_zur_person
-
-        // Wenn beide leer sind, gib leeren String zurück
-        if (
-          (!onlineData || onlineData.trim() === "") &&
-          (!weitereInfo || weitereInfo.trim() === "")
-        ) {
-          return ""
-        }
-
-        // Kombiniere die Informationen
-        const combinedInfo = [onlineData, weitereInfo]
-          .filter((info) => info && info.trim() !== "")
-          .join("\n\n")
-
-        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${combinedInfo}`
-      })()
+      generateExtraUserInfoContent(post)
     )
     userFolder.file(
       `profilUrl.txt`,
@@ -272,18 +291,7 @@ export async function downloadprofilereport(results, originalUrl) {
     // )
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      post.scrapedData?.known_info
-        ? post.scrapedData.known_info.replace(/\\n/g, "\n") // Use known_info if available
-        : `
-              - User-Name: ${safeValue(post.Screenname)}
-              - User-Handle: ${safeValue(post.Username)}
-              - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
-              - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
-              - Ort: ${safeValue(post.scrapedData?.userlocation)}
-              - URL: ${safeValue(post.scrapedData?.userUrl)}
-              - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
-              - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
-              - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
+      generateUserInfoContent(post)
     )
 
     userFolder.file(
@@ -413,26 +421,7 @@ export async function downloadpostreport(results, originalUrl) {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      (() => {
-        const onlineData = post.perplexityresponse?.online_praesenz
-        const weitereInfo =
-          post.perplexityresponse?.weitere_informationen_zur_person
-
-        // Wenn beide leer sind, gib leeren String zurück
-        if (
-          (!onlineData || onlineData.trim() === "") &&
-          (!weitereInfo || weitereInfo.trim() === "")
-        ) {
-          return ""
-        }
-
-        // Kombiniere die Informationen
-        const combinedInfo = [onlineData, weitereInfo]
-          .filter((info) => info && info.trim() !== "")
-          .join("\n\n")
-
-        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${combinedInfo}`
-      })()
+      generateExtraUserInfoContent(post)
     )
 
     userFolder.file(
@@ -449,18 +438,7 @@ export async function downloadpostreport(results, originalUrl) {
 
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      post.scrapedData?.known_info
-        ? post.scrapedData.known_info.replace(/\\n/g, "\n") // Use known_info if available
-        : `
-              - User-Name: ${safeValue(post.Screenname)}
-              - User-Handle: ${safeValue(post.Username)}
-              - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
-              - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
-              - Ort: ${safeValue(post.scrapedData?.userlocation)}
-              - URL: ${safeValue(post.scrapedData?.userUrl)}
-              - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
-              - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
-              - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
+      generateUserInfoContent(post)
     )
 
     userFolder.file(
@@ -697,26 +675,7 @@ export async function createFinalReport(results, originalUrl = "") {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      (() => {
-        const onlineData = post.perplexityresponse?.online_praesenz
-        const weitereInfo =
-          post.perplexityresponse?.weitere_informationen_zur_person
-
-        // Wenn beide leer sind, gib leeren String zurück
-        if (
-          (!onlineData || onlineData.trim() === "") &&
-          (!weitereInfo || weitereInfo.trim() === "")
-        ) {
-          return ""
-        }
-
-        // Kombiniere die Informationen
-        const combinedInfo = [onlineData, weitereInfo]
-          .filter((info) => info && info.trim() !== "")
-          .join("\n\n")
-
-        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${combinedInfo}`
-      })()
+      generateExtraUserInfoContent(post)
     )
 
     userFolder.file(
@@ -739,18 +698,7 @@ export async function createFinalReport(results, originalUrl = "") {
 
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      post.scrapedData?.known_info
-        ? post.scrapedData.known_info.replace(/\\n/g, "\n") // Use known_info if available
-        : `
-              - User-Name: ${safeValue(post.Screenname)}
-              - User-Handle: ${safeValue(post.Username)}
-              - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
-              - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
-              - Ort: ${safeValue(post.scrapedData?.userlocation)}
-              - URL: ${safeValue(post.scrapedData?.userUrl)}
-              - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
-              - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
-              - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
+      generateUserInfoContent(post)
     )
 
     userFolder.file(

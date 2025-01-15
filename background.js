@@ -713,7 +713,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
           scrapedData = capturedProfilesdata.get(post.User_Profil_URL)
         }
 
-        let postReport = null
+        // let postReport = null
         sendMessageToPopup(
           "Suche Informationen zum User mit Hilfe von Perplexity..."
         )
@@ -726,37 +726,104 @@ async function captureReportablePostScreenshots(reportablePosts) {
         const perplexityresponse = await callPerplexity(perplexityQuery)
         console.log("perplexityresponse", perplexityresponse)
 
+        let postReport = null
+        let response = null
+        let known_info = null
+        let online_praesenz = null
+        let weitere_informationen_zur_person = null
+
         if (perplexityresponse) {
           try {
-            // Find the JSON part of the response
+            // First try the clean JSON way
             const jsonStart = perplexityresponse.indexOf("{")
             const jsonEnd = perplexityresponse.lastIndexOf("}") + 1
 
             if (jsonStart !== -1 && jsonEnd !== -1) {
-              // Extract only the JSON part
               const jsonStr = perplexityresponse.substring(jsonStart, jsonEnd)
-              const response = JSON.parse(jsonStr)
-
-              postReport = {
-                ...post,
-                scrapedData: scrapedData,
-                perplexityresponse: response,
-                postScreenshot: reportablepostscreenshots,
-                profileScreenshot: profileScreenshot
+              try {
+                response = JSON.parse(jsonStr)
+                if (response.known_info) {
+                  known_info = response.known_info
+                  online_praesenz = response.online_praesenz
+                  weitere_informationen_zur_person =
+                    response.weitere_informationen_zur_person
+                }
+              } catch (jsonError) {
+                console.log("JSON parsing failed, trying fallback method")
               }
             }
-            // else {
-            //   // If no JSON found, store the raw response
-            //   postReport = {
-            //     ...post,
-            //     scrapedData: scrapedData,
-            //     perplexityresponse: { raw: perplexityresponse },
-            //     postScreenshot: reportablepostscreenshots,
-            //     profileScreenshot: profileScreenshot
-            //   };
-            // }
+
+            // Fallback: String-based extraction if JSON parsing fails
+            if (!known_info) {
+              const knownInfoMarker = '"known_info": "'
+              const onlinePraesenzMarker = '"online_praesenz"'
+
+              let startIndex = perplexityresponse.indexOf(knownInfoMarker)
+              let endIndex = perplexityresponse.indexOf(onlinePraesenzMarker)
+
+              if (startIndex !== -1 && endIndex !== -1) {
+                known_info = perplexityresponse
+                  .substring(startIndex + knownInfoMarker.length, endIndex)
+                  .replace(/\\n/g, "\n")
+                  .replace(/",\s*$/, "")
+                  .trim()
+              }
+
+              // Extract online_praesenz
+              const weitereInfoMarker = '"weitere_informationen_zur_person"'
+              startIndex = perplexityresponse.indexOf('"online_praesenz": "')
+              endIndex = perplexityresponse.indexOf(weitereInfoMarker)
+
+              if (startIndex !== -1 && endIndex !== -1) {
+                online_praesenz = perplexityresponse
+                  .substring(
+                    startIndex + '"online_praesenz": "'.length,
+                    endIndex
+                  )
+                  .replace(/\\n/g, "\n")
+                  .replace(/",\s*$/, "")
+                  .trim()
+              }
+
+              // Extract weitere_informationen_zur_person
+              const allgemeineAnmerkungenMarker = '"allgemeine_anmerkungen"'
+              startIndex = perplexityresponse.indexOf(
+                '"weitere_informationen_zur_person": "'
+              )
+              endIndex = perplexityresponse.indexOf(allgemeineAnmerkungenMarker)
+
+              if (startIndex !== -1 && endIndex !== -1) {
+                weitere_informationen_zur_person = perplexityresponse
+                  .substring(
+                    startIndex + '"weitere_informationen_zur_person": "'.length,
+                    endIndex
+                  )
+                  .replace(/\\n/g, "\n")
+                  .replace(/",\s*$/, "")
+                  .trim()
+              }
+            }
+
+            postReport = {
+              ...post,
+              scrapedData, // Original scraped data remains unchanged
+              perplexityresponse: {
+                known_info,
+                online_praesenz,
+                weitere_informationen_zur_person
+              },
+              postScreenshot: reportablepostscreenshots,
+              profileScreenshot: profileScreenshot
+            }
           } catch (error) {
-            console.error("Error parsing perplexity response:", error)
+            console.error("Error processing perplexity response:", error)
+            postReport = {
+              ...post,
+              scrapedData,
+              perplexityresponse: null,
+              postScreenshot: reportablepostscreenshots,
+              profileScreenshot: profileScreenshot
+            }
           }
         } else {
           sendMessageToPopup(
@@ -764,15 +831,13 @@ async function captureReportablePostScreenshots(reportablePosts) {
           )
           postReport = {
             ...post,
-            scrapedData: scrapedData,
-            postScreenshot: reportablepostscreenshots, // Unique post screenshot for each post
-            profileScreenshot: profileScreenshot // Shared profile screenshot for each post by the same user
+            scrapedData,
+            perplexityresponse: null,
+            postScreenshot: reportablepostscreenshots,
+            profileScreenshot: profileScreenshot
           }
         }
-        // Create a structured object for each post
 
-        //calling perplexity logic
-        // Add the structured post report to the array
         reportablePostsArray.push(postReport)
       } catch (error) {
         console.error(`Error capturing screenshots for post ${post.ID}:`, error)
@@ -1142,6 +1207,126 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               userprofileinfo: { username: null }
             })
           }
+          break
+
+        case "SEARCH_POST":
+          const results = []
+          async function parseTwitterUrl(url) {
+            try {
+              const urlObj = new URL(url)
+
+              if (
+                !urlObj.hostname.includes("x.com") &&
+                !urlObj.hostname.includes("twitter.com")
+              ) {
+                throw new Error("Invalid Twitter/X URL")
+              }
+
+              const pathParts = urlObj.pathname.split("/").filter(Boolean)
+              if (pathParts.length < 1) {
+                throw new Error("No username found in URL")
+              }
+
+              const userName = pathParts[0]
+              const profileURl = `https://x.com/${userName}`
+
+              return {
+                userName,
+                profileURl
+              }
+            } catch (error) {
+              throw new Error(`Failed to parse URL: ${error.message}`)
+            }
+          }
+
+          const { postUrl, knownPostInfo } = request.data
+          console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
+          const resp = await parseTwitterUrl(postUrl)
+          const { userName, profileURl } = resp
+          //send both values to open ai
+          const message = {
+            postUrl: postUrl,
+            handle: userName,
+            isTruncated: false,
+            postId: getActiveAnalysisId(),
+            postUrl: postUrl,
+            screenname: "",
+            text: knownPostInfo,
+            time: getCurrentTime(),
+            userProfileUrl: profileURl
+          }
+
+          let messages = []
+          messages.push(message)
+          console.log("messages>>>>>>.", messages)
+          let backgroundInfo = ""
+          try {
+            const result = await chrome.storage.local.get(["backgroundInfo"])
+            backgroundInfo = result.backgroundInfo || ""
+            console.log(
+              "resultInbackgroundinfo>>>>>>>>>>",
+              result,
+              "backgroundInfo>>>>>>>>",
+              backgroundInfo
+            )
+          } catch (error) {
+            console.error("Error retrieving background info:", error)
+          }
+
+          const API_KEY = await getAPIKey()
+
+          let systemPromptWithContext = evaluatorSystemPrompt
+          if (backgroundInfo.trim() !== "") {
+            const contextBlock = `
+            # Context by the user
+            Additional context provided by the user to be considered during analysis:
+            ${backgroundInfo}
+            # End of user context
+            `
+            // Use a regular expression to safely replace the placeholder
+            systemPromptWithContext = evaluatorSystemPrompt.replace(
+              /\{\{context_block\}\}\n*/g,
+              contextBlock
+            )
+          } else {
+            // If no context, just remove the placeholder
+            systemPromptWithContext = evaluatorSystemPrompt.replace(
+              /\{\{context_block\}\}\n*/g,
+              ""
+            )
+          }
+
+          try {
+            const postresults = await fetchEvaluation(
+              API_KEY,
+              systemPromptWithContext,
+              jsonSchema,
+              messages
+            )
+
+            console.log("Structured Response:", postresults)
+            // const posts = JSON.parse(postresults.choices[0].message?.content)
+            // console.log("posts>>>>>>", posts)
+            postresults.map((post) => {
+              const posts = JSON.parse(post.choices[0].message?.content)
+              results.push(...(posts?.Posts || []))
+            })
+
+            console.log("results>>>>>>>>>>>>>>", results)
+
+            const reportablePosts = results.filter(
+              (post) => post.Post_selbst_ist_anzeigbar_flag === true
+            )
+
+            console.log("Reportable posts:", reportablePosts)
+            sendResponse({
+              analysisId: getActiveAnalysisId(),
+              openairesponse: reportablePosts
+            })
+          } catch (error) {
+            console.error("Error fetching evaluation:", error)
+          }
+
           break
 
         case "getCurrentTime":
