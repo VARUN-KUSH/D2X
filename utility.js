@@ -491,7 +491,7 @@ export async function downloadpostreport(results, originalUrl) {
         `Erläuterung:\n${post.Erklärung}\n\n` +
         `${prüfungText}` +
         `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
-        `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`
+        `Modell Entscheidung, ob der Post anzeigbar ist: ${decisionText}`
 
       // Ersetzen von doppelten Backslashes mit einfachen Zeilenumbrüchen
       const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n")
