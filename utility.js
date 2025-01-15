@@ -157,7 +157,7 @@ async function getFormData() {
   })
 }
 
-export async function downloadprofilereport(results) {
+export async function downloadprofilereport(results, originalUrl) {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
@@ -192,8 +192,23 @@ export async function downloadprofilereport(results) {
       .join("\n")
   }
 
+  const safeValue = (value) => {
+    if (value === null || value === undefined) return ""
+    return value
+  }
+
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
-  mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${""}`)
+  // mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${""}`)
+  mainFolder.file(
+    "initialPostUrl.txt",
+    (() => {
+      if (!originalUrl) return ""
+      if (typeof originalUrl === "string" && originalUrl.trim() === "")
+        return ""
+
+      return `URL des Ausgangsposts: ${originalUrl}`
+    })()
+  )
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
 
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
@@ -223,19 +238,40 @@ export async function downloadprofilereport(results) {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `${post.perplexityresponse?.online_praesenz || ""}`
+      (() => {
+        const onlineData = post.perplexityresponse?.online_praesenz
+        if (!onlineData) return ""
+        if (typeof onlineData === "string" && onlineData.trim() === "")
+          return ""
+
+        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${onlineData}`
+      })()
     )
     userFolder.file(
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
     )
+    // userFolder.file(
+    //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+    //   `Biografie: ${post.scrapedData?.profilebiodata}
+    //   ${post.scrapedData?.userJoindate}
+    //   Folgt: ${post.scrapedData?.followingCount}
+    //   Follower: ${post.scrapedData?.followersCount} `
+    // )
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `Biografie: ${post.scrapedData?.profilebiodata}
-      ${post.scrapedData?.userJoindate}
-      Folgt: ${post.scrapedData?.followingCount}
-      Follower: ${post.scrapedData?.followersCount} `
+      `
+          - User-Name: ${safeValue(post.Screenname)}
+          - User-Handle: ${safeValue(post.Username)}
+          - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
+          - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
+          - Ort: ${safeValue(post.scrapedData?.userlocation)}
+          - URL: ${safeValue(post.scrapedData?.userUrl)}
+          - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
+          - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
+          - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
     )
+
     userFolder.file(
       `userHandle.txt`,
       `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`
@@ -259,6 +295,11 @@ export async function downloadpostreport(results, originalUrl) {
   // let folderName = `Strafanz_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
   zip = null
   zip = new JSZip()
+  const safeValue = (value) => {
+    if (value === null || value === undefined) return ""
+    return value
+  }
+
   let mainFolder = zip.folder("Strafanz_Report") // Main folder
   let formData = {}
   try {
@@ -284,10 +325,50 @@ export async function downloadpostreport(results, originalUrl) {
       .join("\n")
   }
 
-  //Timestamp to add in this text file AnalyseZeitpunkt.txt
+  // Helper function to safely format date
+  function formatDateTime(dateValue) {
+    try {
+      // If dateValue is already a valid Date object
+      if (dateValue instanceof Date && !isNaN(dateValue)) {
+        return dateValue
+          .toISOString()
+          .replace(/T/, " ")
+          .replace(/Z/, "")
+          .replace(
+            /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+            (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+          )
+      }
+
+      // If dateValue is a string or number, try to create a Date object
+      const date = new Date(dateValue)
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid date value")
+      }
+
+      return date
+        .toISOString()
+        .replace(/T/, " ")
+        .replace(/Z/, "")
+        .replace(
+          /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+          (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+        )
+    } catch (error) {
+      console.warn(`Error formatting date: ${error.message}`, dateValue)
+      return "" // Return empty string instead of current date
+    }
+  }
+
   mainFolder.file(
     "initialPostUrl.txt",
-    `URL des Ausgangsposts: ${originalUrl || ""}`
+    (() => {
+      if (!originalUrl) return ""
+      if (typeof originalUrl === "string" && originalUrl.trim() === "")
+        return ""
+
+      return `URL des Ausgangsposts: ${originalUrl}`
+    })()
   )
   mainFolder.file("AnalyseZeitpunkt.txt", `${day}.${month}.${year}`)
 
@@ -318,19 +399,42 @@ export async function downloadpostreport(results, originalUrl) {
 
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${day}.${month}.${year}.txt`,
-      `${post.perplexityresponse?.online_praesenz || ""}`
+      (() => {
+        const onlineData = post.perplexityresponse?.online_praesenz
+        if (!onlineData) return ""
+        if (typeof onlineData === "string" && onlineData.trim() === "")
+          return ""
+
+        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${onlineData}`
+      })()
     )
+
     userFolder.file(
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
     )
+    // userFolder.file(
+    //   `UserInfo_${post.Username}_${day}.${month}.${year}.txt`,
+    //   `Biografie: ${post.scrapedData?.profilebiodata}
+    //   ${post.scrapedData?.userJoindate}
+    //   Folgt: ${post.scrapedData?.followingCount}
+    //   Follower: ${post.scrapedData?.followersCount} `
+    // )
+
     userFolder.file(
       `UserInfo_${post.Username}_${day}.${month}.${year}.txt`,
-      `Biografie: ${post.scrapedData?.profilebiodata}
-      ${post.scrapedData?.userJoindate}
-      Folgt: ${post.scrapedData?.followingCount}
-      Follower: ${post.scrapedData?.followersCount} `
+      `
+          - User-Name: ${safeValue(post.Screenname)}
+          - User-Handle: ${safeValue(post.Username)}
+          - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
+          - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
+          - Ort: ${safeValue(post.scrapedData?.userlocation)}
+          - URL: ${safeValue(post.scrapedData?.userUrl)}
+          - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
+          - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
+          - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
     )
+
     userFolder.file(
       `userHandle.txt`,
       `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`
@@ -400,17 +504,22 @@ export async function downloadpostreport(results, originalUrl) {
 
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
+      // folder2.file(
+      //   `Zeitpunkt.txt`,
+      //   // `Zeitpunkt des Kommentars: ${day}.${month}.${year} um ${hours}:${minutes} Uhr`
+      //   `Zeitpunkt des Kommentars: ${new Date(post?.Veröffentlichungszeitpunkt)
+      //     .toISOString()
+      //     .replace(/T/, " ")
+      //     .replace(/Z/, "")
+      //     .replace(
+      //       /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+      //       (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+      //     )} Uhr`
+      // )
+      // Use in your code
       folder2.file(
         `Zeitpunkt.txt`,
-        // `Zeitpunkt des Kommentars: ${day}.${month}.${year} um ${hours}:${minutes} Uhr`
-        `Zeitpunkt des Kommentars: ${new Date(post.Veröffentlichungszeitpunkt)
-          .toISOString()
-          .replace(/T/, " ")
-          .replace(/Z/, "")
-          .replace(
-            /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
-            (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
-          )} Uhr`
+        `Zeitpunkt des Kommentars: ${formatDateTime(post.Veröffentlichungszeitpunkt)}${formatDateTime(post.Veröffentlichungszeitpunkt) ? " Uhr" : ""}`
       )
     }
   }
@@ -465,6 +574,11 @@ export async function createFinalReport(results, originalUrl = "") {
     return
   }
 
+  const safeValue = (value) => {
+    if (value === null || value === undefined) return ""
+    return value
+  }
+
   // First subfolder: "Anschreiben_Basis_Daten"
   let now = new Date()
   let year = now.getFullYear()
@@ -503,10 +617,22 @@ export async function createFinalReport(results, originalUrl = "") {
   }
 
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
+  // mainFolder.file(
+  //   "initialPostUrl.txt",
+  //   `URL des Ausgangsposts: ${originalUrl || ""}`
+  // )
+
   mainFolder.file(
     "initialPostUrl.txt",
-    `URL des Ausgangsposts: ${originalUrl || ""}`
+    (() => {
+      if (!originalUrl) return ""
+      if (typeof originalUrl === "string" && originalUrl.trim() === "")
+        return ""
+
+      return `URL des Ausgangsposts: ${originalUrl}`
+    })()
   )
+
   mainFolder.file("AnalyseZeitpunkt.txt", `${date}.${month}.${year}`)
 
   let folder1 = mainFolder.folder("Anschreiben_Basis_Daten")
@@ -534,28 +660,57 @@ export async function createFinalReport(results, originalUrl = "") {
     const userFolder = mainFolder.folder(username)
     const post = results.find((item) => item.Username === username)
 
+    // userFolder.file(
+    //   `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+
+    //   post.perplexityresponse?.online_praesenz ? `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
+    //   ${post.perplexityresponse?.online_praesenz || ""}`: ""
+    // )
+
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-      `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
-      ${post.perplexityresponse?.online_praesenz || ""}`
+      (() => {
+        const onlineData = post.perplexityresponse?.online_praesenz
+        if (!onlineData) return ""
+        if (typeof onlineData === "string" && onlineData.trim() === "")
+          return ""
+
+        return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${onlineData}`
+      })()
     )
+
     userFolder.file(
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
     )
+    // userFolder.file(
+    //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
+    //   `
+    //   - User-Name: ${post.Screenname}
+    //   - User-Handle: ${post.Username}
+    //   - Beschreibung: ${post.scrapedData?.profilebiodata}
+    //   - Konto erstellt: ${post.scrapedData?.userJoindate}
+    //   - Ort: ${post.scrapedData.userlocation}
+    //   - URL: ${post.scrapedData.userUrl}
+    //   - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
+    //   - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount}
+    //   - Geboren am ${post.scrapedData.userBirthdate}`
+    // )
+
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
       `
-      - User-Name: ${post.Screenname}
-      - User-Handle: ${post.Username}
-      - Beschreibung: ${post.scrapedData?.profilebiodata}
-      - Konto erstellt: ${post.scrapedData?.userJoindate}
-      - Ort: ${post.scrapedData.userlocation}
-      - URL: ${post.scrapedData.userUrl}
-      - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
-      - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount} 
-      - Geboren am ${post.scrapedData.userBirthdate}`
+          - User-Name: ${safeValue(post.Screenname)}
+          - User-Handle: ${safeValue(post.Username)}
+          - Beschreibung: ${safeValue(post.scrapedData?.profilebiodata)}
+          - Konto erstellt: ${safeValue(post.scrapedData?.userJoindate)}
+          - Ort: ${safeValue(post.scrapedData?.userlocation)}
+          - URL: ${safeValue(post.scrapedData?.userUrl)}
+          - Anzahl Konten denen dieser User folgt: ${safeValue(post.scrapedData?.followingCount)}
+          - Anzahl Konten die diesem User folgen: ${safeValue(post.scrapedData?.followersCount)}
+          - Geboren am ${safeValue(post.scrapedData?.userBirthdate)}`
     )
+
     userFolder.file(
       `userHandle.txt`,
       `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`

@@ -428,7 +428,6 @@ function SidePanel() {
       }
 
       const finalreport = {
-        originalUrl: AnalysisData.postsUrl,
         reportablePostsArray: [results]
       }
 
@@ -460,7 +459,6 @@ function SidePanel() {
       }
       console.log("results>>>>>>.", results)
       const finalreport = {
-        originalUrl: AnalysisData.postsUrl,
         reportablePostsArray: [results]
       }
 

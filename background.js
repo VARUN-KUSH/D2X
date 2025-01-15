@@ -467,12 +467,38 @@ async function processContent(messages) {
         const originalInfo = userInfoMap.get(post._messageKey)
 
         if (originalInfo) {
+
+          // Create replacement patterns for anonymized values
+      const replacements = [
+        {
+          pattern: /user\d+/g, // Matches patterns like user3123
+          value: originalInfo.originalUsername
+        },
+        {
+          pattern: /https:\/\/anonymous\.profileurl\/\d+/g,
+          value: originalInfo.originalProfileUrl
+        },
+        {
+          pattern: /https:\/\/anonymous\.post\/\d+/g,
+          value: originalInfo.originalpostUrl
+        }
+      ];
+
+      // Replace anonymized values in Anzeige_Entwurf if it exists
+      let updatedAnzeigeEntwurf = post.Anzeige_Entwurf;
+      if (updatedAnzeigeEntwurf) {
+        replacements.forEach(({ pattern, value }) => {
+          updatedAnzeigeEntwurf = updatedAnzeigeEntwurf.replace(pattern, value);
+        });
+      }
+
           return {
             ...post,
             Screenname: originalInfo.originalScreenname,
             Username: originalInfo.originalUsername,
             Post_URL: originalInfo.originalpostUrl,
             User_Profil_URL: originalInfo.originalProfileUrl,
+            Anzeige_Entwurf: updatedAnzeigeEntwurf,
             _messageKey: undefined // Remove the temporary key
           }
         }
@@ -865,16 +891,16 @@ function generateFilename(url) {
       const twitterUserHandle = pathSegments[0]
       const tweetURLNumber = pathSegments[2]
 
-      directory = `${twitterUserHandle}/${tweetURLNumber}`
-      filename = `screenshot_${twitterUserHandle}_${tweetURLNumber}_${date}.png`
+      directory = `@${twitterUserHandle}/${tweetURLNumber}`
+      filename = `screenshot_@${twitterUserHandle}_${tweetURLNumber}_${date}.png`
     }
 
     // Case 2: Profile URL format https://x.com/[TwitterUserHandle]
     if (pathSegments.length === 1) {
       const twitterUserHandle = pathSegments[0]
       // Create directory structure: username/profile
-      directory = `${twitterUserHandle}`
-      filename = `screenshot_profile_${twitterUserHandle}_${date}.png`
+      directory = `@${twitterUserHandle}`
+      filename = `screenshot_profile_@${twitterUserHandle}_${date}.png`
     }
   }
 
@@ -937,74 +963,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "SEARCH_PROFILE":
-          function extractTwitterProfileData(profileText) {
-            // Initialize the result object
-            const profileData = {
-              screenname: "",
-              username: "",
-              profilebiodata: "",
-              userlocation: "",
-              userJoindate: "",
-              followingCount: 0,
-              followersCount: 0,
-              additionalInfo: []
-            }
-
-            // Split the text into lines for easier processing
-            const lines = profileText
-              .split("\n")
-              .map((line) => line.trim())
-              .filter((line) => line)
-
-            // Extract screen name (first line) and username (second line)
-            profileData.screenName = lines[0]
-            profileData.username = lines[1].startsWith("@") ? lines[1] : ""
-
-            // Extract bio (typically the next few lines until location/join date)
-            let bioLines = []
-            let currentIndex = 2
-
-            while (
-              currentIndex < lines.length &&
-              !lines[currentIndex].includes("Joined") &&
-              !lines[currentIndex].includes("Following") &&
-              !lines[currentIndex].includes("Followers")
-            ) {
-              bioLines.push(lines[currentIndex])
-              currentIndex++
-            }
-            profileData.bio = bioLines.join("\n")
-
-            // Extract location and join date
-            const locationJoinLine = lines.find((line) =>
-              line.includes("Joined")
-            )
-            if (locationJoinLine) {
-              const [location, joinInfo] = locationJoinLine.split("Joined")
-              profileData.location = location.trim()
-              profileData.joinDate = joinInfo.trim()
-            }
-
-            // Extract following and followers counts
-            for (const line of lines) {
-              if (line.includes("Following")) {
-                profileData.followingCount = parseInt(line.match(/\d+/)[0])
-              }
-              if (line.includes("Followers")) {
-                profileData.followersCount = parseInt(line.match(/\d+/)[0])
-              }
-            }
-
-            // Add any additional information
-            const additionalInfoLine = lines.find((line) =>
-              line.includes("Not followed")
-            )
-            if (additionalInfoLine) {
-              profileData.additionalInfo.push(additionalInfoLine)
-            }
-
-            return profileData
-          }
 
           //call perplexity and the create a folder which contains the report
           const { profileUrl, knownProfileInfo } = request.data
@@ -1055,7 +1013,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const followerCount =
                   parseInt(knowninfo["Anzahl Konten die diesem User folgen"]) ||
                   0
-
+                
+                const birthdate = parseInt(knowninfo["Konto erstellt"]) || ""
                 const profileinfo = {
                   screenname: knowninfo["User-Name"],
                   username: knowninfo["User-Handle"],
@@ -1063,7 +1022,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   userlocation: knowninfo["Ort"],
                   userJoindate: knowninfo["Konto erstellt"],
                   followingCount: followingCount,
-                  followersCount: followerCount
+                  followersCount: followerCount,
+                  userBirthdate: birthdate,
+                  userUrl: knowninfo["URL"]
                 }
 
                 sendResponse({
@@ -1234,9 +1195,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "SAVE_REPORT":
           // Handle the finalreport data
           const reports = request.payload
-          const originalUrl = reports.originalUrl
+          
           const reportablePostsArray = reports.reportablePostsArray
-          await createFinalReport(reportablePostsArray, originalUrl)
+          await createFinalReport(reportablePostsArray)
           await initiateDownload()
           sendResponse({ status: "Download section toggled" })
           break
@@ -1251,9 +1212,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         case "SavepostReport":
           const postreport = request.payload
-          const PostoriginalUrl = postreport.originalUrl
+          
           const reportablePosts = postreport.reportablePostsArray
-          await downloadpostreport(reportablePosts, PostoriginalUrl)
+          await downloadpostreport(reportablePosts)
           await initiateDownload()
           sendResponse({ status: "Download section toggled" })
           break
