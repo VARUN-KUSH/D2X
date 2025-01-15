@@ -972,38 +972,118 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "SEARCH_PROFILE":
-          //call perplexity and the create a folder which contains the report
-          const { profileUrl, knownProfileInfo } = request.data
-          const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
+          try {
+            const { profileUrl, knownProfileInfo } = request.data
+            console.log("Starting SEARCH_PROFILE with:", {
+              profileUrl,
+              knownProfileInfo
+            })
 
-          let username = null
-          if (profileUrlPattern.test(profileUrl)) {
-            // Extract the username from the profile URL
-            username = profileUrl.match(profileUrlPattern)[1]
-            console.log("Extracted Username:", username)
-          } else {
-            console.log("Profile URL does not match the expected format.")
-          }
+            const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
 
-          const perplexityQuery = generatePerplexityPrompt(
-            username,
-            knownProfileInfo
-          )
+            let username = null
+            if (profileUrlPattern.test(profileUrl)) {
+              username = profileUrl.match(profileUrlPattern)[1]
+              console.log("Extracted Username:", username)
+            } else {
+              console.log("Profile URL does not match the expected format.")
+            }
 
-          const perplexityresponse = await callPerplexity(perplexityQuery)
-          let response
-          if (perplexityresponse) {
-            try {
-              // Find the JSON part of the response
+            const perplexityQuery = generatePerplexityPrompt(
+              username,
+              knownProfileInfo
+            )
+
+            const perplexityresponse = await callPerplexity(perplexityQuery)
+            let response = null
+            let known_info = null
+            let online_praesenz = null
+            let weitere_informationen_zur_person = null
+
+            if (perplexityresponse) {
+              // Erst versuchen wir den JSON-Weg
               const jsonStart = perplexityresponse.indexOf("{")
               const jsonEnd = perplexityresponse.lastIndexOf("}") + 1
 
               if (jsonStart !== -1 && jsonEnd !== -1) {
-                // Extract only the JSON part
                 const jsonStr = perplexityresponse.substring(jsonStart, jsonEnd)
-                response = JSON.parse(jsonStr)
-                // Parse the known_info string into an object
-                const knownInfoLines = response.known_info.split("\n")
+                try {
+                  response = JSON.parse(jsonStr)
+                  if (response.known_info) {
+                    known_info = response.known_info
+                    online_praesenz = response.online_praesenz
+                    weitere_informationen_zur_person =
+                      response.weitere_informationen_zur_person
+                  }
+                } catch (jsonError) {
+                  console.log("JSON parsing failed, trying fallback method")
+                }
+              }
+
+              // Fallback: String-basierte Extraktion wenn JSON-Parsing fehlschlägt
+              if (!known_info) {
+                const knownInfoMarker = '"known_info": "'
+                const onlinePraesenzMarker = '"online_praesenz"'
+
+                let startIndex = perplexityresponse.indexOf(knownInfoMarker)
+                let endIndex = perplexityresponse.indexOf(onlinePraesenzMarker)
+
+                if (startIndex !== -1 && endIndex !== -1) {
+                  known_info = perplexityresponse
+                    .substring(startIndex + knownInfoMarker.length, endIndex)
+                    .replace(/\\n/g, "\n")
+                    .replace(/",\s*$/, "")
+                    .trim()
+                }
+
+                // Extraktion für online_praesenz
+                const weitereInfoMarker = '"weitere_informationen_zur_person"'
+                startIndex = perplexityresponse.indexOf('"online_praesenz": "')
+                endIndex = perplexityresponse.indexOf(weitereInfoMarker)
+
+                if (startIndex !== -1 && endIndex !== -1) {
+                  online_praesenz = perplexityresponse
+                    .substring(
+                      startIndex + '"online_praesenz": "'.length,
+                      endIndex
+                    )
+                    .replace(/\\n/g, "\n")
+                    .replace(/",\s*$/, "")
+                    .trim()
+                }
+
+                // Extraktion für weitere_informationen_zur_person
+                const allgemeineAnmerkungenMarker = '"allgemeine_anmerkungen"'
+                startIndex = perplexityresponse.indexOf(
+                  '"weitere_informationen_zur_person": "'
+                )
+                endIndex = perplexityresponse.indexOf(
+                  allgemeineAnmerkungenMarker
+                )
+
+                if (startIndex !== -1 && endIndex !== -1) {
+                  weitere_informationen_zur_person = perplexityresponse
+                    .substring(
+                      startIndex +
+                        '"weitere_informationen_zur_person": "'.length,
+                      endIndex
+                    )
+                    .replace(/\\n/g, "\n")
+                    .replace(/",\s*$/, "")
+                    .trim()
+                }
+              }
+
+              // Initialisiere profileinfo mit dem Username aus der URL
+              let profileinfo = {
+                username: username
+              }
+
+              if (known_info) {
+                profileinfo.known_info = known_info
+
+                // Parse einzelne Felder für Abwärtskompatibilität
+                const knownInfoLines = known_info.split("\n")
                 const knowninfo = {}
 
                 knownInfoLines.forEach((line) => {
@@ -1013,7 +1093,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   }
                 })
 
-                // Extract follower and following counts and convert to numbers
+                // Extrahiere numerische Werte mit Fallbacks
                 const followingCount =
                   parseInt(
                     knowninfo["Anzahl Konten denen dieser User folgt"]
@@ -1021,157 +1101,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 const followerCount =
                   parseInt(knowninfo["Anzahl Konten die diesem User folgen"]) ||
                   0
+                const birthdate = parseInt(knowninfo["Geburtsdatum"]) || ""
 
-                const birthdate = parseInt(knowninfo["Konto erstellt"]) || ""
-                const profileinfo = {
-                  screenname: knowninfo["User-Name"],
-                  username: knowninfo["User-Handle"],
+                // Aktualisiere profileinfo
+                profileinfo = {
+                  ...profileinfo,
+                  screenname: knowninfo["User-Name"] || knowninfo["Name"], // Fallback auf "Name"
+                  username: knowninfo["User-Handle"] || username,
                   profilebiodata: knowninfo["Beschreibung"],
                   userlocation: knowninfo["Ort"],
                   userJoindate: knowninfo["Konto erstellt"],
                   followingCount: followingCount,
                   followersCount: followerCount,
-                  userBirthdate: birthdate,
+                  userBirthdate: birthdate || knowninfo["Geburtsdatum"], // Fallback auf "Geburtsdatum"
                   userUrl: knowninfo["URL"]
                 }
-
-                sendResponse({
-                  analysisId: getActiveAnalysisId(),
-                  perplexityresponse: response,
-                  userprofileinfo: profileinfo
-                })
-                break
-              } else {
-                console.log(
-                  "response found from perplexity is not in correct format"
-                )
               }
-            } catch (error) {
-              console.error("Error parsing perplexity response:", error)
+
+              sendResponse({
+                analysisId: getActiveAnalysisId(),
+                perplexityresponse: response || {
+                  known_info,
+                  online_praesenz,
+                  weitere_informationen_zur_person
+                },
+                userprofileinfo: profileinfo
+              })
+            } else {
+              sendResponse({
+                analysisId: getActiveAnalysisId(),
+                perplexityresponse: null,
+                userprofileinfo: { username }
+              })
             }
-          } else {
-            console.log("no response found from perplexity")
-          }
-
-        case "SEARCH_POST":
-          const results = []
-          async function parseTwitterUrl(url) {
-            try {
-              const urlObj = new URL(url)
-
-              if (
-                !urlObj.hostname.includes("x.com") &&
-                !urlObj.hostname.includes("twitter.com")
-              ) {
-                throw new Error("Invalid Twitter/X URL")
-              }
-
-              const pathParts = urlObj.pathname.split("/").filter(Boolean)
-              if (pathParts.length < 1) {
-                throw new Error("No username found in URL")
-              }
-
-              const userName = pathParts[0]
-              const profileURl = `https://x.com/${userName}`
-
-              return {
-                userName,
-                profileURl
-              }
-            } catch (error) {
-              throw new Error(`Failed to parse URL: ${error.message}`)
-            }
-          }
-
-          const { postUrl, knownPostInfo } = request.data
-          console.log("posturl>>>>", postUrl, "post>>>>", knownPostInfo)
-          const resp = await parseTwitterUrl(postUrl)
-          const { userName, profileURl } = resp
-          //send both values to open ai
-          const message = {
-            postUrl: postUrl,
-            handle: userName,
-            isTruncated: false,
-            postId: getActiveAnalysisId(),
-            postUrl: postUrl,
-            screenname: "",
-            text: knownPostInfo,
-            time: getCurrentTime(),
-            userProfileUrl: profileURl
-          }
-
-          let messages = []
-          messages.push(message)
-          console.log("messages>>>>>>.", messages)
-          let backgroundInfo = ""
-          try {
-            const result = await chrome.storage.local.get(["backgroundInfo"])
-            backgroundInfo = result.backgroundInfo || ""
-            console.log(
-              "resultInbackgroundinfo>>>>>>>>>>",
-              result,
-              "backgroundInfo>>>>>>>>",
-              backgroundInfo
-            )
           } catch (error) {
-            console.error("Error retrieving background info:", error)
-          }
-
-          const API_KEY = await getAPIKey()
-
-          let systemPromptWithContext = evaluatorSystemPrompt
-          if (backgroundInfo.trim() !== "") {
-            const contextBlock = `
-          # Context by the user
-          Additional context provided by the user to be considered during analysis:
-          ${backgroundInfo}
-          # End of user context
-          `
-            // Use a regular expression to safely replace the placeholder
-            systemPromptWithContext = evaluatorSystemPrompt.replace(
-              /\{\{context_block\}\}\n*/g,
-              contextBlock
-            )
-          } else {
-            // If no context, just remove the placeholder
-            systemPromptWithContext = evaluatorSystemPrompt.replace(
-              /\{\{context_block\}\}\n*/g,
-              ""
-            )
-          }
-
-          try {
-            const postresults = await fetchEvaluation(
-              API_KEY,
-              systemPromptWithContext,
-              jsonSchema,
-              messages
-            )
-
-            console.log("Structured Response:", postresults)
-            // const posts = JSON.parse(postresults.choices[0].message?.content)
-            // console.log("posts>>>>>>", posts)
-            postresults.map((post) => {
-              const posts = JSON.parse(post.choices[0].message?.content)
-              results.push(...(posts?.Posts || []))
-            })
-
-            console.log("results>>>>>>>>>>>>>>", results)
-
-            const reportablePosts = results.filter(
-              (post) => post.Post_selbst_ist_anzeigbar_flag === true
-            )
-
-            console.log("Reportable posts:", reportablePosts)
+            console.error("Error in SEARCH_PROFILE:", error)
             sendResponse({
               analysisId: getActiveAnalysisId(),
-              openairesponse: reportablePosts
+              perplexityresponse: null,
+              userprofileinfo: { username: null }
             })
-          } catch (error) {
-            console.error("Error fetching evaluation:", error)
           }
-
           break
+
         case "getCurrentTime":
           const time = await getCurrentTime()
           sendResponse({ time: time })
