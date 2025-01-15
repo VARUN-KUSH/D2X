@@ -1,8 +1,23 @@
 // Evaluator system prompt
 export function generatePerplexityPrompt(user_handle, user_info) {
+  console.log("generatePerplexityPrompt received:", {
+    user_handle,
+    user_info,
+    type: typeof user_info
+  })
+
+  const formattedUserInfo =
+    typeof user_info === "object" && user_info !== null
+      ? Object.entries(user_info)
+          .map(([key, value]) => `- ${key}: ${value}`)
+          .join("\n")
+      : user_info
+
+  console.log("Formatted user info:", formattedUserInfo)
+
   return `Für eine tiefgehende Recherche zum X.com-User ${user_handle} durchführen.
 Hier sind bereits bekannte Informationen zu dem User:
-${user_info}
+${formattedUserInfo}
 
 Antworte ausschließlich im folgenden JSON-Format:
 
