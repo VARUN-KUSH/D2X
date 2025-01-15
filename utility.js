@@ -55,7 +55,7 @@ function generateExtraUserInfoContent(post) {
     .filter((info) => info && info.trim() !== "")
     .join("\n\n")
 
-  return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n${combinedInfo}`
+  return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n\n\n${combinedInfo}`
 }
 
 export async function capturereportablessandchangetoURLs(
@@ -868,8 +868,7 @@ export async function createFinalReport(results, originalUrl = "") {
               .filter((info) => info && info.trim() !== "")
               .join("\n\n")
 
-            return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
-            ${combinedInfo}`
+            return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n\n\n${combinedInfo}`
           })()
         }
 
