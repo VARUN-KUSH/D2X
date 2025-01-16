@@ -244,19 +244,23 @@ async function initiateDownload() {
 
     // Convert the Blob to a base64 string to send to the content script or popup
     const reader = new FileReader()
-    reader.onloadend = () => {
+    reader.onloadend = async() => {
       const base64data = reader.result.split(",")[1] // Extract base64 part
       console.log("base64data>>>>>>>>", base64data)
-      chrome.runtime.sendMessage({
-        action: "downloadZip",
-        base64data: base64data
-      })
+      await saveData(base64data)
     }
     reader.readAsDataURL(zipBlob)
   } catch (error) {
     console.error("Error during download:", error)
   }
 }
+
+
+const saveData = async (base64data) => {
+  await chrome.storage.local.set({ 'downloadData': base64data });
+  chrome.runtime.sendMessage({ action: "downloadZip" });
+};
+
 
 // Function to send messages to the popup
 export function sendMessageToPopup(message, progress = null) {
