@@ -275,7 +275,7 @@ function SidePanel() {
       ...prevState,
       posts: openairesponse || "",
       analysisID: prevState.analysisID || analysisId, // Keep existing analysisID if it exists, otherwise use new one
-      postsUrl: openairesponse[0]?.Post_URL || ""
+      postsUrl: openairesponse[0]?.postUrl || ""
     }))
     setProgress(100)
     // Update analysisId state using the same logic
@@ -393,7 +393,7 @@ function SidePanel() {
       AnalysisData.perplexityresponse
     ) {
       const results = {
-        User_Profil_URL: inputValues.profileUrl,
+        userProfileUrl: inputValues.profileUrl,
         Username: AnalysisData.profilesdata?.username,
         Screenname: AnalysisData.screenName || "",
         perplexityresponse: AnalysisData.perplexityresponse || "",
@@ -657,9 +657,9 @@ function SidePanel() {
   }, [])
 
   const editBackgroundInfo = () => {
-   
+
     setbackgroundInfopresent(false)
-   
+
   }
 
   const editaddress = () => {
@@ -676,7 +676,7 @@ function SidePanel() {
           `Error deleting ${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key: ${chrome.runtime.lastError.message}`
         )
       } else {
-      
+
         // Clear the key from state
         setApiKeys((prevKeys) => ({
           ...prevKeys,
@@ -1012,7 +1012,7 @@ function SidePanel() {
     })
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      ;(async () => {
+      ; (async () => {
         try {
           switch (request.action) {
             case "progressUpdate":
@@ -1051,52 +1051,52 @@ function SidePanel() {
                 const base64 = result.downloadData
                 console.log("base64>>>>>>>>>>>", base64)
 
-                 // Check if data exists
+                // Check if data exists
                 if (!result.downloadData) {
                   console.error("No download data found in storage");
                   return;
                 }
 
-              try {
-                const byteCharacters = atob(base64);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
+                try {
+                  const byteCharacters = atob(base64);
+                  const byteNumbers = new Array(byteCharacters.length);
+                  for (let i = 0; i < byteCharacters.length; i++) {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
+                  }
+                  const byteArray = new Uint8Array(byteNumbers);
+                  let zipBlob = new Blob([byteArray], { type: "application/zip" });
+
+                  // Create a URL for the Blob and download it
+                  const url = URL.createObjectURL(zipBlob);
+                  const downloadName = "Strafanz_Report.zip";
+
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = downloadName;
+                  document.body.appendChild(a); // Add this line
+                  a.click();
+                  document.body.removeChild(a); // Add this line
+
+                  // Clean up
+                  URL.revokeObjectURL(url);
+                  zipBlob = null;
+                  chrome.storage.local.remove('downloadData');
+                } catch (error) {
+                  console.error("Error processing download data:", error);
                 }
-                const byteArray = new Uint8Array(byteNumbers);
-                let zipBlob = new Blob([byteArray], { type: "application/zip" });
-    
-                // Create a URL for the Blob and download it
-                const url = URL.createObjectURL(zipBlob);
-                const downloadName = "Strafanz_Report.zip";
-    
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = downloadName;
-                document.body.appendChild(a); // Add this line
-                a.click();
-                document.body.removeChild(a); // Add this line
-    
-                // Clean up
-                URL.revokeObjectURL(url);
-                zipBlob = null;
-                chrome.storage.local.remove('downloadData');
-            } catch (error) {
-                console.error("Error processing download data:", error);
-            }
               });
               break
 
             case "processUpdate":
               setprojectStatus(request.data)
-              if(request.currentloaderprogress){
+              if (request.currentloaderprogress) {
                 setProgress(request.currentloaderprogress)
               }
-             
+
               if (
                 request.data === "Dokumente erfolgreich heruntergeladen." ||
                 request.data ===
-                  "Entschuldigung, ich habe keine anzeigbaren Posts gefunden."
+                "Entschuldigung, ich habe keine anzeigbaren Posts gefunden."
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
@@ -1131,21 +1131,21 @@ function SidePanel() {
             AnalysisData.posts ||
             AnalysisData.fullscreenshot ||
             AnalysisData.profilesdata) && (
-            <span
-              className="main-icon"
-              title="Daten herunterladen"
-              onClick={toggledownloadSection}
-              style={{
-                cursor: "pointer",
-                transition: "transform 0.1s ease-in-out"
-              }}
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "scale(0.9)")
-              }
-              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-              ⬇️
-            </span>
-          )}
+              <span
+                className="main-icon"
+                title="Daten herunterladen"
+                onClick={toggledownloadSection}
+                style={{
+                  cursor: "pointer",
+                  transition: "transform 0.1s ease-in-out"
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.9)")
+                }
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+                ⬇️
+              </span>
+            )}
 
           <span
             id="mainLinkIcon"
@@ -1197,8 +1197,8 @@ function SidePanel() {
           <section id="mainHelpSection">
             <h2>Über <em>Strafanzeiger</em></h2>
             <p>
-              <em>Strafanzeiger</em> ist eine Chrome Erweiterung zur automatischen Auswertung 
-              von X/Twitter Posts und ggf. Erstellung von Strafanzeigen 
+              <em>Strafanzeiger</em> ist eine Chrome Erweiterung zur automatischen Auswertung
+              von X/Twitter Posts und ggf. Erstellung von Strafanzeigen
               für Posts, die vermutlich gegen deutsches Recht verstoßen.
             </p>
             <p>Die Erweiterung führt folgende Schritte aus:</p>

@@ -281,7 +281,7 @@ export async function downloadprofilereport(results, originalUrl) {
     )
     userFolder.file(
       `profilUrl.txt`,
-      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
+      `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
     // userFolder.file(
     //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
@@ -423,7 +423,7 @@ export async function downloadpostreport(results, originalUrl) {
 
     userFolder.file(
       `profilUrl.txt`,
-      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
+      `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
     // userFolder.file(
     //   `UserInfo_${post.Username}_${day}.${month}.${year}.txt`,
@@ -452,7 +452,7 @@ export async function downloadpostreport(results, originalUrl) {
     console.log("userPosts>>>>>>>>>>>", userPosts)
 
     for (let post of userPosts) {
-      const tweetID = post.Post_URL.split("/").pop()
+      const tweetID = post.postUrl.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
       const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
       folder2.file(
@@ -464,7 +464,7 @@ export async function downloadpostreport(results, originalUrl) {
         `Post_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
-      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
+      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.postUrl}`)
 
       // Entscheidungstext basierend auf dem Flag
       const decisionText = post.Post_selbst_ist_anzeigbar_flag ? "Ja" : "Nein"
@@ -672,7 +672,7 @@ export async function createFinalReport(results, originalUrl = "") {
 
     userFolder.file(
       `profilUrl.txt`,
-      `URL Profil Tatverdächtige*r: ${post.User_Profil_URL || ""}`
+      `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
     // userFolder.file(
     //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
@@ -719,7 +719,7 @@ export async function createFinalReport(results, originalUrl = "") {
     console.log("userPosts>>>>>>>>>>>", userPosts)
 
     for (let post of userPosts) {
-      const tweetID = post.Post_URL.split("/").pop()
+      const tweetID = post.postUrl.split("/").pop()
       let folder2 = userFolder.folder(tweetID)
       const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
       folder2.file(
@@ -731,7 +731,7 @@ export async function createFinalReport(results, originalUrl = "") {
         `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
-      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.Post_URL}`)
+      folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.postUrl}`)
 
       // Entscheidungstext basierend auf dem Flag
       const decisionText = post.Post_selbst_ist_anzeigbar_flag ? "Ja" : "Nein"
@@ -836,8 +836,8 @@ export async function createFinalReport(results, originalUrl = "") {
             )} Uhr`,
           userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
           screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
-          profilUrl: `URL Profil Tatverdächtige*r: ${post.User_Profil_URL}`,
-          postUrl: `URL des Kommentars: ${post.Post_URL}`,
+          profilUrl: `URL Profil Tatverdächtige*r: ${post.userProfileUrl}`,
+          postUrl: `URL des Kommentars: ${post.postUrl}`,
           initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
           UserInfo: `
           

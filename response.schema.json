@@ -21,9 +21,9 @@
               "type": "string",
               "description": "A unique identifier for the post as given by the user."
             },
-            "Post_URL": {
+            "postUrl": {
               "type": "string",
-              "description": "The URL of the social media post (must be a valid URI). For anonymization you might be given a placeholder for the Post_URL.  So anywhere in your answer where you want to use the Post_URL you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
+              "description": "The URL of the social media post (must be a valid URI). For anonymization you might be given a placeholder for the postUrl.  So anywhere in your answer where you want to use the postUrl you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "Username": {
               "type": "string",
@@ -33,9 +33,9 @@
               "type": "string",
               "description": "The display name or screen name of the person who made the post. For anonymization you might be given a placeholder for the Screenname. So anywhere in your answer where you want to use the Screenname you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
-            "User_Profil_URL": {
+            "userProfileUrl": {
               "type": "string",
-              "description": "The URL to the person's profile who made the post (must be a valid URI). For anonymization you might be given a placeholder for the User_Profil_URL.  So anywhere in your answer where you want to use the User_Profil_URL you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
+              "description": "The URL to the person's profile who made the post (must be a valid URI). For anonymization you might be given a placeholder for the userProfileUrl.  So anywhere in your answer where you want to use the userProfileUrl you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
             },
             "Veröffentlichungszeitpunkt": {
               "type": "string",
@@ -165,10 +165,10 @@
           "required": [
             "_messageKey",
             "ID",
-            "Post_URL",
+            "postUrl",
             "Username",
             "Screenname",
-            "User_Profil_URL",
+            "userProfileUrl",
             "Veröffentlichungszeitpunkt",
             "Inhalt",
             "Erklärung",
