@@ -144,6 +144,18 @@ async function scrapeContent(analysisId, tabId) {
   })
 }
 
+async function handleAsyncScrape(request, sendResponse) {
+  try {
+    const analysisId = getActiveAnalysisId();
+    const scrapedPost = await handlePostURLScrape(analysisId, request.url);
+    console.log("scrapedPost>>>>>>>", scrapedPost);
+    sendResponse(scrapedPost);
+  } catch (error) {
+    console.error("Error in handleAsyncScrape:", error);
+    sendResponse(null);
+  }
+}
+
 async function handlePostURLScrape(analysisId, url) {
   console.log(`Handling post URL scrape for: ${url}`)
   let tab
@@ -1355,11 +1367,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "scrapePostURL":
-          analysisId = getActiveAnalysisId()
-          const scrapedPost = await handlePostURLScrape(analysisId, request.url)
-          console.log("scrapedPost>>>>>>>", scrapedPost)
-          sendResponse(scrapedPost)
-          break
+          handleAsyncScrape(request, sendResponse);
+          return true; // This is crucial - tells Chrome to keep the message channel open
+          // analysisId = getActiveAnalysisId()
+          // const scrapedPost = await handlePostURLScrape(analysisId, request.url)
+          // console.log("scrapedPost>>>>>>>", scrapedPost)
+          // sendResponse(scrapedPost)
+          
 
         case "SAVE_REPORT":
           // Handle the finalreport data
