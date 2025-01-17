@@ -446,13 +446,21 @@ async function processContent(messages) {
       return `message_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
 
+    function generatePaddedCounter(counter) {
+      // using antic as padding should help LLMs to better handle the different names since the individual words created in reducing antic will likely map into different tokens.
+      const num = parseInt(counter)
+      if (num < 10) return `antic${num}` // antic1-antic9
+      if (num < 100) return `anti${num}` // anti10-anti99
+      if (num < 1000) return `ant${num}` // ant100-ant999
+      if (num < 10000) return `an${num}` // an1000-an9999
+      return `a${num}` // a10000+
+    }
+
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
-        // Use Post_URL as a unique identifier
-        // Generate a unique key for this message
         const uniqueKey = generateUniqueKey()
+        const paddedCounter = generatePaddedCounter(userCounter)
 
-        // Store original information with Post_URL as key
         userInfoMap.set(uniqueKey, {
           originalScreenname: message.screenname || message.Screenname,
           originalUsername: message.handle || message.Username,
@@ -461,31 +469,38 @@ async function processContent(messages) {
         })
 
         userCounter++
-        // Return anonymized message
+
         return {
           ...message,
-          // screenname: `Username${userCounter}`,
-          // handle: `user${userCounter}-123`,
-          Screenname: `Username${userCounter}`,
-          Username: `user${userCounter}-123`,
-          Post_URL: `https://anonymous.post/${userCounter}`,
-          User_Profil_URL: `https://anonymous.profileurl/${userCounter}`,
+          Screenname: `SCREEN_${paddedCounter}_NAME`, // e.g. SCREEN_antic1_NAME
+          Username: `USER_${paddedCounter}_HANDLE`, // e.g. USER_antic1_HANDLE
+          postUrl: `https://anonymous.post/POST_${paddedCounter}_URL`,
+          userProfileUrl: `https://anonymous.profileurl/PROFILE_${paddedCounter}_URL`,
           _messageKey: uniqueKey
         }
       })
 
       return anonymizedMessages
     }
+
     function restoreOriginalInfo(reportablePosts) {
-      // 1) Convert the entire array to a single JSON string
+      // 1) First do the global string replacement for any mentions in text fields
       let bigJsonString = JSON.stringify(reportablePosts)
 
-      // 2) For each post, fetch the original info and replace
+      // 2) For each post, do global replacements
       for (const post of reportablePosts) {
         const originalInfo = userInfoMap.get(post._messageKey)
-        if (!originalInfo) continue
+        if (!originalInfo) {
+          console.log("No original info found for post - debug info:", {
+            messageKey: post._messageKey,
+            postContent: post,
+            availableKeys: Array.from(userInfoMap.keys()),
+            userInfoMapContent: Array.from(userInfoMap.entries())
+          })
+          continue
+        }
 
-        // We'll do all replacements by searching for the exact anonymized fields
+        // Global replacements to catch any mentions in text fields
         const replacements = [
           {
             searchValue: post.Screenname,
@@ -496,11 +511,11 @@ async function processContent(messages) {
             replaceValue: originalInfo.originalUsername
           },
           {
-            searchValue: post.Post_URL,
+            searchValue: post.postUrl,
             replaceValue: originalInfo.originalpostUrl
           },
           {
-            searchValue: post.User_Profil_URL,
+            searchValue: post.userProfileUrl,
             replaceValue: originalInfo.originalProfileUrl
           }
         ]
@@ -508,7 +523,6 @@ async function processContent(messages) {
         // Go through each replacement
         for (const { searchValue, replaceValue } of replacements) {
           if (searchValue && replaceValue) {
-            // Escape special regex chars in searchValue
             const escapedSearch = searchValue.replace(
               /[.*+?^${}()|[\]\\]/g,
               "\\$&"
@@ -521,15 +535,42 @@ async function processContent(messages) {
         }
       }
 
-      // 3) Re-parse into objects
+      // 3) Parse back into objects
       const updatedPosts = JSON.parse(bigJsonString)
 
-      // 4) Remove the _messageKey
-      updatedPosts.forEach((p) => {
+      // 4) Now explicitly set the critical fields using original values and filter out posts without matches
+      const validPosts = updatedPosts.filter((post) => {
+        const originalInfo = userInfoMap.get(post._messageKey)
+        if (!originalInfo) {
+          console.log("Dropping post due to missing original info:", {
+            post: post,
+            messageKey: post._messageKey,
+            availableMapContent: Array.from(userInfoMap.entries())
+          })
+          return false
+        }
+
+        // Directly set URLs and names to ensure they're correct
+        post.postUrl = originalInfo.originalpostUrl
+        post.userProfileUrl = originalInfo.originalProfileUrl
+        post.Username = originalInfo.originalUsername
+        post.Screenname = originalInfo.originalScreenname
+        return true
+      })
+
+      // 5) Remove the _messageKey
+      validPosts.forEach((p) => {
         delete p._messageKey
       })
 
-      return updatedPosts
+      // Log summary of dropped posts if any were dropped
+      if (validPosts.length < updatedPosts.length) {
+        console.log(
+          `Dropped ${updatedPosts.length - validPosts.length} posts due to missing original info. ${validPosts.length} valid posts remaining.`
+        )
+      }
+
+      return validPosts
     }
 
     try {
@@ -641,9 +682,9 @@ async function captureReportablePostScreenshots(reportablePosts) {
       console.log("eachreportablepost>>>>>>>>>>", post)
       try {
         // Navigate to post URL if necessary
-        if (originalTab.url !== post.Post_URL) {
+        if (originalTab.url !== post.postUrl) {
           console.log("post url and originaltab are not equal")
-          await chrome.tabs.update(originalTab.id, { url: post.Post_URL })
+          await chrome.tabs.update(originalTab.id, { url: post.postUrl })
           await waitForTabToLoad(originalTab.id)
         }
 
@@ -654,7 +695,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
         console.log("going to take screenshort of fullpage")
         sendMessageToPopup("Ich mache Screenshots der anzeigbaren Posts..", 65)
         const reportablepostscreenshots = await requestinitialScreenshotCapture(
-          post.Post_URL,
+          post.postUrl,
           `post_${post.ID}.png`,
           `${post.Username}/Post_${post.ID}`
         )
@@ -670,10 +711,10 @@ async function captureReportablePostScreenshots(reportablePosts) {
         let profileScreenshot = null
         let scrapedData = null
         // Capture user profile screenshot if not already done
-        if (!capturedProfiles.has(post.User_Profil_URL)) {
-          if (originalTab.url !== post.User_Profil_URL) {
+        if (!capturedProfiles.has(post.userProfileUrl)) {
+          if (originalTab.url !== post.userProfileUrl) {
             await chrome.tabs.update(originalTab.id, {
-              url: post.User_Profil_URL
+              url: post.userProfileUrl
             })
             await waitForTabToLoad(originalTab.id)
           }
@@ -711,7 +752,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
             "Ich mache Screenshots der Profile zur Beweissicherung..."
           )
           profileScreenshot = await requestScreenshotCapture(
-            post.User_Profil_URL,
+            post.userProfileUrl,
             `profile_${post.Username}.png`,
             `${post.Username}`
           )
@@ -721,12 +762,12 @@ async function captureReportablePostScreenshots(reportablePosts) {
           //scrape the profile of each user
 
           // Store the profile screenshot in the map for reuse
-          capturedProfiles.set(post.User_Profil_URL, profileScreenshot)
-          capturedProfilesdata.set(post.User_Profil_URL, scrapedData)
+          capturedProfiles.set(post.userProfileUrl, profileScreenshot)
+          capturedProfilesdata.set(post.userProfileUrl, scrapedData)
         } else {
           // Reuse the existing profile screenshot if already captured
-          profileScreenshot = capturedProfiles.get(post.User_Profil_URL)
-          scrapedData = capturedProfilesdata.get(post.User_Profil_URL)
+          profileScreenshot = capturedProfiles.get(post.userProfileUrl)
+          scrapedData = capturedProfilesdata.get(post.userProfileUrl)
         }
 
         // let postReport = null

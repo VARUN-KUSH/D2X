@@ -269,7 +269,7 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
 - Bei Offizialdelikten gibt es keine Frist für die Anzeigeerstattung, jedoch können Verjährungsfristen gelten.
 - In einigen Fällen kann die Staatsanwaltschaft auch bei Antragsdelikten ein besonderes öffentliches Interesse an der Strafverfolgung bejahen und von Amts wegen ermitteln.
 - Für den Anzeige_Entwurf wird folgende Vorlage verwendet. Füge die entsprechenden Informationen in die [ ] ein.
-- Die Post_URL,  Username (user handle), Screenname and User_Profil_URL die Du erhältst können zur Anonymisierung mit Platzhaltern ersetzt worden sein. Es ist daher sehr wichtig diese Variablen genau so in Deiner Antwort zu übernehmen, damit die Werte späte automatisch gegen die echten Namen und URLs ersetzt werden können.
+- Die postUrl,  Username (user handle), Screenname and userProfileUrl die Du erhältst können zur Anonymisierung mit Platzhaltern ersetzt worden sein. Es ist daher sehr wichtig diese Variablen genau so in Deiner Antwort zu übernehmen, damit die Werte späte automatisch gegen die echten Namen und URLs ersetzt werden können.
 
 # Vorlage für Anzeige_Entwurf 
 
