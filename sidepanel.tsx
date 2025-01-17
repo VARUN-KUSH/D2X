@@ -1046,31 +1046,45 @@ function SidePanel() {
 
             case "downloadZip":
               console.log("recieved message", request)
-              const base64 = request.base64data
-              console.log("base64>>>>>>>>>>>", base64)
+              chrome.storage.local.get(['downloadData'], (result) => {
+                // Process the data here
+                const base64 = result.downloadData
+                console.log("base64>>>>>>>>>>>", base64)
 
-              const byteCharacters = atob(base64)
-              const byteNumbers = new Array(byteCharacters.length)
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i)
-              }
-              const byteArray = new Uint8Array(byteNumbers)
-              let zipBlob = new Blob([byteArray], { type: "application/zip" })
+                 // Check if data exists
+                if (!result.downloadData) {
+                  console.error("No download data found in storage");
+                  return;
+                }
 
-              // Create a URL for the Blob and download it
-              const url = URL.createObjectURL(zipBlob)
-              const downloadName = "Strafanz_Report.zip"
-
-              const a = document.createElement("a")
-              a.href = url
-              a.download = downloadName
-              a.click()
-
-              // Clean up the URL after download
-              URL.revokeObjectURL(url)
-
-              // Clear the blob
-              zipBlob = null
+              try {
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                let zipBlob = new Blob([byteArray], { type: "application/zip" });
+    
+                // Create a URL for the Blob and download it
+                const url = URL.createObjectURL(zipBlob);
+                const downloadName = "Strafanz_Report.zip";
+    
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = downloadName;
+                document.body.appendChild(a); // Add this line
+                a.click();
+                document.body.removeChild(a); // Add this line
+    
+                // Clean up
+                URL.revokeObjectURL(url);
+                zipBlob = null;
+                chrome.storage.local.remove('downloadData');
+            } catch (error) {
+                console.error("Error processing download data:", error);
+            }
+              });
               break
 
             case "processUpdate":
