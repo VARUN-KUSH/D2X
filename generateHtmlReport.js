@@ -274,6 +274,23 @@ function generateHtmlReport(
       </body>
       </html>`
   
+
+    /**
+     * Calculates the number of lines in a text considering word wrap at 75 characters.
+     *
+     * @param {string} content - The text content to analyze.
+     * @returns {number} - The total number of lines.
+     */
+    function calculateLineCount(content) {
+        if (!content) return 0;
+        const lines = content.split("\n");
+        let totalLines = 0;
+        lines.forEach((line) => {
+            totalLines += Math.ceil(line.length / 75) || 1;
+        });
+        return totalLines;
+    }
+
     // Define default heights for each iframe class
     const defaultHeights = {
       "iframe-Abs_Adresse": 75,
@@ -297,21 +314,7 @@ function generateHtmlReport(
       "iframe-ExtraUserInfo": 170
     }
   
-    /**
-     * Calculates the number of lines in a text considering word wrap at 75 characters.
-     *
-     * @param {string} content - The text content to analyze.
-     * @returns {number} - The total number of lines.
-     */
-    function calculateLineCount(content) {
-      if (!content) return 0
-      const lines = content.split("\n")
-      let totalLines = 0
-      lines.forEach((line) => {
-        totalLines += Math.ceil(line.length / 75) || 1
-      })
-      return totalLines
-    }
+
 
     /**
      * Sanitizes input to prevent injection attacks.
@@ -332,6 +335,18 @@ function generateHtmlReport(
     //     })
     //   }
 
+    // Calculate heights based on fileContents
+    const heights = { ...defaultHeights };
+    if (fileContents) {
+        for (const className in heights) {
+            const key = className.replace("iframe-", "");
+            if (fileContents[key]) {
+                const lineCount = calculateLineCount(fileContents[key]);
+                heights[className] = 30 + lineCount * 15;  // Same formula as Anzeigen_neu_generieren
+            }
+        }
+    }
+
     /**
      * Generates CSS styles for iframes based on their calculated heights.
      *
@@ -339,25 +354,15 @@ function generateHtmlReport(
      * @returns {string} - The generated CSS styles as a string.
      */
     function generateIframeStyles(heights) {
-      let styles = ""
-      for (const className in heights) {
-        styles += `
-      .${className} {
-          height: ${heights[className]}px;
-      }
-      `
-      }
-      return styles
-    }
-  
-    // Calculate heights based on fileContents
-    const heights = { ...defaultHeights }
-    for (const className in heights) {
-      const key = className.replace("iframe-", "") // e.g., "Abs_Adresse"
-      if (fileContents[key]) {
-        const lineCount = calculateLineCount(fileContents[key])
-        heights[className] = 30 + lineCount * 15
-      }
+        let styles = "";
+        for (const className in heights) {
+            styles += `
+            .${className} {
+                height: ${heights[className]}px;
+            }
+            `;
+        }
+        return styles;
     }
   
     // Generate CSS styles for iframes
