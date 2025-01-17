@@ -430,13 +430,21 @@ async function processContent(messages) {
       return `message_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
 
+    function generatePaddedCounter(counter) {
+      // using antic as padding should help LLMs to better handle the different names since the individual words created in reducing antic will likely map into different tokens.
+      const num = parseInt(counter)
+      if (num < 10) return `antic${num}` // antic1-antic9
+      if (num < 100) return `anti${num}` // anti10-anti99
+      if (num < 1000) return `ant${num}` // ant100-ant999
+      if (num < 10000) return `an${num}` // an1000-an9999
+      return `a${num}` // a10000+
+    }
+
     function anonymizeMessages(messages) {
       const anonymizedMessages = messages.map((message) => {
-        // Use Post_URL as a unique identifier
-        // Generate a unique key for this message
         const uniqueKey = generateUniqueKey()
+        const paddedCounter = generatePaddedCounter(userCounter)
 
-        // Store original information with Post_URL as key
         userInfoMap.set(uniqueKey, {
           originalScreenname: message.screenname || message.Screenname,
           originalUsername: message.handle || message.Username,
@@ -445,21 +453,20 @@ async function processContent(messages) {
         })
 
         userCounter++
-        // Return anonymized message
+
         return {
           ...message,
-          // screenname: `Username${userCounter}`,
-          // handle: `user${userCounter}-123`,
-          Screenname: `Username${userCounter}`,
-          Username: `user${userCounter}-123`,
-          Post_URL: `https://anonymous.post/${userCounter}`,
-          User_Profil_URL: `https://anonymous.profileurl/${userCounter}`,
+          Screenname: `SCREEN_${paddedCounter}_NAME`, // e.g. SCREEN_antic1_NAME
+          Username: `USER_${paddedCounter}_HANDLE`, // e.g. USER_antic1_HANDLE
+          Post_URL: `https://anonymous.post/POST_${paddedCounter}_URL`,
+          User_Profil_URL: `https://anonymous.profileurl/PROFILE_${paddedCounter}_URL`,
           _messageKey: uniqueKey
         }
       })
 
       return anonymizedMessages
     }
+
     function restoreOriginalInfo(reportablePosts) {
       // 1) Convert the entire array to a single JSON string
       let bigJsonString = JSON.stringify(reportablePosts)
