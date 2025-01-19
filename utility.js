@@ -810,75 +810,40 @@ export async function createFinalReport(results, originalUrl = "") {
       }
       try {
         const fileContents = {
-          AnzeigenEntwurf: `${post.Anzeige_Entwurf}`,
-          Abs_Adresse: `${formatText(senderAddress)}`,
-          Abs_Kontakt: `${formatText(senderContactdetails)}`,
-          Empf_Adresse: `${formatText(recipientAddress)}`,
-          Betreff: "Anzeige zu Kommentar auf X/Twitter",
-          Datumszeile: `${city}, den ${date}.${month}.${year}`,
-          Abs_UnterzeichnendePerson: `${fullName}`,
-          Anlagen: `Anlage: Sachverhalt
-          Informationen aus dem Profil Tatverdächtige*r:
-          Screenshot Nutzerprofil auf X/Twitter
-          Screenshot des Kommentars und Kontext:`,
-          AnalyseZeitpunkt: `${date}.${month}.${year}`,
-          Post: `${post.Inhalt}`,
-          // Zeitpunkt: `Zeitpunkt des Kommentars: ${post.Veröffentlichungszeitpunkt} Uhr`,
-          Zeitpunkt: `Zeitpunkt des Kommentars: ${new Date(
-            post.Veröffentlichungszeitpunkt
-          )
-            .toISOString()
-            .replace(/T/, " ")
-            .replace(/Z/, "")
-            .replace(
-              /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
-              (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
-            )} Uhr`,
-          userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
-          screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
-          profilUrl: `URL Profil Tatverdächtige*r: ${post.userProfileUrl}`,
-          postUrl: `URL des Kommentars: ${post.postUrl}`,
-          initialPostUrl: `URL des Ausgangsposts: ${originalUrl}`,
-          UserInfo: `
-          
-          - User-Name: ${post.Screenname}
-          - User-Handle: ${post.Username}
-          - Beschreibung: ${post.scrapedData?.profilebiodata}
-          - Konto erstellt: ${post.scrapedData?.userJoindate}
-          - Ort: ${post.scrapedData.userlocation}
-          - URL: ${post.scrapedData.userUrl}
-          - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
-          - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount} 
-          - Geboren am ${post.scrapedData.userBirthdate}`,
-          ExtraUserInfo: (() => {
-            const onlineData = post.perplexityresponse?.online_praesenz
-            const weitereInfo =
-              post.perplexityresponse?.weitere_informationen_zur_person
-
-            // Wenn beide leer sind, gib leeren String zurück
-            if (
-              (!onlineData || onlineData.trim() === "") &&
-              (!weitereInfo || weitereInfo.trim() === "")
-            ) {
-              return ""
-            }
-
-            // Kombiniere die Informationen
-            const combinedInfo = [onlineData, weitereInfo]
-              .filter((info) => info && info.trim() !== "")
-              .join("\n\n")
-
-            return `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:\n\n\n${combinedInfo}`
-          })()
-        }
-
+            AnzeigenEntwurf: post.Anzeige_Entwurf?.replace(/\\n/g, "\n") || "",
+            Abs_Adresse: formatText(senderAddress),
+            Abs_Kontakt: formatText(senderContactdetails),
+            Empf_Adresse: formatText(recipientAddress),
+            Betreff: "Anzeige zu Kommentar auf X/Twitter",
+            Datumszeile: `${city}, den ${date}.${month}.${year}`,
+            Abs_UnterzeichnendePerson: fullName,
+            Anlagen: `Anlagen: Sachverhalt, Infos zum Profil Tatverdächtige*r, Screenshot Nutzerprofil, Screenshot Kommentar`,
+            AnalyseZeitpunkt: `${date}.${month}.${year}`,
+            Post: post.Inhalt || "",
+            Zeitpunkt: `Zeitpunkt des Kommentars: ${new Date(post.Veröffentlichungszeitpunkt)
+                .toISOString()
+                .replace(/T/, " ")
+                .replace(/Z/, "")
+                .replace(
+                    /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
+                    (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
+                )} Uhr`,
+            userHandle: `Benutzername (Handle) im Profil Tatverdächtige*r: ${post.Username}`,
+            screenname: `Anzeigename (Screenname) im Profil Tatverdächtige*r: ${post.Screenname || ""}`,
+            profilUrl: `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`,
+            postUrl: `URL des Kommentars: ${post.postUrl || ""}`,
+            initialPostUrl: originalUrl ? `URL des Ausgangsposts: ${originalUrl}` : "",
+            UserInfo: generateUserInfoContent(post),
+            ExtraUserInfo: generateExtraUserInfoContent(post)
+        };
+    
         const htmlreport = generateHtmlReport(
-          post.Username,
-          tweetID,
-          dateString,
-          post.Verfolgungsart,
-          fileContents
-        )
+            post.Username,
+            tweetId,
+            dateString,
+            post.Verfolgungsart,
+            fileContents
+        );
         console.log("Generated HTML Report:", htmlreport)
 
         mainFolder.file(
