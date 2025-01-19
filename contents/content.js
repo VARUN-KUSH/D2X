@@ -9,6 +9,10 @@ let twitterScraper = null
 let initializationAttempts = 0
 const MAX_INITIALIZATION_ATTEMPTS = 5
 
+async function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 function initializeTwitterScraper() {
   console.log("Attempting to initialize TwitterScraper")
   if (typeof window.TwitterScraper !== "undefined") {
@@ -19,7 +23,7 @@ function initializeTwitterScraper() {
     window.addEventListener(
       "TwitterScraperReady",
       () => {
-        twitterScraper = new TwitterScraper()
+        twitterScraper = new window.TwitterScraper()
         console.log("TwitterScraper initialized after waiting for ready event")
       },
       { once: true }
@@ -27,8 +31,8 @@ function initializeTwitterScraper() {
   }
 }
 
-function ensureTwitterScraperInitialized() {
-  return new Promise((resolve, reject) => {
+async function ensureTwitterScraperInitialized() {
+  return await new Promise((resolve, reject) => {
     if (twitterScraper) {
       resolve(twitterScraper)
     } else {
@@ -60,72 +64,130 @@ function isTwitterOrX() {
   )
 }
 
+// async function scrapeContent(
+//   analysisId = null,
+//   targetUrl = null,
+//   isSecondaryParse = false
+// ) {
+//   console.log(
+//     `Scraping content for analysisId: ${analysisId}, targetUrl: ${targetUrl}`
+//   )
+//   console.log("isSecondaryParse>>>>", isSecondaryParse)
+//   if (isTwitterOrX()) {
+//     console.log("Twitter/X page detected")
+//     try {
+//       const scraper = await ensureTwitterScraperInitialized()
+//       console.log("TwitterScraper initialized, getting tweets")
+
+//       let tweets
+//       if (targetUrl) {
+//         async function executeScraping() {
+//           setTimeout(async () => {
+//             console.log("Page fully loaded or already loaded")
+
+//             // Logic when DOM is loaded, then run it
+//             console.log(`Scraping single tweet: ${targetUrl}`)
+
+//             tweets = await scraper.parseTweets(analysisId, targetUrl, isSecondaryParse)
+//             console.log("fullPostTweet>>>>>>>>>", tweets)
+//           }, 2000)
+//         }
+
+//         // Check if the document is already fully loaded
+//         return await new Promise(async(resolve, reject) => {
+//           if (document.readyState === "complete") {
+//             await delay(2000)
+//             // Page is already loaded, so run the scraping logic immediately
+//             await executeScraping()
+//             resolve(tweets)
+//           } else {
+//             // Page is not fully loaded yet, wait for it to load
+            
+//             window.addEventListener("load", async() => {await executeScraping()
+//               resolve(tweets)
+//             })
+//           }
+//         })
+        
+//         // await delay(3000);
+//         //logic when dom is loaded then run it
+//         // If targetUrl is provided, we're scraping a single tweet
+//         // console.log(`Scraping single tweet: ${targetUrl}`)
+//         // tweets = scraper.parseTweets(analysisId, targetUrl)
+//         // console.log("fullPostTweet>>>>>>>>>", tweets)
+//       } else {
+//         // Otherwise, scrape all tweets on the page
+//         tweets = await scraper.getTweets(analysisId)
+//         return tweets
+//       }
+
+      
+//     } catch (error) {
+//       console.error("Error in TwitterScraper:", error)
+//       throw error
+//     }
+//   } else {
+//     console.log("Non-Twitter page detected")
+//     // Fallback to universal scraping method
+//     return await universalScrape(screenshotData, analysisId)
+//   }
+// }
+
 async function scrapeContent(
   analysisId = null,
-  screenshotData = null,
-  targetUrl = null
+  targetUrl = null,
+  isSecondaryParse = false
 ) {
   console.log(
     `Scraping content for analysisId: ${analysisId}, targetUrl: ${targetUrl}`
   )
-  if (isTwitterOrX()) {
-    console.log("Twitter/X page detected")
-    try {
-      const scraper = await ensureTwitterScraperInitialized()
-      console.log("TwitterScraper initialized, getting tweets")
+  console.log("isSecondaryParse>>>>", isSecondaryParse)
 
-      let tweets
-      if (targetUrl) {
-        function executeScraping() {
-          setTimeout(() => {
-            console.log("Page fully loaded or already loaded")
+  if (!isTwitterOrX()) {
+    console.log("Non-Twitter page detected")
+    return await universalScrape(screenshotData, analysisId)
+  }
 
-            // Logic when DOM is loaded, then run it
-            console.log(`Scraping single tweet: ${targetUrl}`)
+  console.log("Twitter/X page detected")
+  try {
+    const scraper = await ensureTwitterScraperInitialized()
+    console.log("TwitterScraper initialized, getting tweets")
 
-            tweets = scraper.parseTweets(analysisId, targetUrl)
-            console.log("fullPostTweet>>>>>>>>>", tweets)
-          }, 2000)
-        }
-
-        // Check if the document is already fully loaded
+    // Function to wait for page load
+    const waitForPageLoad = () => {
+      return new Promise((resolve) => {
         if (document.readyState === "complete") {
-          await delay(2000)
-          // Page is already loaded, so run the scraping logic immediately
-          executeScraping()
+          resolve()
         } else {
-          // Page is not fully loaded yet, wait for it to load
-          window.addEventListener("load", executeScraping)
+          window.addEventListener("load", () => resolve(), { once: true })
         }
-        // await delay(3000);
-        //logic when dom is loaded then run it
+      })
+    }
+
+    // Function to perform the actual scraping
+    const performScraping = async () => {
+      if (targetUrl) {
         // If targetUrl is provided, we're scraping a single tweet
-        // console.log(`Scraping single tweet: ${targetUrl}`)
-        // tweets = scraper.parseTweets(analysisId, targetUrl)
-        // console.log("fullPostTweet>>>>>>>>>", tweets)
+        console.log(`Scraping single tweet: ${targetUrl}`)
+        await new Promise(resolve => setTimeout(resolve, 2000)) // Wait for dynamic content
+        const tweets = await scraper.parseTweets(analysisId, targetUrl, isSecondaryParse)
+        console.log("fullPostTweet>>>>>>>>>", tweets)
+        return tweets
       } else {
         // Otherwise, scrape all tweets on the page
-        tweets = await scraper.getTweets(analysisId)
+        const tweets = await scraper.getTweets(analysisId)
+        return tweets
       }
-
-      if (!tweets || tweets.length === 0) {
-        console.warn(
-          `No tweets scraped. analysisId: ${analysisId}, targetUrl: ${targetUrl}`
-        )
-        console.log("Current page content:", document.body.innerHTML)
-      } else {
-        console.log(`Scraped ${tweets.length} tweets`)
-      }
-
-      return tweets
-    } catch (error) {
-      console.error("Error in TwitterScraper:", error)
-      throw error
     }
-  } else {
-    console.log("Non-Twitter page detected")
-    // Fallback to universal scraping method
-    return await universalScrape(screenshotData, analysisId)
+
+    // Main execution flow
+    await waitForPageLoad()
+    const result = await performScraping()
+    return result
+
+  } catch (error) {
+    console.error("Error in TwitterScraper:", error)
+    throw error
   }
 }
 
@@ -300,7 +362,7 @@ chrome.runtime.onConnect.addListener(function (port) {
 
         scrapeContent(request.analysisId)
           .then((content) => {
-            console.log(`Content extracted: ${JSON.stringify(content)}`)
+            console.log(`Content extracted: ${content}`)
 
             // Send the response back to the background script
             port.postMessage({ status: "Content extracted", content: content })
@@ -326,10 +388,10 @@ chrome.runtime.onConnect.addListener(function (port) {
         console.log(
           `Scraping content with analysisId: ${request.analysisId}, targetUrl: ${request.tabUrl}`
         )
-
-        scrapeContent(request.analysisId, request.targetUrl)
+        console.log("isSecondaryParse>>>>", request.isSecondaryParse)
+        scrapeContent(request.analysisId, request.targetUrl, request.isSecondaryParse)
           .then((content) => {
-            console.log(`Content extracted: ${JSON.stringify(content)}`)
+            console.log(`Content extracted of truncated tweets: ${content}`)
 
             // Send the response back to the background script
             port.postMessage({ status: "Content extracted", content: content })

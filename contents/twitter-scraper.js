@@ -122,7 +122,12 @@ class TwitterScraper {
     }
   }
 
-  async parseTweets(analysisId = "", targetUrl = null) {
+  async parseTweets(
+    analysisId = "",
+    targetUrl = null,
+    isSecondaryParse = false
+  ) {
+    console.log("isSecondaryParse", isSecondaryParse, "targetUrl>>>>>", targetUrl)
     const alltweetsection = document.querySelector(
       'section[role="region"] > div[aria-label^="Timeline:"]'
     )
@@ -138,6 +143,16 @@ class TwitterScraper {
     let idleCount = 0 // Tracks consecutive iterations with no new tweets
 
     // Helper function to extract tweet data
+    // if (isSecondaryParse) {
+    //     console.log("alltweetsection>>>>", alltweetsection)
+    //     const tweetData = await this.extractTweetData(alltweetsection, analysisId, counter)
+    //     console.log("tweetData>>>", tweetData)
+    //     if (tweetData) {
+    //       tweetsData.push(tweetData)
+    //     }
+
+    //   return tweetsData
+    // }
 
     // Scroll and scrape
     while (true) {
@@ -153,8 +168,14 @@ class TwitterScraper {
           analysisId,
           counter
         )
+        if (isSecondaryParse && tweetData && targetUrl == tweetData.postUrl) {
+          console.log("truncatedtweet is still true>>>>", tweetData)
+          tweetData.isTruncated = false
+          tweetsData.push(tweetData)
+          return tweetsData
+        }
         console.log("tweetsData>>>>>>>>.", tweetData)
-        if (tweetData && !uniqueTweets.has(tweetData.postUrl)) {
+        if (tweetData && !uniqueTweets.has(tweetData.postUrl) && !isSecondaryParse) {
           uniqueTweets.add(tweetData.postUrl)
           tweetsData.push(tweetData)
           counter++
@@ -246,7 +267,7 @@ class TwitterScraper {
     console.log(`Requesting full post content for URL: ${url}`)
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
-        { action: "scrapePostURL", url: url },
+        { action: "scrapePostURL", url: url, isSecondaryParse: true },
         (response) => {
           if (chrome.runtime.lastError) {
             console.error(

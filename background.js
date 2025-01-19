@@ -147,7 +147,7 @@ async function scrapeContent(analysisId, tabId) {
 async function handleAsyncScrape(request, sendResponse) {
   try {
     const analysisId = getActiveAnalysisId();
-    const scrapedPost = await handlePostURLScrape(analysisId, request.url);
+    const scrapedPost = await handlePostURLScrape(analysisId, request.url, request.isSecondaryParse);
     console.log("scrapedPost>>>>>>>", scrapedPost);
     sendResponse(scrapedPost);
   } catch (error) {
@@ -156,8 +156,9 @@ async function handleAsyncScrape(request, sendResponse) {
   }
 }
 
-async function handlePostURLScrape(analysisId, url) {
+async function handlePostURLScrape(analysisId, url, isSecondaryParse) {
   console.log(`Handling post URL scrape for: ${url}`)
+  console.log("isSecondaryParse>>>>", isSecondaryParse)
   let tab
   try {
     tab = await chrome.tabs.create({ url: url, active: false })
@@ -191,7 +192,8 @@ async function handlePostURLScrape(analysisId, url) {
       port.postMessage({
         action: "scrapeContent",
         targetUrl: url,
-        analysisId: analysisId
+        analysisId: analysisId,
+        isSecondaryParse: isSecondaryParse
       })
 
       // Listen for messages from the content script

@@ -1094,9 +1094,8 @@ function SidePanel() {
               }
 
               if (
-                request.data === "Dokumente erfolgreich heruntergeladen." ||
-                request.data ===
-                "Entschuldigung, ich habe keine anzeigbaren Posts gefunden."
+                request.data.includes("Dokumente erfolgreich heruntergeladen.")||
+                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.")
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
