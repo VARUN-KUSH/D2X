@@ -4,6 +4,103 @@ import "../main.css"
 
 //logs metric
 
+// Helper function to sanitize filename parts
+function sanitizeForFilename(str) {
+  return str
+    // Replace invalid filename characters with underscores
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    // Replace umlauts and special characters
+    .replace(/[äÄ]/g, 'ae')
+    .replace(/[öÖ]/g, 'oe')
+    .replace(/[üÜ]/g, 'ue')
+    .replace(/[ß]/g, 'ss')
+    // Remove any other non-ASCII characters
+    .replace(/[^\x00-\x7F]/g, '_')
+    // Replace multiple underscores with single one
+    .replace(/_+/g, '_')
+    // Remove leading/trailing underscores
+    .trim()
+    .replace(/^_+|_+$/g, '');
+}
+
+// Function to truncate parts of the filename while preserving essential information
+function truncateFilename(parts, maxLength = 180) {
+  // Basic structure: Anzeige_username_postid_verfolgungsart_verdacht_date.html
+  const essentialParts = {
+    prefix: parts.prefix,  // "Anzeige"
+    username: parts.username,
+    postId: parts.postId,
+    verfolgungsart: parts.verfolgungsart,
+    date: parts.date,
+    extension: '.html'
+  };
+
+  // Calculate length of essential parts with separators
+  const essentialLength = Object.values(essentialParts).join('_').length;
+
+  // Calculate remaining space for verdacht part
+  const maxVerdachtLength = maxLength - essentialLength - 1; // -1 for separator
+
+  if (parts.verdacht && parts.verdacht.length > maxVerdachtLength) {
+    // If verdacht is too long, truncate it while preserving start and end
+    const halfLength = Math.floor(maxVerdachtLength / 2) - 2; // -2 for ".."
+    if (halfLength > 3) { // Only truncate if we can keep at least 3 chars on each side
+      parts.verdacht = parts.verdacht.substring(0, halfLength) +
+        '..' +
+        parts.verdacht.substring(parts.verdacht.length - halfLength);
+    } else {
+      // If too short, just truncate to maxLength
+      parts.verdacht = parts.verdacht.substring(0, maxVerdachtLength);
+    }
+  }
+
+  // Combine all parts
+  return [
+    essentialParts.prefix,
+    essentialParts.username,
+    essentialParts.postId,
+    essentialParts.verfolgungsart,
+    parts.verdacht,
+    essentialParts.date
+  ].filter(Boolean).join('_') + essentialParts.extension;
+}
+
+// Main function to modify the createHtmlDocument to include VerdachtAuf.txt content
+async function getModifiedHtmlFilename(postDirectoryHandle, userHandle, postNo, offenceType, dateString) {
+  try {
+    // Try to read VerdachtAuf.txt
+    let verdachtContent = '';
+    try {
+      const verdachtFileHandle = await postDirectoryHandle.getFileHandle('VerdachtAuf.txt');
+      const verdachtFile = await verdachtFileHandle.getFile();
+      verdachtContent = (await verdachtFile.text()).trim();
+    } catch (error) {
+      console.warn('VerdachtAuf.txt nicht gefunden oder nicht lesbar');
+      // Continue without verdacht content
+    }
+
+    // Sanitize the verdacht content if it exists
+    const sanitizedVerdacht = verdachtContent ? sanitizeForFilename(verdachtContent) : '';
+
+    // Prepare filename parts
+    const filenameParts = {
+      prefix: 'Anzeige',
+      username: userHandle,
+      postId: postNo,
+      verfolgungsart: offenceType,
+      verdacht: sanitizedVerdacht,
+      date: dateString
+    };
+
+    // Generate and return the truncated filename
+    return truncateFilename(filenameParts);
+  } catch (error) {
+    console.error('Error generating filename:', error);
+    // Fallback to original filename format if there's an error
+    return `Anzeige_${userHandle}_${postNo}_${offenceType}_${dateString}.html`;
+  }
+}
+
 const Anzeigen_neu_generieren = () => {
   function createHtmlDocument(
     userHandle,
@@ -530,8 +627,9 @@ const Anzeigen_neu_generieren = () => {
           // Save the generated HTML file
           try {
             // Attempt to save in the parent directory
+            const fileName = await getModifiedHtmlFilename(postDirectoryHandle, userHandle, postNo, offenceType, dateString);
             const saveFileHandle = await parentDirectoryHandle.getFileHandle(
-              `Anzeige_${userHandle}_${postNo}_${offenceType}_${dateString}.html`,
+              fileName,
               { create: true }
             )
             const writableStream = await saveFileHandle.createWritable()
@@ -545,8 +643,9 @@ const Anzeigen_neu_generieren = () => {
             )
             // Fallback to showSaveFilePicker
             try {
+              const fileName = await getModifiedHtmlFilename(postDirectoryHandle, userHandle, postNo, offenceType, dateString);
               const saveFileHandle = await window.showSaveFilePicker({
-                suggestedName: `Anzeige_${userHandle}_${postNo}_${offenceType}_${dateString}.html`,
+                suggestedName: fileName,
                 types: [
                   {
                     description: "HTML Document",
@@ -591,7 +690,7 @@ const Anzeigen_neu_generieren = () => {
 
         <h3>Wozu dient das Tool zum Anzeigen-Neu-Generieren?</h3>
         <p>
-        Dieses Tool benötigst du, wenn du Texte aus heruntergeladenen Strafanzeigenentwürfen bearbeitet hast. Es aktualisiert die Entwürfe, sodass die Änderungen korrekt angezeigt und gedruckt werden können.
+          Dieses Tool benötigst du, wenn du Texte aus heruntergeladenen Strafanzeigenentwürfen bearbeitet hast. Es aktualisiert die Entwürfe, sodass die Änderungen korrekt angezeigt und gedruckt werden können.
         </p>
 
         <h3>Voraussetzungen</h3>
@@ -659,7 +758,7 @@ const Anzeigen_neu_generieren = () => {
           </li>
           <li>
             <strong>Wichtiger Hinweis:</strong> Bereits vorhandene Anzeigen mit
-            demselben Namen werden automatisch vom Tool 
+            demselben Namen werden automatisch vom Tool
             <strong> überschrieben</strong> und aktualisiert.
           </li>
         </ol>

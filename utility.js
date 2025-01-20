@@ -28,7 +28,7 @@ function generateSubsumptionDetails(post) {
   // If relevant Subsumtions exist, construct the string
   if (relevantSubsumtions && relevantSubsumtions.length > 0) {
     return relevantSubsumtions
-      .map(sub => `${sub.Verdacht}-${sub.Strafwahrsch}`) // Combine "Verdacht" and "Strafwahrsch"
+      .map(sub => `${sub.Verdacht}.${sub.Strafwahrsch}`) // Combine "Verdacht" and "Strafwahrsch"
       .join("_"); // Join entries with an underscore
   }
 
