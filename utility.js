@@ -1029,7 +1029,8 @@ export async function fetchEvaluation(
             response_format: {
               type: "json_schema",
               json_schema: jsonSchema
-            }
+            },
+            temperature: 0
           })
         }
       )
