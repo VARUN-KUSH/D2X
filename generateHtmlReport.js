@@ -37,7 +37,7 @@ function generateHtmlReport(
     fileContents
   ) {
     // Define the HTML template with placeholders
-    console.log("username>>>>>>>>", username, "tweetID>>>>>>>>>>>>.", tweetId, "dateString>>>>>>>", dateString)
+    console.log("username>>>>>>>>", username, "tweetId>>>>>>>>>>>>.", tweetId, "dateString>>>>>>>", dateString)
     const htmlTemplate = `
       <!DOCTYPE html>
       <html lang="de">

@@ -452,16 +452,16 @@ export async function downloadpostreport(results, originalUrl) {
     console.log("userPosts>>>>>>>>>>>", userPosts)
 
     for (let post of userPosts) {
-      const tweetID = post.postUrl.split("/").pop()
-      let folder2 = userFolder.folder(tweetID)
+      const tweetId = post.postUrl.split("/").pop()
+      let folder2 = userFolder.folder(tweetId)
       const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
       folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
+        `AnzeigenEntwurf_${post.Username}_${tweetId}_${day}.${month}.${year}.txt`,
         formattedText
       )
 
       folder2.file(
-        `Post_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
+        `Post_${post.Username}_${tweetId}_${day}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.postUrl}`)
@@ -501,11 +501,11 @@ export async function downloadpostreport(results, originalUrl) {
 
       // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
       folder2.file(
-        `BegründungDerAnzeige_${post.Username}_${tweetID}_${day}.${month}.${year}.txt`,
+        `BegründungDerAnzeige_${post.Username}_${tweetId}_${day}.${month}.${year}.txt`,
         formattedTextBegründung
       )
 
-      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
+      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetId}`)
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       // folder2.file(
       //   `Zeitpunkt.txt`,
@@ -719,16 +719,16 @@ export async function createFinalReport(results, originalUrl = "") {
     console.log("userPosts>>>>>>>>>>>", userPosts)
 
     for (let post of userPosts) {
-      const tweetID = post.postUrl.split("/").pop()
-      let folder2 = userFolder.folder(tweetID)
+      const tweetId = post.postUrl.split("/").pop()
+      let folder2 = userFolder.folder(tweetId)
       const formattedText = post.Anzeige_Entwurf.replace(/\\n/g, "\n")
       folder2.file(
-        `AnzeigenEntwurf_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `AnzeigenEntwurf_${post.Username}_${tweetId}_${date}.${month}.${year}.txt`,
         formattedText
       )
 
       folder2.file(
-        `Post_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `Post_${post.Username}_${tweetId}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
       folder2.file(`postUrl.txt`, `URL des Kommentars: ${post.postUrl}`)
@@ -761,14 +761,14 @@ export async function createFinalReport(results, originalUrl = "") {
         `Erläuterung:\n${post.Erklärung}\n\n` +
         `${prüfungText}` +
         `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
-        `Modell Entscheidung, ob der Post Anzeigbar ist: ${decisionText}`
+        `Modell Entscheidung, ob der Post anzeigbar ist: ${decisionText}`
 
       // Ersetzen von doppelten Backslashes mit einfachen Zeilenumbrüchen
       const formattedTextBegründung = textBegründung.replace(/\\n/g, "\n")
 
       // Erstellen und Speichern der Textdatei mit dem gewünschten Namen
       folder2.file(
-        `BegründungDerAnzeige_${post.Username}_${tweetID}_${date}.${month}.${year}.txt`,
+        `BegründungDerAnzeige_${post.Username}_${tweetId}_${date}.${month}.${year}.txt`,
         formattedTextBegründung
       )
 
@@ -780,7 +780,7 @@ export async function createFinalReport(results, originalUrl = "") {
           console.log("postblobData>>>>>>>>>>.", postblobData)
 
           folder2.file(
-            `screenshot_${post.Username}_${tweetID}_${date}.${month}.${year}.png`,
+            `screenshot_${post.Username}_${tweetId}_${date}.${month}.${year}.png`,
             postblobData,
             { binary: true }
           )
@@ -789,7 +789,7 @@ export async function createFinalReport(results, originalUrl = "") {
         console.error("Error fetching post screenshot:", error)
       }
 
-      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetID}`)
+      folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetId}`)
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
       folder2.file(
         `Zeitpunkt.txt`,
@@ -804,8 +804,8 @@ export async function createFinalReport(results, originalUrl = "") {
           )} Uhr`
       )
       const dateString = `${date}.${month}.${year}`
-      if (!post.Username || !tweetID || !dateString || !post.Verfolgungsart) {
-        console.error("Missing required inputs:", { post, tweetID, dateString })
+      if (!post.Username || !tweetId || !dateString || !post.Verfolgungsart) {
+        console.error("Missing required inputs:", { post, tweetId, dateString })
         return
       }
       try {
@@ -847,7 +847,7 @@ export async function createFinalReport(results, originalUrl = "") {
         console.log("Generated HTML Report:", htmlreport)
 
         mainFolder.file(
-          `Anzeige_${post.Username}_${tweetID}_${post.Verfolgungsart}_${date}.${month}.${year}.html`,
+          `Anzeige_${post.Username}_${tweetId}_${post.Verfolgungsart}_${date}.${month}.${year}.html`,
           htmlreport
         )
       } catch (error) {
@@ -857,7 +857,7 @@ export async function createFinalReport(results, originalUrl = "") {
         console.error("Stack Trace:", error.stack)
         console.log("Input Details:", {
           Username: post.Username,
-          TweetID: tweetID,
+          TweetID: tweetId,
           DateString: dateString,
           Verfolgungsart: post.Verfolgungsart
         })
