@@ -274,7 +274,7 @@ function App() {
           <li>
             <strong>Telefonseelsorge (24/7 erreichbar)</strong>
             <br />
-            Hier kannst du anonym und kostenlos mit jemandem sprechen, der dir 
+            Hier kannst du anonym und kostenlos mit jemandem sprechen, der dir
             zuhört.
             <br />
             📞 Telefon: 0800 111 0 111 oder 0800 111 0 222
@@ -395,7 +395,7 @@ function App() {
 
         <h3 id="rechtlicher-hinweis">Rechtlicher Hinweis</h3>
         <ul>
-        <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
+          <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
           <li>
             <em>Strafanzeiger</em> erstellt nur Entwürfe für Anzeigen - keine
             rechtsverbindlichen Dokumente
@@ -775,7 +775,7 @@ function App() {
               <li>
                 Wichtig ist: An dieser Adresse müssen Behördenschreiben
                 zugestellt werden können. <em>E-Mail-Adresse oder Postfach reichen
-                nicht aus.</em>
+                  nicht aus.</em>
               </li>
               <li>
                 Es kann z.B. die Adresse eines Anwalts oder einer Beratungsstelle
@@ -806,8 +806,8 @@ function App() {
           </li>
           <p>
             💡 <strong>Tipp</strong>: Wenn bestimmte Daten nicht auf dem Brief
-            erscheinen sollen, lass die entsprechenden Felder in den Einstellungen einfach leer. 
-            Denk daran, nach dem Eintragen auf "Speichern" zu klicken. 
+            erscheinen sollen, lass die entsprechenden Felder in den Einstellungen einfach leer.
+            Denk daran, nach dem Eintragen auf "Speichern" zu klicken.
             Falls du schon die Anzeigenentwürfe heruntergeladen hast, kannst du die Adressdaten auch einfach in den Dateien
             im Ordner Anschreiben_Basis_Daten ändern - diese werden dann in die Anzeigenentwürfe übernommen.
           </p>
@@ -820,7 +820,7 @@ function App() {
                 enhalten, der für die Screenshots genutzt wurde z.B. das Profilbild
               </li>
               <li>
-              Wenn nötig, kannst du die Screenshot-Dateien in einem Grafikprogramm öffnen und den unteren Teil wegschneiden, falls er nicht benötigt wird. Damit niemand das Beweismittel infrage stellen kann, solltest du nur in dringenden Fällen etwas selbst schwärzen – und dann so, dass es offensichtlich ist und der Screenshot noch als unverändertes Beweismittel gelten kann. Änderungen werden dann auch automatisch in den Anzeigen übernommen.
+                Wenn nötig, kannst du die Screenshot-Dateien in einem Grafikprogramm öffnen und den unteren Teil wegschneiden, falls er nicht benötigt wird. Damit niemand das Beweismittel infrage stellen kann, solltest du nur in dringenden Fällen etwas selbst schwärzen – und dann so, dass es offensichtlich ist und der Screenshot noch als unverändertes Beweismittel gelten kann. Änderungen werden dann auch automatisch in den Anzeigen übernommen.
               </li>
               <li>Achte darauf den Inhalt nicht zu verändern</li>
               <li>Wenn du Dich entscheidest Screenshots anzupassen behalte eine Kopie des Originals</li>
@@ -850,10 +850,10 @@ function App() {
               <li>Der Post auf den die Leute reagieren</li>
               <li>Weitere Informationen, die helfen, die Reaktionen auf deine Posts zu verstehen</li>
             </ul>
-            </li>
-            </ul>
-            <p>💡 <strong>Tipp</strong>: Schreib einfach so, als würdest du eine Person informieren, die die Kommentare für dich prüfen soll und dich nicht kennt.</p>
-            <p>⚠️ <strong>Hinweise</strong>: Die Daten werden an OpenAI gesendet.
+          </li>
+        </ul>
+        <p>💡 <strong>Tipp</strong>: Schreib einfach so, als würdest du eine Person informieren, die die Kommentare für dich prüfen soll und dich nicht kennt.</p>
+        <p>⚠️ <strong>Hinweise</strong>: Die Daten werden an OpenAI gesendet.
         </p>
         <h2 id="4-weitere-einstellungen">4. Weitere Einstellungen</h2>
 
@@ -871,7 +871,7 @@ function App() {
             </ul>
           </li>
           <li>
-          💡 <strong>Tipp</strong>: Auch wenn das Menü und Profilbilder im Verlauf ausgeblendet werden, können
+            💡 <strong>Tipp</strong>: Auch wenn das Menü und Profilbilder im Verlauf ausgeblendet werden, können
             dein Profilbild oder Username an anderen Stellen auftauchen
           </li>
         </ul>
@@ -1093,7 +1093,7 @@ function App() {
         </h4>
         <ul>
           <li>
-            <strong>Anzeige[@handle][TweetID][DELIKTART][Datum].html</strong>:
+            <strong>Anzeige[@handle][TweetID][DELIKTART][Verdacht.Strafwahrscheinlichkeit][Datum].html</strong>:
             Die fertigen Anzeigen
           </li>
           <li>
@@ -1344,11 +1344,11 @@ function App() {
           <li>Bei Grenzfällen können unterschiedliche Bewertungen entstehen</li>
           <li>
             Analysiere kritische Fälle ggf. mehrfach und prüfe die Ergebnisse
-            sorgfältig. 
+            sorgfältig.
             <ul><li>Dabei kann dir u.a. die Datei <em>BegründungDerAnzeige</em> helfen, die du
-            in jedem Ordner (userhandle/TweetID) zu jedem Kommentar mit Anzeigenentwurf findest.</li> 
-            <li>Die Datei enthält die Argumentationskette mit der das KI Modell 
-            von OpenAI, zu seiner Entscheidung gekommen ist.</li></ul>
+              in jedem Ordner (userhandle/TweetID) zu jedem Kommentar mit Anzeigenentwurf findest.</li>
+              <li>Die Datei enthält die Argumentationskette mit der das KI Modell
+                von OpenAI, zu seiner Entscheidung gekommen ist.</li></ul>
           </li>
         </ul>
 
@@ -1438,7 +1438,7 @@ function App() {
               z.B. auch eine Beschreibung des Bildes wenn der Kommentar eines
               enthält.
             </li>
-            </ul></ul>
+          </ul></ul>
         </p>
 
       </div>

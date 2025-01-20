@@ -19,6 +19,40 @@ function modifyUrl(url) {
 
   return modifiedUrl
 }
+function generateSubsumptionDetails(post) {
+  // Filter Subsumtions to include only those with "HOCH" or "MITTEL" and sort them by priority ("HOCH" first)
+  const relevantSubsumtions = post.Subsumtion
+    ?.filter(sub => sub.Strafwahrsch === "HOCH" || sub.Strafwahrsch === "MITTEL") // Include only "HOCH" and "MITTEL"
+    .sort((a, b) => (a.Strafwahrsch === "HOCH" ? -1 : 1)); // Ensure "HOCH" entries appear first
+
+  // If relevant Subsumtions exist, construct the string
+  if (relevantSubsumtions && relevantSubsumtions.length > 0) {
+    return relevantSubsumtions
+      .map(sub => `${sub.Verdacht}-${sub.Strafwahrsch}`) // Combine "Verdacht" and "Strafwahrsch"
+      .join("_"); // Join entries with an underscore
+  }
+
+  // Return an empty string if no relevant Subsumtions are found
+  return "";
+}
+
+
+
+// Function to generate the HTML Report name
+function generateFileName(post, tweetId, date, month, year) {
+  // Get the Subsumption details as a string
+  const subsumptionDetails = generateSubsumptionDetails(post);
+
+  // If there are Subsumption details, include them in the file name
+  if (subsumptionDetails) {
+    return `Anzeige_${post.Username}_${tweetId}_${post.Verfolgungsart}_${subsumptionDetails}_${date}.${month}.${year}.html`;
+  }
+
+  // Fallback: Original file name format if no relevant Subsumtions exist
+  return `Anzeige_${post.Username}_${tweetId}_${post.Verfolgungsart}_${date}.${month}.${year}.html`;
+}
+
+
 
 function generateUserInfoContent(post) {
   // First try Perplexity known_info
@@ -728,6 +762,11 @@ export async function createFinalReport(results, originalUrl = "") {
       )
 
       folder2.file(
+        `VerdachtAuf.txt`,
+        generateSubsumptionDetails(post)
+      )
+
+      folder2.file(
         `Post_${post.Username}_${tweetId}_${date}.${month}.${year}.txt`,
         `${post.Inhalt}`
       )
@@ -846,10 +885,10 @@ export async function createFinalReport(results, originalUrl = "") {
         );
         console.log("Generated HTML Report:", htmlreport)
 
-        mainFolder.file(
-          `Anzeige_${post.Username}_${tweetId}_${post.Verfolgungsart}_${date}.${month}.${year}.html`,
-          htmlreport
-        )
+mainFolder.file(
+  generateFileName(post, tweetId, date, month, year), // Generated file name
+  htmlreport // The file content
+);
       } catch (error) {
         console.error("Error generating HTML report:", error)
 
