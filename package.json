@@ -26,8 +26,8 @@
   "manifest": {
     "host_permissions": [
       "<all_urls>",
-      "https://api.openai.com/",
-      "https://www.timeapi.io",
+      "https://api.openai.com/*",
+      "https://www.timeapi.io/*",
       "https://x.com/*"
     ],
     "permissions": [
