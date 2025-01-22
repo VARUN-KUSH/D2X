@@ -264,7 +264,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 function checkTwitterHeaderVisibility() {
   // Function to find profile element with retries
-  async function findProfileElement(maxAttempts = 5, intervalMs = 1000) {
+  async function findProfileElement(maxAttempts = 10, intervalMs = 1000) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const profileelem = document.querySelector('div[data-testid="inline_reply_offscreen"]');
       if (profileelem) {
@@ -278,6 +278,47 @@ function checkTwitterHeaderVisibility() {
     }
     return null;
   }
+
+  function updateElementVisibility(element, shouldHide) {
+    if (element) {
+      if (shouldHide) {
+        element.style.display = "none";
+        // Optional: Remove the element completely
+        // element.remove();
+      } else {
+        element.style.display = "";
+      }
+    }
+  }
+
+   // Create a MutationObserver to watch for DOM changes
+   const observer = new MutationObserver(async (mutations) => {
+    chrome.storage.local.get("disableTwitterHeader", async (result) => {
+      const disableTwitterHeader = result.disableTwitterHeader || false;
+      if (!disableTwitterHeader) return;
+
+      const headerElement = document.querySelector('header[role="banner"]');
+      const profileelem = await findProfileElement(3, 500); // Reduced retries for observer
+      
+      updateElementVisibility(headerElement, disableTwitterHeader);
+      
+      if (profileelem) {
+        const avatarContainer = profileelem.querySelector(
+          'div[data-testid^="UserAvatar-Container-"]'
+        );
+        updateElementVisibility(avatarContainer, disableTwitterHeader);
+      }
+    });
+  });
+
+  // Start observing the document with the configured parameters
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: false,
+    characterData: false
+  });
+
 
   // Function to handle header visibility
   function updateHeaderVisibility(headerElement, disableTwitterHeader) {
