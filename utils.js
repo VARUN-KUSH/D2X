@@ -19,7 +19,13 @@ export function generatePerplexityPrompt(user_handle, user_info) {
 Hier sind bereits bekannte Informationen zu dem User:
 ${formattedUserInfo}
 
-Antworte ausschließlich im folgenden JSON-Format:
+Es sollen ausschließlich seriöse Quellen genutzt werden. Nutze daher KEINE Twitter-Alternativen wie z.B.:
+  idcrawl.com
+  twstalker
+  instalker
+  asci.altmetric.com
+
+WICHTIG: Antworte ausschließlich im folgenden JSON-Format:
 
 {
   "known_info": "STICHPUNKTLISTE (als ein String)",
@@ -29,7 +35,9 @@ Antworte ausschließlich im folgenden JSON-Format:
 }
 
 known_info:
-Enthält alle bereits bekannten Informationen zum User, also Informationen, die bereits in der Frage enthalten waren. Stelle diese bekennten Informationen in einer Stichpunktliste wie dieser da - diese Liste ist ein Text String "..." kein Array oder ähnliches: 
+Enthält alle bereits bekannten Informationen zum User, also Informationen, die bereits in der Frage enthalten waren.
+Wenn Du zu einem Punkt keine Informationen hast, dann lasse diesen Stichpunkt ganz weg.
+Stelle nur die bekannten Informationen in einer Stichpunktliste wie dieser da - diese Liste ist ein Text String "..." kein Array oder ähnliches: 
 "- User-Name: 
 - User-Handle: 
 - Beschreibung: 
@@ -75,13 +83,12 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
 {{context_block}}
 </context>
 
+**Wenn das Opfer Informationen bereitgestellt hat, müssen diese vom Assistenten bei der Bewertung berücksichtigt und respektiert werden.**
+
 **Weiterer Kontext, die Post oder Teil der Posts, die vom Opfer veröffentlicht wurde und auf die sich die zu untersuchenden Posts wahrscheinlich beziehen:**
 <victim_post>
 {{victim_post_block}}
 </victim_post>
-
-
-**Wenn das Opfer Informationen bereitgestellt hat, müssen diese vom Assistenten bei der Bewertung berücksichtigt und respektiert werden.**
 
 **Berücksichtige stets den gesamten Kontext einer Nachricht. Denke daran, dass in sozialen Medien oft "Dog-Whistles" verwendet werden, um etwas zu sagen, ohne Konsequenzen befürchten zu müssen. Diese Dog-Whistles könnten für den Assistenten ohne zusätzlichen Kontext schwer zu erkennen sein. Anzeichen für einen Dog-Whistle sind beispielsweise Nachrichten, die aus dem Kontext gerissen erscheinen, besonders wenn mehrere Nachrichten eine ähnliche Phrase verwenden. Das Erkennen eines Dog-Whistles könnte die Art und Weise ändern, wie eine Nachricht bewertet wird.**
 
