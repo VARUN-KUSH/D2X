@@ -146,13 +146,17 @@ async function scrapeContent(analysisId, tabId) {
 
 async function handleAsyncScrape(request, sendResponse) {
   try {
-    const analysisId = getActiveAnalysisId();
-    const scrapedPost = await handlePostURLScrape(analysisId, request.url, request.isSecondaryParse);
-    console.log("scrapedPost>>>>>>>", scrapedPost);
-    sendResponse(scrapedPost);
+    const analysisId = getActiveAnalysisId()
+    const scrapedPost = await handlePostURLScrape(
+      analysisId,
+      request.url,
+      request.isSecondaryParse
+    )
+    console.log("scrapedPost>>>>>>>", scrapedPost)
+    sendResponse(scrapedPost)
   } catch (error) {
-    console.error("Error in handleAsyncScrape:", error);
-    sendResponse(null);
+    console.error("Error in handleAsyncScrape:", error)
+    sendResponse(null)
   }
 }
 
@@ -258,7 +262,7 @@ async function initiateDownload() {
 
     // Convert the Blob to a base64 string to send to the content script or popup
     const reader = new FileReader()
-    reader.onloadend = async() => {
+    reader.onloadend = async () => {
       const base64data = reader.result.split(",")[1] // Extract base64 part
       console.log("base64data>>>>>>>>", base64data)
       await saveData(base64data)
@@ -269,12 +273,10 @@ async function initiateDownload() {
   }
 }
 
-
 const saveData = async (base64data) => {
-  await chrome.storage.local.set({ 'downloadData': base64data });
-  chrome.runtime.sendMessage({ action: "downloadZip" });
-};
-
+  await chrome.storage.local.set({ downloadData: base64data })
+  chrome.runtime.sendMessage({ action: "downloadZip" })
+}
 
 // Function to send messages to the popup
 export function sendMessageToPopup(message, progress = null) {
@@ -386,6 +388,68 @@ async function getAPIKey() {
   })
 }
 
+const replaceTextBlocks = (systemPrompt, contextBlock, victimPost) => {
+  try {
+    // First replace the context_block
+    let updatedPrompt = systemPrompt.replace(
+      /\{\{context_block\}\}\n*/g,
+      contextBlock || ""
+    )
+
+    // Then replace the victim_post_block
+    updatedPrompt = updatedPrompt.replace(
+      /\{\{victim_post_block\}\}\n*/g,
+      victimPost || ""
+    )
+
+    return updatedPrompt
+  } catch (error) {
+    console.error("Error replacing text blocks:", error)
+    return systemPrompt // Return original if something goes wrong
+  }
+}
+
+const getvictimname = (profileUrl) => {
+  try {
+    // Check if the URL is valid
+    if (!profileUrl || typeof profileUrl !== "string") {
+      return null
+    }
+
+    // Create URL object to validate URL format
+    const url = new URL(profileUrl)
+
+    // Check if it's an X/Twitter domain
+    if (!["x.com", "twitter.com"].includes(url.hostname)) {
+      return null
+    }
+
+    // Split path and remove empty strings
+    const pathParts = url.pathname.split("/").filter(Boolean)
+
+    // If no path parts or first part is not a username
+    if (!pathParts.length) {
+      return null
+    }
+
+    // Get the username (first part of path)
+    const username = pathParts[0]
+
+    // Check for reserved paths and username length
+    const reservedPaths = ["home", "explore", "notifications", "status"]
+    if (
+      reservedPaths.includes(username.toLowerCase()) ||
+      username.length > 15
+    ) {
+      return null
+    }
+
+    return username
+  } catch (error) {
+    return null
+  }
+}
+
 // Function to process content with batching and error handling
 async function processContent(messages) {
   try {
@@ -416,23 +480,20 @@ async function processContent(messages) {
     }
 
     let systemPromptWithContext = evaluatorSystemPrompt
-    if (backgroundInfo.trim() !== "") {
+    if (backgroundInfo.profileUrl || backgroundInfo.Info) {
       const contextBlock = `
-    # Context by the user
-    Additional context provided by the user to be considered during analysis:
-    ${backgroundInfo}
-    # End of user context
-    `
+      # Context by the user
+      Additional context provided by the user to be considered during analysis:
+      ${backgroundInfo.Info}
+      # End of user context
+      `
+      const victimPost = getvictimname(backgroundInfo.profileUrl)
       // Use a regular expression to safely replace the placeholder
-      systemPromptWithContext = evaluatorSystemPrompt.replace(
-        /\{\{context_block\}\}\n*/g,
-        contextBlock
-      )
-    } else {
-      // If no context, just remove the placeholder
-      systemPromptWithContext = evaluatorSystemPrompt.replace(
-        /\{\{context_block\}\}\n*/g,
-        ""
+
+      systemPromptWithContext = replaceTextBlocks(
+        evaluatorSystemPrompt,
+        contextBlock,
+        victimPost
       )
     }
 
@@ -1335,23 +1396,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const API_KEY = await getAPIKey()
 
           let systemPromptWithContext = evaluatorSystemPrompt
-          if (backgroundInfo.trim() !== "") {
+          if (backgroundInfo.profileUrl || backgroundInfo.Info) {
             const contextBlock = `
             # Context by the user
             Additional context provided by the user to be considered during analysis:
-            ${backgroundInfo}
+            ${backgroundInfo.Info}
             # End of user context
             `
+            const victimPost = getvictimname(backgroundInfo.profileUrl)
             // Use a regular expression to safely replace the placeholder
-            systemPromptWithContext = evaluatorSystemPrompt.replace(
-              /\{\{context_block\}\}\n*/g,
-              contextBlock
-            )
-          } else {
-            // If no context, just remove the placeholder
-            systemPromptWithContext = evaluatorSystemPrompt.replace(
-              /\{\{context_block\}\}\n*/g,
-              ""
+
+            systemPromptWithContext = replaceTextBlocks(
+              evaluatorSystemPrompt,
+              contextBlock,
+              victimPost
             )
           }
 
@@ -1410,13 +1468,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           break
 
         case "scrapePostURL":
-          handleAsyncScrape(request, sendResponse);
-          return true; // This is crucial - tells Chrome to keep the message channel open
-          // analysisId = getActiveAnalysisId()
-          // const scrapedPost = await handlePostURLScrape(analysisId, request.url)
-          // console.log("scrapedPost>>>>>>>", scrapedPost)
-          // sendResponse(scrapedPost)
-          
+          handleAsyncScrape(request, sendResponse)
+          return true // This is crucial - tells Chrome to keep the message channel open
+        // analysisId = getActiveAnalysisId()
+        // const scrapedPost = await handlePostURLScrape(analysisId, request.url)
+        // console.log("scrapedPost>>>>>>>", scrapedPost)
+        // sendResponse(scrapedPost)
 
         case "SAVE_REPORT":
           // Handle the finalreport data

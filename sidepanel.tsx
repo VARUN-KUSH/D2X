@@ -85,7 +85,11 @@ function SidePanel() {
   //state save locally
   const [isaddress, setisAddress] = useState(false)
   const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
-  const [backgroundInfo, setbackgroundInfo] = useState("")
+  const [backgroundInfo, setbackgroundInfo] = useState({
+    profileUrl: "",
+    originalPost: "",
+    Info: ""
+  })
   const [analysisId, setAnalysisId] = useState("")
   const [showHelpSection, setShowHelpSection] = useState(false)
   const [showSettingsSection, setShowSettingsSection] = useState(false)
@@ -286,7 +290,18 @@ function SidePanel() {
   }
 
   const handleBackgroundInfo = (e) => {
-    setbackgroundInfo(e.target.value)
+    setbackgroundInfo({...backgroundInfo,
+    Info: e.target.value})
+  }
+
+  const handleoriginalBackgroundInfo = (e) => {
+    setbackgroundInfo({...backgroundInfo,
+      originalPost: e.target.value})
+  }
+
+  const handleprofileBackgroundInfo = (e) => {
+    setbackgroundInfo({...backgroundInfo,
+      profileUrl: e.target.value})
   }
 
   const saveformdata = () => {
@@ -1495,6 +1510,37 @@ function SidePanel() {
                   Hintergrundinformationen
                 </summary>
                 <div>
+                <label htmlFor="backgroundInfo">
+                    Meine Profil URL:
+                    <span
+                      className="help-icon"
+                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      ⓘ
+                    </span>
+                  </label>
+                  <textarea
+                    id="backgroundInfo"
+                    name="backgroundInfo"
+                    value={backgroundInfo.profileUrl}
+                    placeholder=""
+                    onChange={handleprofileBackgroundInfo}
+                    disabled={backgroundInfopresent}></textarea>
+                  <label htmlFor="backgroundInfo">
+                  URL von meinem ursprünglichen Post:
+                    <span
+                      className="help-icon"
+                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      ⓘ
+                    </span>
+                  </label>
+                  <textarea
+                    id="backgroundInfo"
+                    name="backgroundInfo"
+                    value={backgroundInfo.originalPost}
+                    placeholder=""
+                    onChange={handleoriginalBackgroundInfo}
+                    disabled={backgroundInfopresent}></textarea>
+
                   <label htmlFor="backgroundInfo">
                     Hintergrundinformationen:
                     <span
@@ -1506,7 +1552,7 @@ function SidePanel() {
                   <textarea
                     id="backgroundInfo"
                     name="backgroundInfo"
-                    value={backgroundInfo}
+                    value={backgroundInfo.Info}
                     placeholder=""
                     onChange={handleBackgroundInfo}
                     disabled={backgroundInfopresent}></textarea>

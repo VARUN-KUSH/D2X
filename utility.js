@@ -235,7 +235,25 @@ async function getFormData() {
   })
 }
 
-export async function downloadprofilereport(results, originalUrl) {
+async function getoriginalUrl() {
+  let backgroundInfo = ""
+  try {
+    const result = await chrome.storage.local.get(["backgroundInfo"])
+    backgroundInfo = result.backgroundInfo || ""
+    console.log(
+      "resultInbackgroundinfo>>>>>>>>>>",
+      result,
+      "backgroundInfo>>>>>>>>",
+      backgroundInfo
+    )
+  } catch (error) {
+    console.error("Error retrieving background info:", error)
+  }
+  const originalUrl = backgroundInfo?.originalPost
+  return originalUrl
+}
+
+export async function downloadprofilereport(results) {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
@@ -272,6 +290,8 @@ export async function downloadprofilereport(results, originalUrl) {
 
   //Timestamp to add in this text file AnalyseZeitpunkt.txt
   // mainFolder.file("initialPostUrl.txt", `URL des Ausgangsposts: ${""}`)
+  const originalUrl = await getoriginalUrl()
+
   mainFolder.file(
     "initialPostUrl.txt",
     (() => {
@@ -339,7 +359,7 @@ export async function downloadprofilereport(results, originalUrl) {
     )
   }
 }
-export async function downloadpostreport(results, originalUrl) {
+export async function downloadpostreport(results) {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
@@ -413,6 +433,9 @@ export async function downloadpostreport(results, originalUrl) {
     }
   }
 
+
+
+  const originalUrl = await getoriginalUrl()
   mainFolder.file(
     "initialPostUrl.txt",
     (() => {
@@ -654,11 +677,15 @@ export async function createFinalReport(results, originalUrl = "") {
   //   `URL des Ausgangsposts: ${originalUrl || ""}`
   // )
 
+  if(originalUrl.trim() === "") {
+    originalUrl = await getoriginalUrl()
+  }
+
   mainFolder.file(
     "initialPostUrl.txt",
     (() => {
       if (!originalUrl) return ""
-      if (typeof originalUrl === "string" && originalUrl.trim() === "")
+      if (typeof originalUrl === "string" && originalUrl.trim() === "") 
         return ""
 
       return `URL des Ausgangsposts: ${originalUrl}`
