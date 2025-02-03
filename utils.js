@@ -21,8 +21,8 @@ ${formattedUserInfo}
 
 Es sollen ausschließlich seriöse Quellen genutzt werden. Nutze daher KEINE Twitter-Alternativen wie z.B.:
   idcrawl.com
-  twstalker
-  instalker
+  twstalker.com
+  instalker.org
   asci.altmetric.com
 
 WICHTIG: Antworte ausschließlich im folgenden JSON-Format:
