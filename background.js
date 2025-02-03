@@ -109,6 +109,30 @@ function generateScreenshotFilename(analysisId, index, total) {
   return `screenshot_${analysisId}_${index + 1}_of_${total}.png`
 }
 
+/**
+ * Filters the scraped tweets for the victim’s posts and concatenates their data.
+ * @param {string} victimUsername - The victim's username (extracted from the profile URL).
+ * @param {Array} scrapedContent - The array of scraped tweet objects.
+ * @returns {string} A concatenated string of all matching tweet details.
+ */
+function filterVictimPosts(victimUsername, scrapedContent) {
+  if (!victimUsername || !Array.isArray(scrapedContent)) return '';
+  
+  // Ensure victimUsername has an "@" prefix.
+  if (victimUsername.charAt(0) !== '@') {
+    victimUsername = '@' + victimUsername;
+  }
+  
+  // Filter tweets where the Username matches exactly.
+  const victimTweets = scrapedContent.filter(tweet => tweet.Username === victimUsername);
+  
+  // Return a concatenated string with each tweet's details.
+  return victimTweets.map(tweet => {
+    return `Screenname: ${tweet.Screenname}\nUsername: ${tweet.Username}\nTime: ${tweet.time}\nText: ${tweet.text}\n`;
+  }).join('\n\n');
+}
+
+
 async function scrapeContent(analysisId, tabId) {
   return new Promise((resolve, reject) => {
     const port = chrome.tabs.connect(tabId, { name: "scrapingChannel" })
@@ -482,20 +506,21 @@ async function processContent(messages) {
     let systemPromptWithContext = evaluatorSystemPrompt
     if (backgroundInfo.profileUrl || backgroundInfo.Info) {
       const contextBlock = `
-      # Context by the user
-      Additional context provided by the user to be considered during analysis:
       ${backgroundInfo.Info}
-      # End of user context
       `
-      const victimPost = getvictimname(backgroundInfo.profileUrl)
-      // Use a regular expression to safely replace the placeholder
-
+      
+      // First extract the victim’s username...
+      const victimUsername = getvictimname(backgroundInfo.profileUrl);
+      // ... then filter the scraped content (which is passed as 'messages') for the victim's posts.
+      const victimPost = filterVictimPosts(victimUsername, messages);
+      
       systemPromptWithContext = replaceTextBlocks(
         evaluatorSystemPrompt,
         contextBlock,
         victimPost
       )
     }
+    
 
     console.log("systemprompts", systemPromptWithContext)
     const results = []
@@ -1398,13 +1423,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           let systemPromptWithContext = evaluatorSystemPrompt
           if (backgroundInfo.profileUrl || backgroundInfo.Info) {
             const contextBlock = `
-            # Context by the user
-            Additional context provided by the user to be considered during analysis:
             ${backgroundInfo.Info}
-            # End of user context
             `
-            const victimPost = getvictimname(backgroundInfo.profileUrl)
-            // Use a regular expression to safely replace the placeholder
+      // First extract the victim’s username...
+      const victimUsername = getvictimname(backgroundInfo.profileUrl);
+      // ... then filter the scraped content (which is passed as 'messages') for the victim's posts.
+      const victimPost = filterVictimPosts(victimUsername, messages);
 
             systemPromptWithContext = replaceTextBlocks(
               evaluatorSystemPrompt,
