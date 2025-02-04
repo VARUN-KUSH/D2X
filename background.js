@@ -353,10 +353,8 @@ async function startFullAnalysis() {
     }
     // After processing, add analysis results to the ZIP Folder
     sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...", 80)
-    await createFinalReport(
-      results.Report.reportablePostsArray,
-      results.Report.originalUrl
-    )
+    await createFinalReport(results.Report.reportablePostsArray)
+  
     sendMessageToPopup("Dokumente werden heruntergeladen...", 95)
     await initiateDownload()
     sendMessageToPopup("Dokumente erfolgreich heruntergeladen.", 100)
