@@ -1520,30 +1520,32 @@ function SidePanel() {
                     Meine Profil URL:
                     <span
                       className="help-icon"
-                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      title="Gib hier die URL Deines Profils ein. Z.B. https://x.com/meinUserHandle. Diese Informationen wird verwendet um Deine Posts zu identifizieren, die mit Deinen User-Namen (Screenname und User_Handle) an  OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden.">
                       ⓘ
                     </span>
                   </label>
                   <textarea
                     id="backgroundInfo"
                     name="backgroundInfo"
+                    className="textarea-small"
                     value={backgroundInfo.profileUrl}
-                    placeholder=""
+                    placeholder="https://x.com/meinUserHandle"
                     onChange={handleprofileBackgroundInfo}
                     disabled={backgroundInfopresent}></textarea>
                   <label htmlFor="backgroundInfo">
                     URL von meinem ursprünglichen Post:
                     <span
                       className="help-icon"
-                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      title="Gib hier die URL von Deinem Ursprünglichen Post ein. Z.B. https://x.com/meinUserHandle/status/1234567890123456789. Diese Informationen wird später in der Anzeige als Link eingefügt.">
                       ⓘ
                     </span>
                   </label>
                   <textarea
                     id="backgroundInfo"
                     name="backgroundInfo"
+                    className="textarea-medium"
                     value={backgroundInfo.originalPost}
-                    placeholder=""
+                    placeholder="https://x.com/meinUserHandle/status/1234567890123456789"
                     onChange={handleoriginalBackgroundInfo}
                     disabled={backgroundInfopresent}></textarea>
 
@@ -1551,7 +1553,7 @@ function SidePanel() {
                     Hintergrundinformationen:
                     <span
                       className="help-icon"
-                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
+                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. Hilfreich ist alles, was man wissen muss, um die Hasskommentare zu verstehen. Schreibe einfach normal, als würdest du mit einer Person sprechen. BEI MANUELLER ANALYSE füge hier auch ein, was du gepostet hast, z. B.: „Ich habe folgendes geschrieben, worauf die Leute reagieren: …">
                       ⓘ
                     </span>
                   </label>
@@ -1559,7 +1561,7 @@ function SidePanel() {
                     id="backgroundInfo"
                     name="backgroundInfo"
                     value={backgroundInfo.Info}
-                    placeholder=""
+                    placeholder="Gib hier Infos ein, die OpenAI helfen die Kommentare zu verstehen. BEI MANUELLER ANALYSE füge auch Deinen Post hier ein (z.B. Mein Post: ...). "
                     onChange={handleBackgroundInfo}
                     disabled={backgroundInfopresent}></textarea>
                   {backgroundInfopresent ? (

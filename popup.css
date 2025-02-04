@@ -58,7 +58,8 @@ button:hover {
 }
 
 #deletebutton:hover {
-  background-color: lightcoral !important; /* Ensure this rule takes precedence */
+  background-color: lightcoral !important;
+  /* Ensure this rule takes precedence */
 }
 
 button:active {
@@ -66,7 +67,8 @@ button:active {
 }
 
 .message {
-  color: green; /* Text color changed to green */
+  color: green;
+  /* Text color changed to green */
   font-size: 14px;
   text-align: center;
 }
@@ -85,16 +87,21 @@ details {
 }
 
 details summary {
-  padding: 8px 5px; /* Adds padding to the top/bottom and left */
-  border-bottom: 1px solid #e6e6e6; /* Optional: adds a border for separation */
+  padding: 8px 5px;
+  /* Adds padding to the top/bottom and left */
+  border-bottom: 1px solid #e6e6e6;
+  /* Optional: adds a border for separation */
   font-weight: normal;
   cursor: pointer;
   color: #333333;
   padding-left: 5px;
   margin-bottom: 10px;
-  font-size: 14px; /* Ensure font-size is consistent */
-  line-height: 1.5; /* Ensure enough line height */
-  padding: 5px 0; /* Add padding to the top and bottom */
+  font-size: 14px;
+  /* Ensure font-size is consistent */
+  line-height: 1.5;
+  /* Ensure enough line height */
+  padding: 5px 0;
+  /* Add padding to the top and bottom */
 }
 
 details div {
@@ -119,6 +126,18 @@ textarea {
   border-radius: 4px;
   height: auto;
   min-height: 80px;
+}
+
+.textarea-small {
+  min-height: 30px;
+  height: 30px;
+  /* entspricht ca. 1 Zeile */
+}
+
+.textarea-medium {
+  min-height: 50px;
+  height: 50px;
+  /* entspricht ca. 2 Zeilen */
 }
 
 input[type="text"],
@@ -244,11 +263,13 @@ details summary {
 }
 
 details summary {
-  list-style: none; /* Entfernt das Standard-Aufzählungszeichen */
+  list-style: none;
+  /* Entfernt das Standard-Aufzählungszeichen */
 }
 
 details summary::-webkit-details-marker {
-  display: none; /* Entfernt das Standard-Dreieck in Webkit-Browsern */
+  display: none;
+  /* Entfernt das Standard-Dreieck in Webkit-Browsern */
 }
 
 details summary::before {
@@ -260,7 +281,8 @@ details summary::before {
 
 details[open] summary::before {
   content: "▼";
-  transform: rotate(0); /* Keine Rotation, da wir das Symbol direkt ändern */
+  transform: rotate(0);
+  /* Keine Rotation, da wir das Symbol direkt ändern */
 }
 
 /* details[open] summary::before {
@@ -273,7 +295,7 @@ details div {
 }
 
 /* Ensure consistent styling for section headers */
-#mainActions > details > summary {
+#mainActions>details>summary {
   font-size: 14px;
   font-weight: normal;
   color: #555555;
