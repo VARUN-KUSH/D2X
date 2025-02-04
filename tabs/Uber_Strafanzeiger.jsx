@@ -996,8 +996,8 @@ function App() {
           <li>
             Wähle:
             <ul>
-              <li>"Ganze Seite" für einen Screenshot der kompletten Seite</li>
-              <li>"Angezeigter Bereich" für nur den aktuell sichtbaren Teil</li>
+              <li>"Ganze Seite - Post" für einen Screenshot der kompletten Seite (für Posts)</li>
+              <li>"Angezeigter Bereich - Profil" für nur den aktuell sichtbaren Teil (für Profile)</li>
             </ul>
           </li>
           <li>Der Screenshot wird automatisch gespeichert</li>

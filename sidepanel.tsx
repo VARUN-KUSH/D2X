@@ -290,18 +290,24 @@ function SidePanel() {
   }
 
   const handleBackgroundInfo = (e) => {
-    setbackgroundInfo({...backgroundInfo,
-    Info: e.target.value})
+    setbackgroundInfo({
+      ...backgroundInfo,
+      Info: e.target.value
+    })
   }
 
   const handleoriginalBackgroundInfo = (e) => {
-    setbackgroundInfo({...backgroundInfo,
-      originalPost: e.target.value})
+    setbackgroundInfo({
+      ...backgroundInfo,
+      originalPost: e.target.value
+    })
   }
 
   const handleprofileBackgroundInfo = (e) => {
-    setbackgroundInfo({...backgroundInfo,
-      profileUrl: e.target.value})
+    setbackgroundInfo({
+      ...backgroundInfo,
+      profileUrl: e.target.value
+    })
   }
 
   const saveformdata = () => {
@@ -1109,7 +1115,7 @@ function SidePanel() {
               }
 
               if (
-                request.data.includes("Dokumente erfolgreich heruntergeladen.")||
+                request.data.includes("Dokumente erfolgreich heruntergeladen.") ||
                 request.data.includes("Ich habe keine anzeigbaren Posts gefunden.")
               ) {
                 setisAnimating(false) // Stop animation
@@ -1510,7 +1516,7 @@ function SidePanel() {
                   Hintergrundinformationen
                 </summary>
                 <div>
-                <label htmlFor="backgroundInfo">
+                  <label htmlFor="backgroundInfo">
                     Meine Profil URL:
                     <span
                       className="help-icon"
@@ -1526,7 +1532,7 @@ function SidePanel() {
                     onChange={handleprofileBackgroundInfo}
                     disabled={backgroundInfopresent}></textarea>
                   <label htmlFor="backgroundInfo">
-                  URL von meinem ursprünglichen Post:
+                    URL von meinem ursprünglichen Post:
                     <span
                       className="help-icon"
                       title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. HILFREICH SIND: Dein Benutzername, @User-Handle, was du gepostet hast und Informationen, die helfen, die Hasskommentare besser zu verstehen... – Schreibe einfach normal, als würdest du mit einer Person sprechen.">
@@ -1629,13 +1635,13 @@ function SidePanel() {
                 id="fullPageScreenshot"
                 title="Erstellt einen Screenshot der gesamten Webseite, einschließlich des Scrollens in Bereiche, die aktuell nicht sichtbar sind."
                 onClick={takefullpagess}>
-                Ganze Seite
+                Ganze Seite - Post
               </button>
               <button
                 id="visibleAreaScreenshot"
                 title="Erstellt einen Screenshot des aktuell sichtbaren Bereichs der Webseite."
                 onClick={visiblepagess}>
-                Angezeigter Bereich
+                Angezeigter Bereich - Profil
               </button>
             </div>
           </details>
