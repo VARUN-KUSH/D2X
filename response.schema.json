@@ -31,7 +31,7 @@
             },
             "Screenname": {
               "type": "string",
-              "description": "The display name or screen name of the person who made the post. For anonymization you might be given a placeholder for the Screenname. So anywhere in your answer where you want to use the Screenname you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically."
+              "description": "The display name or screen name of the person who made the post. For anonymization you might be given a placeholder for the Screenname. So anywhere in your answer where you want to use the Screenname you must replicate that placeholder exactly, so following processes can replaced it with the real string automatically. If no Screenname is provided explicitly as a key, it might be provided to you as meta data in the value of the 'text' key field which might also contain the handle - they could be the same - but if not do not confuse them"
             },
             "userProfileUrl": {
               "type": "string",
@@ -39,11 +39,11 @@
             },
             "Veröffentlichungszeitpunkt": {
               "type": "string",
-              "description": "The timestamp when the post was published (must be in ISO 8601 date-time format, so year-month-dayThour:minutes:secondsZ which is yyyy-mm-ddThh:mm:ssZ e.g., '2024-03-21T14:30:00Z')."
+              "description": "The timestamp when the post was published (must be in ISO 8601 date-time format, so year-month-dayThour:minutes:secondsZ which is yyyy-mm-ddThh:mm:ssZ e.g., '2024-03-21T14:30:00Z'). If this is not provided explicitly as a key, it might be provided to you as meta data in the value of the 'text' key field"
             },
             "Inhalt": {
               "type": "string",
-              "description": "The text content or description of the post."
+              "description": "The actual text the user wrote is given to you under the text key. In some cases, the value of the text field in the provided data can contain unstructured metadata alongside the original post. In that case, remove the metadata and keep only the original post. Be sure to exclude only the screen name and username of the original poster, which typically appear at the beginning of the unstructured data. Do not remove or alter any other mentions (@AnotherUser) that appear in the main content, even if they are directly after the removed username. Exclude metadata such as timestamps, view counts, or other platform-generated information unless explicitly part of the message."
             },
             "Erklärung": {
               "type": "string",
