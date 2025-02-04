@@ -79,9 +79,8 @@ function SidePanel() {
     city: "",
     fullName: ""
   })
-  const [openSection, setOpenSection] = useState<string | null>(
-    "evaluateSection"
-  )
+  const [openSection, setOpenSection] = useState<string | null>("backgroundInfoSection")
+
   //state save locally
   const [isaddress, setisAddress] = useState(false)
   const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
@@ -121,7 +120,7 @@ function SidePanel() {
   // const [darkMode, setDarkMode] = useState(false); // Track dark mode state
   // useEffect(() => {
   //     setupMessageListener();
-  //     // Ensure "Seite Auswerten" is open by default
+  //     // Ensure "Seite automatisch auswerten" is open by default
   //     document.getElementById("evaluateSection").open = true;
   // }, []);
 
@@ -1238,42 +1237,6 @@ function SidePanel() {
 
         {showSettingsSection && (
           <>
-            <div id="twitterheaderdisablesection">
-              <input
-                type="checkbox"
-                id="twitterHeaderToggle"
-                name="twitterHeaderToggle"
-                checked={isTwitterHeaderDisabled}
-                onChange={handleTwitterHeaderToggle}
-              />
-              <label
-                htmlFor="twitterHeaderToggle"
-                id="twitterheaderdisablelabel">
-                Menu auf x.com ausblenden
-              </label>
-            </div>
-            <div
-              //remove instyle and add in popup css
-              style={{
-                display: "flex",
-                alignItems: "center", // camelCase for "align-items"
-                justifyItems: "center", // camelCase for "justify-items"
-                fontSize: "14px", // camelCase for "font-size"
-                fontWeight: "normal", // camelCase for "font-weight"
-                color: "#555555",
-                borderBottom: "1px solid #e6e6e6" // camelCase for "border-bottom"
-              }}>
-              <input
-                type="checkbox"
-                id="perplexityuse"
-                name="PerplexityToggle"
-                checked={isPerplexityDisabled}
-                onChange={handlePerplexityToggle}
-              />
-              <label htmlFor="perplexityuse" id="perplexitylabel">
-                Profilsuche mit Perplexity
-              </label>
-            </div>
             <section id="settingsSection">
               <h2>Einstellungen</h2>
               <details
@@ -1509,110 +1472,146 @@ function SidePanel() {
                   </div>
                 </div>
               </details>
-
-              <details id="backgroundInfoSection">
-                <summary
-                  onClick={() => toggleSubSection("backgroundInfoSection")}>
-                  Hintergrundinformationen
-                </summary>
-                <div>
-                  <label htmlFor="backgroundInfo">
-                    Meine Profil URL:
-                    <span
-                      className="help-icon"
-                      title="Gib hier die URL Deines Profils ein. Z.B. https://x.com/meinUserHandle. Diese Informationen wird verwendet um Deine Posts zu identifizieren, die mit Deinen User-Namen (Screenname und User_Handle) an  OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden.">
-                      ⓘ
-                    </span>
-                  </label>
-                  <textarea
-                    id="backgroundInfo"
-                    name="backgroundInfo"
-                    className="textarea-small"
-                    value={backgroundInfo.profileUrl}
-                    placeholder="https://x.com/meinUserHandle"
-                    onChange={handleprofileBackgroundInfo}
-                    disabled={backgroundInfopresent}></textarea>
-                  <label htmlFor="backgroundInfo">
-                    URL von meinem ursprünglichen Post:
-                    <span
-                      className="help-icon"
-                      title="Gib hier die URL von Deinem Ursprünglichen Post ein. Z.B. https://x.com/meinUserHandle/status/1234567890123456789. Diese Informationen wird später in der Anzeige als Link eingefügt.">
-                      ⓘ
-                    </span>
-                  </label>
-                  <textarea
-                    id="backgroundInfo"
-                    name="backgroundInfo"
-                    className="textarea-medium"
-                    value={backgroundInfo.originalPost}
-                    placeholder="https://x.com/meinUserHandle/status/1234567890123456789"
-                    onChange={handleoriginalBackgroundInfo}
-                    disabled={backgroundInfopresent}></textarea>
-
-                  <label htmlFor="backgroundInfo">
-                    Hintergrundinformationen:
-                    <span
-                      className="help-icon"
-                      title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. Hilfreich ist alles, was man wissen muss, um die Hasskommentare zu verstehen. Schreibe einfach normal, als würdest du mit einer Person sprechen. BEI MANUELLER ANALYSE füge hier auch ein, was du gepostet hast, z. B.: „Ich habe folgendes geschrieben, worauf die Leute reagieren: …">
-                      ⓘ
-                    </span>
-                  </label>
-                  <textarea
-                    id="backgroundInfo"
-                    name="backgroundInfo"
-                    value={backgroundInfo.Info}
-                    placeholder="Gib hier Infos ein, die OpenAI helfen die Kommentare zu verstehen. BEI MANUELLER ANALYSE füge auch Deinen Post hier ein (z.B. Mein Post: ...). "
-                    onChange={handleBackgroundInfo}
-                    disabled={backgroundInfopresent}></textarea>
-                  {backgroundInfopresent ? (
-                    <button
-                      id="deletebutton"
-                      onClick={editBackgroundInfo}
-                      style={{
-                        backgroundColor: "red",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 12px",
-                        cursor: "pointer"
-                      }}
-                      onMouseDown={(e) =>
-                        (e.currentTarget.style.transform = "scale(0.9)")
-                      }
-                      onMouseUp={(e) =>
-                        (e.currentTarget.style.transform = "scale(1)")
-                      }>
-                      Bearbeiten
-                    </button>
-                  ) : (
-                    <button
-                      onClick={saveBackgroundInfo}
-                      style={{
-                        color: "white",
-                        border: "none",
-                        padding: "8px 12px",
-                        cursor: "pointer"
-                      }}
-                      onMouseDown={(e) =>
-                        (e.currentTarget.style.transform = "scale(0.9)")
-                      }
-                      onMouseUp={(e) =>
-                        (e.currentTarget.style.transform = "scale(1)")
-                      }>
-                      Speichern
-                    </button>
-                  )}
-                </div>
-              </details>
+              <div id="twitterheaderdisablesection">
+                <input
+                  type="checkbox"
+                  id="twitterHeaderToggle"
+                  name="twitterHeaderToggle"
+                  checked={isTwitterHeaderDisabled}
+                  onChange={handleTwitterHeaderToggle}
+                />
+                <label
+                  htmlFor="twitterHeaderToggle"
+                  id="twitterheaderdisablelabel">
+                  Menu auf x.com ausblenden
+                </label>
+              </div>
+              <div
+                //remove instyle and add in popup css
+                style={{
+                  display: "flex",
+                  alignItems: "center", // camelCase for "align-items"
+                  justifyItems: "center", // camelCase for "justify-items"
+                  fontSize: "14px", // camelCase for "font-size"
+                  fontWeight: "normal", // camelCase for "font-weight"
+                  color: "#555555",
+                  borderBottom: "1px solid #e6e6e6" // camelCase for "border-bottom"
+                }}>
+                <input
+                  type="checkbox"
+                  id="perplexityuse"
+                  name="PerplexityToggle"
+                  checked={isPerplexityDisabled}
+                  onChange={handlePerplexityToggle}
+                />
+                <label htmlFor="perplexityuse" id="perplexitylabel">
+                  Profilsuche mit Perplexity
+                </label>
+              </div>
             </section>
           </>
         )}
 
         <section id="mainActions">
+          <details id="backgroundInfoSection" open={openSection === "backgroundInfoSection"}>
+            <summary onClick={(e) => toggleSection("backgroundInfoSection", e)}>
+              Hintergrundinformationen
+            </summary>
+
+            <div>
+              <label htmlFor="backgroundInfo">
+                Meine Profil URL:
+                <span
+                  className="help-icon"
+                  title="Gib hier die URL Deines Profils ein. Z.B. https://x.com/meinUserHandle. Diese Informationen wird verwendet um Deine Posts zu identifizieren, die mit Deinen User-Namen (Screenname und User_Handle) an  OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden.">
+                  ⓘ
+                </span>
+              </label>
+              <textarea
+                id="backgroundInfo"
+                name="backgroundInfo"
+                className="textarea-small"
+                value={backgroundInfo.profileUrl}
+                placeholder="https://x.com/meinUserHandle"
+                onChange={handleprofileBackgroundInfo}
+                disabled={backgroundInfopresent}></textarea>
+              <label htmlFor="backgroundInfo">
+                URL von meinem ursprünglichen Post:
+                <span
+                  className="help-icon"
+                  title="Gib hier die URL von Deinem Ursprünglichen Post ein. Z.B. https://x.com/meinUserHandle/status/1234567890123456789. Diese Informationen wird später in der Anzeige als Link eingefügt.">
+                  ⓘ
+                </span>
+              </label>
+              <textarea
+                id="backgroundInfo"
+                name="backgroundInfo"
+                className="textarea-medium"
+                value={backgroundInfo.originalPost}
+                placeholder="https://x.com/meinUserHandle/status/1234567890123456789"
+                onChange={handleoriginalBackgroundInfo}
+                disabled={backgroundInfopresent}></textarea>
+
+              <label htmlFor="backgroundInfo">
+                Hintergrundinformationen:
+                <span
+                  className="help-icon"
+                  title="Gib hier zusätzliche Hintergrundinformationen ein. Diese Informationen werden an OpenAI gesendet, um bei der Bewertung der Nachrichten berücksichtigt zu werden. Hilfreich ist alles, was man wissen muss, um die Hasskommentare zu verstehen. Schreibe einfach normal, als würdest du mit einer Person sprechen. BEI MANUELLER ANALYSE füge hier auch ein, was du gepostet hast, z. B.: „Ich habe folgendes geschrieben, worauf die Leute reagieren: …">
+                  ⓘ
+                </span>
+              </label>
+              <textarea
+                id="backgroundInfo"
+                name="backgroundInfo"
+                value={backgroundInfo.Info}
+                placeholder="Gib hier Infos ein, die OpenAI helfen die Kommentare zu verstehen. BEI MANUELLER ANALYSE füge auch Deinen Post hier ein (z.B. Mein Post: ...). "
+                onChange={handleBackgroundInfo}
+                disabled={backgroundInfopresent}></textarea>
+              {backgroundInfopresent ? (
+                <button
+                  id="deletebutton"
+                  onClick={editBackgroundInfo}
+                  style={{
+                    backgroundColor: "red",
+                    color: "white",
+                    border: "none",
+                    padding: "8px 12px",
+                    cursor: "pointer"
+                  }}
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.9)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }>
+                  Bearbeiten
+                </button>
+              ) : (
+                <button
+                  onClick={saveBackgroundInfo}
+                  style={{
+                    color: "white",
+                    border: "none",
+                    padding: "8px 12px",
+                    cursor: "pointer"
+                  }}
+                  onMouseDown={(e) =>
+                    (e.currentTarget.style.transform = "scale(0.9)")
+                  }
+                  onMouseUp={(e) =>
+                    (e.currentTarget.style.transform = "scale(1)")
+                  }>
+                  Speichern
+                </button>
+              )}
+            </div>
+          </details>
+          <h3>Automatische Auswertung:</h3>
           <details
             id="evaluateSection"
             open={openSection === "evaluateSection"}>
             <summary onClick={(e) => toggleSection("evaluateSection", e)}>
-              Seite Auswerten
+              Seite automatisch auswerten
             </summary>
             <div>
               {/* disabling button until the process is complete */}
@@ -1620,11 +1619,11 @@ function SidePanel() {
               <button
                 onClick={triggerFullAnalysis}
                 title="Führt eine automatische Auswertung der Posts auf der aktuellen Seite durch. Erstellt für anzeigbare Posts Strafanzeigeentwürfe inklusive Beweissicherungen mit Screenshots und Profilsuchen und speichert die Ergebnisse im Download-Ordner.">
-                Seite auswerten
+                Seite automatisch auswerten
               </button>
             </div>
           </details>
-
+          <h3>Manuelle Auswertung:</h3>
           <details
             id="screenshotSection"
             open={openSection === "screenshotSection"}>

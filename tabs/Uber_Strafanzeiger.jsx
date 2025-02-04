@@ -492,7 +492,10 @@ function App() {
                 Deine für die KI hinterlegten Informationen aus dem Bereich{" "}
                 <em>Hintergrundinformationen</em>
               </li>
-              <li>Bei manueller Kommentaranalyse werden alle dort angegebenen Informationen an OpenAI geschickt. Inklusive ggf. von dir dort angegebener Nutzernamen/Handle.</li>
+              <li>
+                Bei automatischer Auswertung werden die von Dir geschriebenen Posts mit Deinem x User-Namen/-Handle als Kontext automatisch an OpenAi weitergegeben.
+              </li>
+              <li>Bei manueller Kommentaranalyse werden alle dort angegebenen Informationen an OpenAI geschickt. Inklusive ggf. von dir dort angegebener Nutzernamen/Handle und URL.</li>
             </ul>
           </li>
           <li>
@@ -915,7 +918,7 @@ function App() {
           <li>
             <strong>Hauptmenü</strong>:
             <ul>
-              <li>Seite auswerten</li>
+              <li>Seite automatisch auswerten</li>
               <li>Screenshots erstellen</li>
               <li>Profilrecherche</li>
               <li>Kommentaranalyse</li>
@@ -932,8 +935,8 @@ function App() {
         </p>
         <ol>
           <li>Öffne deinen Post mit den Kommentaren auf X.com</li>
-          <li>Klappe "Seite auswerten" auf</li>
-          <li>Klicke auf den Button "Seite auswerten"</li>
+          <li>Klappe "Seite automatisch auswerten" auf</li>
+          <li>Klicke auf den Button "Seite automatisch auswerten"</li>
         </ol>
 
         <h3 id="was-passiert-dann">Was passiert dann?</h3>
