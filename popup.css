@@ -6,7 +6,7 @@ body {
   min-width: 250px;
   padding: 10px;
   margin: 0;
-  background-color: #f4f4f4;
+  background-color: #F8F9FC;
 }
 
 #settingsSection {
@@ -26,7 +26,7 @@ header {
   align-items: center;
   margin-bottom: 5px;
   padding-bottom: 5px;
-  border-bottom: 1px solid #4a90e2;
+  border-bottom: 1px solid #3B82F6;
 }
 
 .header-icons {
@@ -37,11 +37,11 @@ header {
 h1 {
   font-size: 24px;
   margin: 0;
-  color: #333333;
+  color: #1E293B;
 }
 
 button {
-  background-color: #4a90e2;
+  background-color: #3B82F6;
   border: none;
   color: white;
   padding: 10px 15px;
@@ -58,18 +58,18 @@ button {
 }
 
 button:hover {
-  background-color: #357abd;
+  background-color: #60A5FA;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 #deletebutton {
-  background-color: red;
+  background-color: #F06A50;
   color: white;
   transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 #deletebutton:hover {
-  background-color: lightcoral !important;
+  background-color: #E85C44 !important;
   /* Ensure this rule takes precedence */
 }
 
@@ -78,7 +78,7 @@ button:active {
 }
 
 .message {
-  color: green;
+  color: #10B981;
   /* Text color changed to green */
   font-size: 14px;
   text-align: center;
@@ -87,24 +87,24 @@ button:active {
 .main-icon {
   font-size: 24px;
   cursor: pointer;
-  color: #4a90e2;
+  color: #3B82F6;
   margin-left: 10px;
 }
 
 details {
   margin-bottom: 15px;
   padding-left: 10px;
-  border-left: 2px solid #4a90e2;
+  border-left: 2px solid #3B82F6;
 }
 
 details summary {
   padding: 8px 5px;
   /* Adds padding to the top/bottom and left */
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #E2E8F0;
   /* Optional: adds a border for separation */
   font-weight: normal;
   cursor: pointer;
-  color: #333333;
+  color: #1E293B;
   padding-left: 5px;
   margin-bottom: 10px;
   font-size: 14px;
@@ -123,7 +123,7 @@ details div {
 label {
   display: block;
   margin-top: 20px;
-  color: #555555;
+  color: #475569;
   font-size: 14px;
 }
 
@@ -133,7 +133,7 @@ textarea {
   margin-top: 5px;
   margin-bottom: 10px;
   box-sizing: border-box;
-  border: 1px solid #cccccc;
+  border: 1px solid #E2E8F0;
   border-radius: 4px;
   height: auto;
   min-height: 80px;
@@ -158,7 +158,7 @@ input[type="password"] {
   margin-top: 5px;
   margin-bottom: 10px;
   box-sizing: border-box;
-  border: 1px solid #cccccc;
+  border: 1px solid #E2E8F0;
   border-radius: 4px;
   height: auto;
   min-height: 30px;
@@ -167,28 +167,28 @@ input[type="password"] {
 input[type="text"]:focus,
 input[type="password"]:focus,
 textarea:focus {
-  border-color: #4a90e2;
+  border-color: #3B82F6;
   outline: none;
 }
 
 #mainLinkIcon {
   font-size: 24px;
   cursor: pointer;
-  color: #4a90e2;
+  color: #3B82F6;
   margin-left: 10px;
 }
 
 #analysisIdSection {
-  background-color: #f4f4f4;
+  background-color: #F8F9FC;
   padding: 10px;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #E2E8F0;
   font-size: 14px;
-  color: #555555;
+  color: #475569;
 }
 
 #progressBar {
   width: 100%;
-  background-color: #e6e6e6;
+  background-color: #E2E8F0;
   padding: 3px;
   border-radius: 3px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -197,7 +197,7 @@ textarea:focus {
 #progressBar div {
   width: 0;
   height: 24px;
-  background-color: #4a90e2;
+  background-color: #3B82F6;
   border-radius: 3px;
   transition: width 0.5s ease-in-out;
 }
@@ -205,7 +205,7 @@ textarea:focus {
 #progressText {
   text-align: center;
   margin-top: 5px;
-  color: #333333;
+  color: #1E293B;
 }
 
 /* need to adjust the resultssection header */
@@ -219,7 +219,7 @@ textarea:focus {
 
 section {
   margin-bottom: 20px;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid #E2E8F0;
   padding-bottom: 10px;
 }
 
@@ -227,14 +227,14 @@ section {
   font-size: 16px;
   font-weight: normal;
   margin: 10px 0;
-  color: #555555;
-  border-bottom: 1px solid #e6e6e6;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
   padding-bottom: 10px;
 }
 
 .help-icon {
   cursor: help;
-  color: #4a90e2;
+  color: #3B82F6;
   font-size: 14px;
   margin-left: 5px;
 }
@@ -242,14 +242,14 @@ section {
 #mainHelpSection {
   margin-top: 10px;
   background-color: #fff;
-  border: 1px solid #4a90e2;
+  border: 1px solid #3B82F6;
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 15px;
 }
 
 #mainHelpSection h2 {
-  color: #4a90e2;
+  color: #3B82F6;
   margin-top: 0;
 }
 
@@ -262,13 +262,13 @@ section {
 details {
   margin-bottom: 15px;
   padding-left: 10px;
-  border-left: 2px solid #4a90e2;
+  border-left: 2px solid #3B82F6;
 }
 
 details summary {
   font-weight: normal;
   cursor: pointer;
-  color: #333333;
+  color: #1E293B;
   padding-left: 5px;
   margin-bottom: 10px;
 }
@@ -309,8 +309,8 @@ details div {
 #mainActions>details>summary {
   font-size: 14px;
   font-weight: normal;
-  color: #555555;
-  border-bottom: 1px solid #e6e6e6;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
   padding-bottom: 10px;
 }
 
@@ -321,8 +321,8 @@ details div {
 
   font-size: 14px;
   font-weight: normal;
-  color: #555555;
-  border-bottom: 1px solid #e6e6e6;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 #twitterheaderdisablelabel {
@@ -336,8 +336,8 @@ details div {
 
   font-size: 14px;
   font-weight: normal;
-  color: #555555;
-  border-bottom: 1px solid #e6e6e6;
+  color: #475569;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 #perplexitylabel {

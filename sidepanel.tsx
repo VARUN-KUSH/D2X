@@ -1271,7 +1271,6 @@ function SidePanel() {
                       <button
                         id="deletebutton"
                         onClick={() => deleteAPIKey("openai")}
-                        style={{ backgroundColor: "red", color: "white" }}
                         onMouseDown={(e) =>
                           (e.currentTarget.style.transform = "scale(0.9)")
                         }
@@ -1435,13 +1434,6 @@ function SidePanel() {
                         id="deletebutton"
                         type="button"
                         onClick={editaddress}
-                        style={{
-                          backgroundColor: "red",
-                          color: "white",
-                          border: "none",
-                          padding: "8px 12px",
-                          cursor: "pointer"
-                        }}
                         onMouseDown={(e) =>
                           (e.currentTarget.style.transform = "scale(0.9)")
                         }
@@ -1571,13 +1563,6 @@ function SidePanel() {
                 <button
                   id="deletebutton"
                   onClick={editBackgroundInfo}
-                  style={{
-                    backgroundColor: "red",
-                    color: "white",
-                    border: "none",
-                    padding: "8px 12px",
-                    cursor: "pointer"
-                  }}
                   onMouseDown={(e) =>
                     (e.currentTarget.style.transform = "scale(0.9)")
                   }
