@@ -94,6 +94,14 @@ button:active {
 details {
   margin-bottom: 15px;
   padding-left: 10px;
+  border-left: 2px solid transparent;
+  /* Changed from #3B82F6 to transparent */
+  transition: border-color 0.3s ease;
+  /* Added transition */
+}
+
+/* Added new rule */
+details[open] {
   border-left: 2px solid #3B82F6;
 }
 
@@ -257,12 +265,6 @@ section {
 #mainHelpSection ol {
   font-size: 14px;
   line-height: 1.4;
-}
-
-details {
-  margin-bottom: 15px;
-  padding-left: 10px;
-  border-left: 2px solid #3B82F6;
 }
 
 details summary {
