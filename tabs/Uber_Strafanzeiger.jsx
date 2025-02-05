@@ -69,14 +69,14 @@ const sections = [
         name: "2. Adressdaten eingeben",
         href: "#2-adressdaten-eingeben",
       },
-      { name: "3. Hintergrundinformationen", href: "#3-hintergrundinformationen" },
-      { name: "4. Weitere Einstellungen", href: "#4-weitere-einstellungen" },
+      { name: "3. Weitere Einstellungen", href: "#3-weitere-einstellungen" },
     ],
   },
   {
     title: "Grundfunktionen",
     links: [
       { name: "Die Benutzeroberfläche", href: "#die-benutzeroberfläche" },
+      { name: "Hintergrundinformationen", href: "#hintergrundinformationen" },
       {
         name: "Automatische Auswertung einer Seite",
         href: "#automatische-auswertung-einer-seite",
@@ -843,22 +843,7 @@ function App() {
             </ul>
           </li>
         </ul>
-        <h2 id="3-hintergrundinformationen">3. Hintergrundinformationen</h2>
-        <p>Diese Informationen helfen der OpenAI KI bei der Bewertung der Posts:</p>
-        <ul>
-          <li>
-            <strong>Daten die du am besten angeben solltest:</strong>:
-            <ul>
-              <li>Dein Name, Screen-Name und @User-Handle (kannst du aus deinem x Profil kopieren)</li>
-              <li>Der Post auf den die Leute reagieren</li>
-              <li>Weitere Informationen, die helfen, die Reaktionen auf deine Posts zu verstehen</li>
-            </ul>
-          </li>
-        </ul>
-        <p>💡 <strong>Tipp</strong>: Schreib einfach so, als würdest du eine Person informieren, die die Kommentare für dich prüfen soll und dich nicht kennt.</p>
-        <p>⚠️ <strong>Hinweise</strong>: Die Daten werden an OpenAI gesendet.
-        </p>
-        <h2 id="4-weitere-einstellungen">4. Weitere Einstellungen</h2>
+        <h2 id="3-weitere-einstellungen">3. Weitere Einstellungen</h2>
 
         <h3 id="menü-auf-xcom-ausblenden">Menü auf X.com ausblenden</h3>
         <ul>
@@ -900,7 +885,7 @@ function App() {
         <p><em>Strafanzeiger</em> ist einfach aufgebaut:</p>
         <ul>
           <li>
-            <strong>Strafanzeiger</strong>: Titel der Extension
+            <strong><em>Strafanzeiger</em></strong>: Titel der Extension
           </li>
           <li>
             <strong>🔗</strong>: Link zum Anzeigen-neu-generieren-Tool
@@ -912,18 +897,69 @@ function App() {
             <strong>⚙️</strong>: Einstellungen
           </li>
           <li>
-            <strong>Analysis ID</strong>: Automatisch generierte ID für deine
+            <em>Analysis ID</em>: Automatisch generierte ID für deine
             aktuelle Analyse. Taucht in den Screenshot-Zeitstempeln auf.
           </li>
           <li>
             <strong>Hauptmenü</strong>:
             <ul>
-              <li>Seite automatisch auswerten</li>
-              <li>Screenshots erstellen</li>
-              <li>Profilrecherche</li>
-              <li>Kommentaranalyse</li>
+              <li>Hintergrundinformationen</li>
+              <li>Automatische Auswertung:</li>
+              <ul>
+                <li>Seite automatisch auswerten</li>
+              </ul>
+              <li>Manuelle Auswertung:</li>
+              <ul>
+                <li>Screenshots erstellen</li>
+                <li>Profilrecherche</li>
+                <li>Kommentaranalyse</li>
+              </ul>
+
             </ul>
           </li>
+        </ul>
+        <h2 id="hintergrundinformationen">Hintergrundinformationen</h2>
+        <p>Diese Informationen helfen der OpenAI KI bei der Bewertung der Posts. Es gibt drei wichtige Felder:</p>
+
+        <ul>
+          <li>
+            <em>Meine Profil URL</em>:
+            <ul>
+              <li>Gib hier die URL deines X Profils ein (z.B. https://x.com/meinUserHandle)</li>
+              <li>Bei der automatischen Auswertung wird dein User-Handel verwendet, um deine Posts zu identifizieren und als Kontext für die Bewertungen an OpenAi gesendet (inkl. Screen-Name und Handle).</li>
+              <li>Auch bei der manuellen Auswertung wird Dein User-Handle/Profil URL an OpenAI gesendet - allerdings nicht automatisch deine Posts.</li>
+            </ul>
+          </li>
+          <li>
+            <em>URL von meinem ursprünglichen Post</em>:
+            <ul>
+              <li>Füge hier die URL deines ursprünglichen Posts ein auf den sich die Kommentare beziehen (z.B. https://x.com/meinUserHandle/status/1234567890123456789)</li>
+              <li>Diese URL wird später in der Anzeige als Link eingefügt</li>
+            </ul>
+          </li>
+          <li>
+            <em>Hintergrundinformationen</em>:
+            <ul>
+              <li>Hier kannst du alles eintragen, was man wissen muss, um die Hasskommentare zu verstehen</li>
+              <li>BEI MANUELLER ANALYSE: Füge hier auch ein, was du gepostet hast, z.B.: "Ich habe folgendes geschrieben, worauf die Leute reagieren: [Deine Posts]"</li>
+              <li>Diese Informationen helfen OpenAI, den Kontext der Kommentare besser zu verstehen</li>
+            </ul>
+          </li>
+        </ul>
+
+        <p>💡 <strong>Tipps</strong>:</p>
+        <ul>
+          <li>Schreib einfach so, als würdest du einer Person erklären, die die Kommentare für dich prüfen soll</li>
+          <li>Je mehr Kontext du angibst, desto besser kann die KI die Situation einschätzen</li>
+          <li>Die Informationen werden gespeichert und können später bearbeitet werden</li>
+        </ul>
+
+        <p>⚠️ <strong>Wichtige Hinweise</strong>:</p>
+        <ul>
+          <li>Alle eingegebenen Informationen werden für die Analyse an OpenAI gesendet</li>
+          <li>Die Informationen werden lokal in deinem Browser gespeichert, bis du sie änderst</li>
+          <li>Klicke nach der Eingabe auf "Speichern", um die Informationen zu sichern</li>
+          <li>Mit "Bearbeiten" kannst du die gespeicherten Informationen später anpassen</li>
         </ul>
 
         <h2 id="automatische-auswertung-einer-seite">
@@ -935,7 +971,7 @@ function App() {
         </p>
         <ol>
           <li>Öffne deinen Post mit den Kommentaren auf X.com</li>
-          <li>Klappe "Seite automatisch auswerten" auf</li>
+          <li>Prüfe, dass Du alle wichtigen <em>Hintergrundinformationen</em> angegeben hast</li>
           <li>Klicke auf den Button "Seite automatisch auswerten"</li>
         </ol>
 
@@ -964,10 +1000,10 @@ function App() {
           <li>
             Der Vorgang kann einige Zeit dauern:
             <ul>
-              <li>Initial Screenshots: ~10 Sekunden</li>
-              <li>Post-Analyse: ~15 Sekunden pro Post (aber es werden mehrere gleichzeitig bearbeitet)</li>
+              <li>Einen Post lesen: ~0,5 Sekunden</li>
+              <li>Post-Bewertung: ~0,5 Sekunden pro Post (aber mindestens 1 min)</li>
               <li>
-                Screenshots & Profilanalyse: ~10 Sekunden pro relevantem
+                Screenshots & Profilanalyse: ~50 Sekunden pro relevantem
                 Profil/Kommentar
               </li>
             </ul>
@@ -999,8 +1035,8 @@ function App() {
           <li>
             Wähle:
             <ul>
-              <li>"Ganze Seite - Post" für einen Screenshot der kompletten Seite (für Posts)</li>
-              <li>"Angezeigter Bereich - Profil" für nur den aktuell sichtbaren Teil (für Profile)</li>
+              <li><strong>"Ganze Seite - Post"</strong> für einen Screenshot der kompletten Seite (für Posts)</li>
+              <li><strong>"Angezeigter Bereich - Profil"</strong> für nur den aktuell sichtbaren Teil (für Profile)</li>
             </ul>
           </li>
           <li>Der Screenshot wird automatisch gespeichert</li>
