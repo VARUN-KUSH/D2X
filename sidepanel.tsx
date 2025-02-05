@@ -1238,7 +1238,7 @@ function SidePanel() {
         {showSettingsSection && (
           <>
             <section id="settingsSection">
-              <h2>Einstellungen</h2>
+              <h3>Einstellungen</h3>
               <details
                 id="apiKeysSection"
                 open={openSubSections.apiKeysSection}>
