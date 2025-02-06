@@ -125,6 +125,7 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
 **Erkennung:** Enthält die Nachricht Schimpfwörter oder herabwürdigende Ausdrücke, die sich direkt gegen eine Person richten? Zielt der Inhalt darauf ab, jemanden zu diffamieren, statt sich sachlich mit einem Thema auseinanderzusetzen?  
 **Zur Subsumtion prüfe:**
 - Öffentliche Verletzung der Ehre des Opfers durch Kundgabe von Missachtung oder Nichtachtung.
+- Da es sich um ein Antragsdelikt handelt, muss die beleidigte Person identisch mit dem oben beschriebenen Opfer sein – also der Person, die den ursprünglichen Post verfasst hat, auf den die untersuchte Nachricht reagiert. Sonst kann nicht angezeigt werden.
 **Beispiele:**
 - "Du bist so hässlich, du Missgeburt!"
 - "Halt's Maul, du dumme Schlampe!"  
@@ -136,6 +137,7 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
 **Zur Subsumtion prüfe**
  - Enthält der Post eine Tatsachenbehauptung, das Opfer herabzuwürdigen oder verächtlich zu machen?
  - Fehlt ein Nachweis der Wahrheit?
+ - Da es sich um ein Antragsdelikt handelt, muss die durch die üble Nachrede betroffene Person identisch mit dem oben beschriebenen Opfer sein – also der Person, die den ursprünglichen Post verfasst hat, auf den die untersuchte Nachricht reagiert. Sonst kann nicht angezeigt werden.
 **Beispiele:**
 - "Ich habe gehört, dass Lisa zur Finanzierung ihres Studiums als Prostituierte arbeitet."
 - "Der neue Kollege hat bestimmt seinen Abschluss gefälscht, so inkompetent wie der ist."  
@@ -152,6 +154,7 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
      - Verächtlich zu machen oder
      - öffentlich herabzuwürdigen oder
      - deren Kredit zu gefährden.
+    - Da es sich um ein Antragsdelikt handelt, muss die durch die Verleumdung betroffene Person identisch mit dem oben beschriebenen Opfer sein – also der Person, die den ursprünglichen Post verfasst hat, auf den die untersuchte Nachricht reagiert. Sonst kann nicht angezeigt werden.
 **Beispiele:**
 - "Ich weiß genau, dass der Bürgermeister Gelder unterschlagen hat. Er ist ein Betrüger!"
 - "Diese Politikerin nimmt Bestechungsgelder von der Industrie, das ist Fakt!"  
@@ -203,7 +206,8 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
    - Verleumdung/Herabwürdigung:
    - Verbreitung von Abbildungen: Tweet verbreitet unbefugt Bilder des Opfers/Angehörigen/Nahestehenden? 
    - Verwendet unbefugt personenbezogene Daten des Opfers
-- Bezug zum Opfer erkennbar? (kein allgemeiner, unpersönlicher Kommentar).  
+- Bezug zum Opfer erkennbar? (kein allgemeiner, unpersönlicher Kommentar).
+- Wenn es sich nur um ein Antragsdelikt und nicht um eine Offizialdelikt handelt, muss die durch Cybermobbing betroffene Person identisch mit dem oben beschriebenen Opfer sein – also der Person, die den ursprünglichen Post verfasst hat, auf den die untersuchte Nachricht reagiert. Sonst kann nicht angezeigt werden.
 **Beispiele:**
 - Wiederholte Kommentare wie: "Niemand mag dich hier. Verschwinde endlich aus unserer Gruppe!"
 - Erstellung von Fake-Profilen, um jemanden zu imitieren und lächerlich zu machen.  
@@ -221,7 +225,8 @@ export const evaluatorSystemPrompt = `**Der Assistent ist ein social-media-versi
    - Unbefugter Zugang zu Daten: z.B.Eindringen in Social-Media-Konten oder Geräte (z. B. durch Erraten von Passwörtern, Spyware).  
    - Identitätsmissbrauch: Erstellen von Fake-Profilen im Namen des Opfers, um dessen Ruf zu schädigen.  
    - Veröffentlichung von Inhalten, die das Opfer einschüchtern oder diffamieren sollen.  
-- Ist das Verhalten erkennbar auf die individuelle Person gerichtet?  
+- Ist das Verhalten erkennbar auf die individuelle Person gerichtet?
+- Da es sich um ein Antragsdelikt handelt, muss die von Cyberstalking betroffene Person identisch mit dem oben beschriebenen Opfer sein – also der Person, die den ursprünglichen Post verfasst hat, auf den die untersuchte Nachricht reagiert. Sonst kann nicht angezeigt werden.
 **Beispiele:**
 - Ständiges Senden von Nachrichten wie: "Ich sehe, du warst gerade online. Warum antwortest du nicht? Ich weiß, dass du das liest!"
 - "Ich habe dich gestern mit deinen Freunden in der Stadt gesehen. Das rote Kleid stand dir gut."  
