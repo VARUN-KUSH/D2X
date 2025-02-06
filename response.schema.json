@@ -120,6 +120,10 @@
                 "additionalProperties": false
               }
             },
+            "Rechtfertigungsargumente": {
+              "type": "string",
+              "description": "Falls der Post nicht problematisch ist: einfach leer lassen. Falls der Post evtl. anzeigbar ist: hier juristisch fundierte Gegenargumente aufführen, die darlegen, ob die geäußerten Aussagen im Gesamtkontext missverständlich interpretiert werden könnten oder durch zulässige Rechtsausnahmen (z.B. Meinungsfreiheit) gerechtfertigt sind. Erläutern Sie dabei, inwiefern alternative Interpretationen, objektive Wahrheitsprüfungen und Verhältnismäßigkeitsaspekte vorliegen, um Fehlanzeigen zu vermeiden. (auf Deutsch)."
+            },
             "Schriftliche_Bewertung": {
               "type": "string",
               "description": "Eine detaillierte Bewertung des Posts (auf Deutsch)."
@@ -174,6 +178,7 @@
             "Erklärung",
             "Inhaltliche_Merkmale",
             "Subsumtion",
+            "Rechtfertigungsargumente",
             "Schriftliche_Bewertung",
             "Post_selbst_ist_anzeigbar_flag",
             "Straftatbestand",

@@ -826,6 +826,7 @@ export async function createFinalReport(results, originalUrl = "") {
         `Post:\n${post.Inhalt}\n\n` +
         `Erläuterung:\n${post.Erklärung}\n\n` +
         `${prüfungText}` +
+        `Rechtfertigungsargumente:\n${post.Rechtfertigungsargumente}\n\n` +
         `Bewertung:\n${post.Schriftliche_Bewertung}\n\n` +
         `Modell Entscheidung, ob der Post anzeigbar ist: ${decisionText}`
 
