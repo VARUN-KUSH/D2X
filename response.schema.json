@@ -47,7 +47,7 @@
             },
             "Erklärung": {
               "type": "string",
-              "description": "Beschreibung: Wer sagt was zu wem. Inklusive Kontext und Bedeutung. (auf Deutsch)"
+              "description": "Beschreibung des Posts: Denke sehr genau nach - Wer sagt was zu wem. Wer ist ggf. die betroffene Person. Was genau ist der Kontext des Posts und dessen Bedeutung. (auf Deutsch)"
             },
             "Inhaltliche_Merkmale": {
               "type": "array",
