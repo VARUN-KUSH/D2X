@@ -105,6 +105,19 @@ async function getCurrentTime() {
   }
 }
 
+function getUsername(profileUrl) {
+  const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
+
+  let username = null
+  if (profileUrlPattern.test(profileUrl)) {
+    username = profileUrl.match(profileUrlPattern)[1]
+    console.log("Extracted Username:", username)
+  } else {
+    console.log("Profile URL does not match the expected format.")
+  }
+  return username
+}
+
 function generateScreenshotFilename(analysisId, index, total) {
   return `screenshot_${analysisId}_${index + 1}_of_${total}.png`
 }
@@ -116,22 +129,25 @@ function generateScreenshotFilename(analysisId, index, total) {
  * @returns {string} A concatenated string of all matching tweet details.
  */
 function filterVictimPosts(victimUsername, scrapedContent) {
-  if (!victimUsername || !Array.isArray(scrapedContent)) return '';
-  
-  // Ensure victimUsername has an "@" prefix.
-  if (victimUsername.charAt(0) !== '@') {
-    victimUsername = '@' + victimUsername;
-  }
-  
-  // Filter tweets where the Username matches exactly.
-  const victimTweets = scrapedContent.filter(tweet => tweet.Username === victimUsername);
-  
-  // Return a concatenated string with each tweet's details.
-  return victimTweets.map(tweet => {
-    return `Screenname: ${tweet.Screenname}\nUsername: ${tweet.Username}\nTime: ${tweet.time}\nText: ${tweet.text}\n`;
-  }).join('\n\n');
-}
+  if (!victimUsername || !Array.isArray(scrapedContent)) return ""
 
+  // Ensure victimUsername has an "@" prefix.
+  if (victimUsername.charAt(0) !== "@") {
+    victimUsername = "@" + victimUsername
+  }
+
+  // Filter tweets where the Username matches exactly.
+  const victimTweets = scrapedContent.filter(
+    (tweet) => tweet.Username === victimUsername
+  )
+
+  // Return a concatenated string with each tweet's details.
+  return victimTweets
+    .map((tweet) => {
+      return `Screenname: ${tweet.Screenname}\nUsername: ${tweet.Username}\nTime: ${tweet.time}\nText: ${tweet.text}\n`
+    })
+    .join("\n\n")
+}
 
 async function scrapeContent(analysisId, tabId) {
   return new Promise((resolve, reject) => {
@@ -354,7 +370,7 @@ async function startFullAnalysis() {
     // After processing, add analysis results to the ZIP Folder
     sendMessageToPopup("Ich erstelle die Strafanzeigen und Dokumente...", 80)
     await createFinalReport(results.Report.reportablePostsArray)
-  
+
     sendMessageToPopup("Dokumente werden heruntergeladen...", 95)
     await initiateDownload()
     sendMessageToPopup("Dokumente erfolgreich heruntergeladen.", 100)
@@ -506,19 +522,18 @@ async function processContent(messages) {
       const contextBlock = `
       ${backgroundInfo.Info}
       `
-      
+
       // First extract the victim’s username...
-      const victimUsername = getvictimname(backgroundInfo.profileUrl);
+      const victimUsername = getvictimname(backgroundInfo.profileUrl)
       // ... then filter the scraped content (which is passed as 'messages') for the victim's posts.
-      const victimPost = filterVictimPosts(victimUsername, messages);
-      
+      const victimPost = filterVictimPosts(victimUsername, messages)
+
       systemPromptWithContext = replaceTextBlocks(
         evaluatorSystemPrompt,
         contextBlock,
         victimPost
       )
     }
-    
 
     console.log("systemprompts", systemPromptWithContext)
     const results = []
@@ -1179,6 +1194,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           })
           break
 
+        case "GET_PROFILE_INFO":
+          try {
+            const { profileUrl, knownProfileInfo } = request.data
+            console.log("Starting SEARCH_PROFILE with:", {
+              profileUrl,
+              knownProfileInfo
+            })
+
+            const username = getUsername(profileUrl)
+            let profileinfo = {
+              screenname: null,
+              username: username,
+              profilebiodata: null,
+              userlocation: null,
+              userJoindate: null,
+              followingCount: null,
+              followersCount: null,
+              userBirthdate: null,
+              userUrl: null
+            }
+            sendResponse({
+              analysisId: getActiveAnalysisId(),
+              perplexityresponse: null,
+              userprofileinfo: profileinfo
+            })
+          } catch (error) {}
         case "SEARCH_PROFILE":
           try {
             const { profileUrl, knownProfileInfo } = request.data
@@ -1187,15 +1228,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               knownProfileInfo
             })
 
-            const profileUrlPattern = /^https:\/\/x\.com\/([^/]+)$/
-
-            let username = null
-            if (profileUrlPattern.test(profileUrl)) {
-              username = profileUrl.match(profileUrlPattern)[1]
-              console.log("Extracted Username:", username)
-            } else {
-              console.log("Profile URL does not match the expected format.")
-            }
+            const username = getUsername(profileUrl)
 
             const perplexityQuery = generatePerplexityPrompt(
               username,
@@ -1423,10 +1456,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const contextBlock = `
             ${backgroundInfo.Info}
             `
-      // First extract the victim’s username...
-      const victimUsername = getvictimname(backgroundInfo.profileUrl);
-      // ... then filter the scraped content (which is passed as 'messages') for the victim's posts.
-      const victimPost = filterVictimPosts(victimUsername, messages);
+            // First extract the victim’s username...
+            const victimUsername = getvictimname(backgroundInfo.profileUrl)
+            // ... then filter the scraped content (which is passed as 'messages') for the victim's posts.
+            const victimPost = filterVictimPosts(victimUsername, messages)
 
             systemPromptWithContext = replaceTextBlocks(
               evaluatorSystemPrompt,

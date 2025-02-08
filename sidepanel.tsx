@@ -79,7 +79,9 @@ function SidePanel() {
     city: "",
     fullName: ""
   })
-  const [openSection, setOpenSection] = useState<string | null>("backgroundInfoSection")
+  const [openSection, setOpenSection] = useState<string | null>(
+    "backgroundInfoSection"
+  )
 
   //state save locally
   const [isaddress, setisAddress] = useState(false)
@@ -145,13 +147,8 @@ function SidePanel() {
     }))
   }
 
+
   const handleProfileSearch = async () => {
-    const { perplexityApiKey } = apiKeys
-    if (!perplexityApiKey) {
-      setShowMessage("Please add PerplexityAI API key to start the analysis.")
-      setTimeout(() => setShowMessage(""), 1000)
-      return
-    }
     //update it to simply ask from checkbox not locally
     const usePerplexity = await new Promise((resolve) => {
       chrome.storage.local.get("usePerplexity", (result) => {
@@ -160,56 +157,96 @@ function SidePanel() {
         //handle edge cases if keys are not added
       })
     })
-    if (!usePerplexity) {
-      setShowMessage("Perplexity Toggle ist ausgeschaltet, daher wird nicht nach der Online-Präsenz des Benutzers gesucht..")
-      setTimeout(() => setShowMessage(""), 1000)
-      return
-    }
+   
 
-    setShowProgressBar(true)
-    setProgress(10)
-    setprojectStatus(
-      "Überprüfung der Online-Präsenz des Profils mit Perplexity"
-    )
+    const { perplexityApiKey } = apiKeys
+   
+   
     setAnalysisData((prevState) => ({
       ...prevState,
       profilesdata: null,
       perplexityresponse: null
     }))
-    const response: any = await new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          action: "SEARCH_PROFILE",
-          data: inputValues
-        },
-        function (response) {
-          if (response && response.analysisId) {
-            resolve(response)
-          } else {
-            console.error("Failed to start analysis", response)
-            alert("Failed to start analysis")
-            setShowProgressBar(false)
-            reject()
-            return
-          }
-        }
+
+    let response:any
+    if (!usePerplexity) {
+      //send a message to background script
+      setShowProgressBar(true)
+      setProgress(10)
+
+      setprojectStatus(
+        "perplexity is disabled so getting profile info from the user provided profile data"
       )
-    })
-    setProgress(50)
+
+      response = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "GET_PROFILE_INFO",
+            data: inputValues
+          },
+          function (response) {
+            if (response && response.analysisId) {
+              resolve(response)
+            } else {
+              console.error("Failed to start analysis", response)
+              alert("Failed to start analysis")
+              setShowProgressBar(false)
+              reject()
+              return
+            }
+          }
+        )
+      })
+      setProgress(50)
+
+    } else {
+      if (!perplexityApiKey) {
+        setShowMessage("Please add PerplexityAI API key to start the analysis.")
+        setTimeout(() => setShowMessage(""), 1000)
+        return
+      }
+
+      setShowProgressBar(true)
+      setProgress(10)
+      setprojectStatus(
+        "Überprüfung der Online-Präsenz des Profils mit Perplexity"
+      )
+      response = await new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage(
+          {
+            action: "SEARCH_PROFILE",
+            data: inputValues
+          },
+          function (response) {
+            if (response && response.analysisId) {
+              resolve(response)
+            } else {
+              console.error("Failed to start analysis", response)
+              alert("Failed to start analysis")
+              setShowProgressBar(false)
+              reject()
+              return
+            }
+          }
+        )
+      })
+      setProgress(50)
+    }
+
     const { analysisId, perplexityresponse, userprofileinfo } = response
-    console.log(
-      "perplexityresponse>>>>>>>",
-      perplexityresponse,
-      "userprofileinfo>>>",
-      userprofileinfo
-    )
-    setAnalysisData((prevState) => ({
-      ...prevState,
-      profilesdata: userprofileinfo || "",
-      perplexityresponse: perplexityresponse,
-      screenName: userprofileinfo?.screenname || "",
-      analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
-    }))
+      console.log(
+        "perplexityresponse>>>>>>>",
+        perplexityresponse,
+        "userprofileinfo>>>",
+        userprofileinfo
+      )
+      setAnalysisData((prevState) => ({
+        ...prevState,
+        profilesdata: userprofileinfo || "",
+        perplexityresponse: perplexityresponse,
+        screenName: userprofileinfo?.screenname || "",
+        analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+      }))
 
     // Update analysisId state using the same logic
     setProgress(100)
@@ -466,8 +503,8 @@ function SidePanel() {
       AnalysisData.fullscreenshot &&
       AnalysisData.posts &&
       AnalysisData.visiblescreenshot &&
-      AnalysisData.profilesdata &&
-      AnalysisData.perplexityresponse
+      AnalysisData.profilesdata
+      
     ) {
       const results = {
         ...(AnalysisData.posts[0] || ""),
@@ -677,9 +714,7 @@ function SidePanel() {
   }, [])
 
   const editBackgroundInfo = () => {
-
     setbackgroundInfopresent(false)
-
   }
 
   const editaddress = () => {
@@ -696,7 +731,6 @@ function SidePanel() {
           `Error deleting ${keyType.charAt(0).toUpperCase() + keyType.slice(1)} API key: ${chrome.runtime.lastError.message}`
         )
       } else {
-
         // Clear the key from state
         setApiKeys((prevKeys) => ({
           ...prevKeys,
@@ -1032,7 +1066,7 @@ function SidePanel() {
     })
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      ; (async () => {
+      ;(async () => {
         try {
           switch (request.action) {
             case "progressUpdate":
@@ -1066,45 +1100,47 @@ function SidePanel() {
 
             case "downloadZip":
               console.log("recieved message", request)
-              chrome.storage.local.get(['downloadData'], (result) => {
+              chrome.storage.local.get(["downloadData"], (result) => {
                 // Process the data here
                 const base64 = result.downloadData
                 console.log("base64>>>>>>>>>>>", base64)
 
                 // Check if data exists
                 if (!result.downloadData) {
-                  console.error("No download data found in storage");
-                  return;
+                  console.error("No download data found in storage")
+                  return
                 }
 
                 try {
-                  const byteCharacters = atob(base64);
-                  const byteNumbers = new Array(byteCharacters.length);
+                  const byteCharacters = atob(base64)
+                  const byteNumbers = new Array(byteCharacters.length)
                   for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    byteNumbers[i] = byteCharacters.charCodeAt(i)
                   }
-                  const byteArray = new Uint8Array(byteNumbers);
-                  let zipBlob = new Blob([byteArray], { type: "application/zip" });
+                  const byteArray = new Uint8Array(byteNumbers)
+                  let zipBlob = new Blob([byteArray], {
+                    type: "application/zip"
+                  })
 
                   // Create a URL for the Blob and download it
-                  const url = URL.createObjectURL(zipBlob);
-                  const downloadName = "Strafanz_Report.zip";
+                  const url = URL.createObjectURL(zipBlob)
+                  const downloadName = "Strafanz_Report.zip"
 
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = downloadName;
-                  document.body.appendChild(a); // Add this line
-                  a.click();
-                  document.body.removeChild(a); // Add this line
+                  const a = document.createElement("a")
+                  a.href = url
+                  a.download = downloadName
+                  document.body.appendChild(a) // Add this line
+                  a.click()
+                  document.body.removeChild(a) // Add this line
 
                   // Clean up
-                  URL.revokeObjectURL(url);
-                  zipBlob = null;
-                  chrome.storage.local.remove('downloadData');
+                  URL.revokeObjectURL(url)
+                  zipBlob = null
+                  chrome.storage.local.remove("downloadData")
                 } catch (error) {
-                  console.error("Error processing download data:", error);
+                  console.error("Error processing download data:", error)
                 }
-              });
+              })
               break
 
             case "processUpdate":
@@ -1114,8 +1150,12 @@ function SidePanel() {
               }
 
               if (
-                request.data.includes("Dokumente erfolgreich heruntergeladen.") ||
-                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.")
+                request.data.includes(
+                  "Dokumente erfolgreich heruntergeladen."
+                ) ||
+                request.data.includes(
+                  "Ich habe keine anzeigbaren Posts gefunden."
+                )
               ) {
                 setisAnimating(false) // Stop animation
                 setTimeout(() => {
@@ -1143,28 +1183,30 @@ function SidePanel() {
   return (
     <div>
       <header>
-        <h1><em>Strafanzeiger</em></h1>
+        <h1>
+          <em>Strafanzeiger</em>
+        </h1>
         {/* Display the message if it exists */}
         <div className="header-icons">
           {(AnalysisData.visiblescreenshot ||
             AnalysisData.posts ||
             AnalysisData.fullscreenshot ||
             AnalysisData.profilesdata) && (
-              <span
-                className="main-icon"
-                title="Daten herunterladen"
-                onClick={toggledownloadSection}
-                style={{
-                  cursor: "pointer",
-                  transition: "transform 0.1s ease-in-out"
-                }}
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.9)")
-                }
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                ⬇️
-              </span>
-            )}
+            <span
+              className="main-icon"
+              title="Daten herunterladen"
+              onClick={toggledownloadSection}
+              style={{
+                cursor: "pointer",
+                transition: "transform 0.1s ease-in-out"
+              }}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.9)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+              ⬇️
+            </span>
+          )}
 
           <span
             id="mainLinkIcon"
@@ -1214,11 +1256,14 @@ function SidePanel() {
       <main>
         {showHelpSection && (
           <section id="mainHelpSection">
-            <h2>Über <em>Strafanzeiger</em></h2>
+            <h2>
+              Über <em>Strafanzeiger</em>
+            </h2>
             <p>
-              <em>Strafanzeiger</em> ist eine Chrome Erweiterung zur automatischen Auswertung
-              von X/Twitter Posts und ggf. Erstellung von Strafanzeigen
-              für Posts, die vermutlich gegen deutsches Recht verstoßen.
+              <em>Strafanzeiger</em> ist eine Chrome Erweiterung zur
+              automatischen Auswertung von X/Twitter Posts und ggf. Erstellung
+              von Strafanzeigen für Posts, die vermutlich gegen deutsches Recht
+              verstoßen.
             </p>
             <p>Die Erweiterung führt folgende Schritte aus:</p>
             <ol>
@@ -1228,9 +1273,9 @@ function SidePanel() {
               <li>Erstellung Strafanzeigeentwürfen in einer ZIP Datei</li>
             </ol>
             <p>
-              Sensitiven Daten werden lokal in Ihrem Browser verarbeitet
-              und nur die für die Analyse notwendigen Informationen an die
-              KI-Dienste übermittelt.
+              Sensitiven Daten werden lokal in Ihrem Browser verarbeitet und nur
+              die für die Analyse notwendigen Informationen an die KI-Dienste
+              übermittelt.
             </p>
           </section>
         )}
@@ -1505,7 +1550,9 @@ function SidePanel() {
         )}
 
         <section id="mainActions">
-          <details id="backgroundInfoSection" open={openSection === "backgroundInfoSection"}>
+          <details
+            id="backgroundInfoSection"
+            open={openSection === "backgroundInfoSection"}>
             <summary onClick={(e) => toggleSection("backgroundInfoSection", e)}>
               Hintergrundinformationen
             </summary>

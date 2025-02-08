@@ -26,6 +26,7 @@
   "manifest": {
     "host_permissions": [
       "<all_urls>",
+      "https://api.perplexity.ai/*",
       "https://api.openai.com/*",
       "https://www.timeapi.io/*",
       "https://x.com/*"
