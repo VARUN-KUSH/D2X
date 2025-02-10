@@ -122,7 +122,7 @@
             },
             "Rechtfertigungsargumente": {
               "type": "string",
-              "description": "Falls der Post nicht problematisch ist: einfach leer lassen. Falls der Post evtl. anzeigbar ist: hier juristisch fundierte Gegenargumente aufführen, die darlegen, ob die geäußerten Aussagen im Gesamtkontext missverständlich interpretiert werden könnten oder durch zulässige Rechtsausnahmen (z.B. Meinungsfreiheit) gerechtfertigt sind. Erläutern Sie dabei, inwiefern alternative Interpretationen, objektive Wahrheitsprüfungen und Verhältnismäßigkeitsaspekte vorliegen, um Fehlanzeigen zu vermeiden. (auf Deutsch)."
+              "description": "Falls der Post nicht problematisch ist: einfach leer lassen. Falls der Post evtl. anzeigbar ist, hier juristisch fundierte Rechtfertigungsargumente aufführen, die darlegen, ob die geäußerten Aussagen im Gesamtkontext missverständlich interpretiert werden könnten oder durch zulässige Rechtsausnahmen gerechtfertigt sind. Erläutern Sie dabei, inwiefern alternative Interpretationen, objektive Wahrheitsprüfungen, Verhältnismäßigkeitsaspekte und weitere relevante Rechtfertigungsgründe vorliegen, um Fehlanzeigen zu vermeiden. (auf Deutsch)."
             },
             "Schriftliche_Bewertung": {
               "type": "string",
@@ -130,7 +130,7 @@
             },
             "Post_selbst_ist_anzeigbar_flag": {
               "type": "boolean",
-              "description": "Indicates whether the person who posted directly violates German law through their post (`true`) or if the post is not reportable (`false`) e.g. because the person merely is reporting others' illegal actions."
+              "description": "Indicates whether the person who posted directly violates German law through their post (`true`) or if the post is not reportable (`false`) e.g. because the person merely is reporting others' illegal actions. Be critical - only decide true if it is a clear case"
             },
             "Straftatbestand": {
               "type": "array",
