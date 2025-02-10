@@ -888,7 +888,7 @@ function App() {
             <strong><em>Strafanzeiger</em></strong>: Titel der Extension
           </li>
           <li>
-            <strong>🔗</strong>: Link zum Anzeigen-neu-generieren-Tool
+            <strong>📝</strong>: Link zum Anzeigen-neu-generieren-Tool
           </li>
           <li>
             <strong>ⓘ</strong>: Diese Anleitung
@@ -1227,7 +1227,7 @@ function App() {
         <p><strong>Nach Änderungen müssen die Anzeigen neu generiert werden</strong>, damit die Inhalte beim Drucken richtig angezeigt werden:</p>
         <ol>
           <li>Öffne die <em>Strafanzeiger</em> Extension</li>
-          <li>Klicke auf das 🔗-Symbol in der oberen Leiste</li>
+          <li>Klicke auf das 📝-Symbol in der oberen Leiste</li>
           <li>
             Folge den Anweisungen auf der Seite:
             <ul>

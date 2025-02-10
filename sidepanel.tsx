@@ -1261,7 +1261,7 @@ function SidePanel() {
               (e.currentTarget.style.transform = "scale(0.9)")
             }
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-            🔗
+            📝
           </span>
           <span
             className="main-icon"
