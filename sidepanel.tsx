@@ -1,5 +1,6 @@
 import { CaptureAPI } from "capture-api"
 import React, { useEffect, useState } from "react"
+import TermsModal from "./TermsModal";
 import {
   addTimestampToScreenshots,
   capturereportablessandchangetoURLs,
@@ -127,6 +128,42 @@ function SidePanel() {
   //     // Ensure "Seite automatisch auswerten" is open by default
   //     document.getElementById("evaluateSection").open = true;
   // }, []);
+
+  // State to control the display of the Terms Modal
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  // State to track if terms have been accepted
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  useEffect(() => {
+    // Check if the user has already accepted the terms
+    chrome.storage.local.get("acceptedTerms", (result) => {
+      if (result.acceptedTerms) {
+        setTermsAccepted(true);
+      } else {
+        // If not accepted, show the modal upon first launch
+        setShowTermsModal(true);
+      }
+    });
+  }, []);
+
+  // Called when the user clicks the button in the modal
+  const handleTermsAccept = () => {
+    if (!termsAccepted) {
+      // Store acceptance and update state
+      chrome.storage.local.set({ acceptedTerms: true }, () => {
+        setTermsAccepted(true);
+        setShowTermsModal(false);
+      });
+    } else {
+      // If already accepted (e.g. modal triggered via the § icon), simply close it
+      setShowTermsModal(false);
+    }
+  };
+
+  // Toggle the modal when the § icon is clicked
+  const toggleTermsModal = () => {
+    setShowTermsModal(true);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -1227,6 +1264,19 @@ function SidePanel() {
             🔗
           </span>
           <span
+            className="main-icon"
+            title="Nutzungsbedingungen anzeigen"
+            onClick={toggleTermsModal}
+            style={{
+              cursor: "pointer",
+              transition: "transform 0.1s ease-in-out"
+            }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            §
+          </span>
+          <span
             id="mainHelpIcon"
             className="main-icon"
             title="Anleitung, wichtige Hinweise und Infos"
@@ -1790,6 +1840,9 @@ function SidePanel() {
           ) : null}
         </div>
       </main>
+      {showTermsModal && (
+        <TermsModal alreadyAccepted={termsAccepted} onAccept={handleTermsAccept} />
+      )}
     </div>
   )
 }
