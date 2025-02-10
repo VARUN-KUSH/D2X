@@ -7,6 +7,10 @@ body {
   padding: 10px;
   margin: 0;
   background-color: #F8F9FC;
+  /* Allow vertical scrolling when content overflows */
+  overflow-y: auto;
+  /* Optionally ensure full viewport height */
+  height: 100vh;
 }
 
 /* Modal overlay styles */
@@ -354,7 +358,7 @@ details div {
 }
 
 #twitterheaderdisablelabel {
-  margin-bottom: 20;
+  margin-bottom: 20px;
 }
 
 #perplexityuse {
@@ -369,5 +373,5 @@ details div {
 }
 
 #perplexitylabel {
-  margin-bottom: 20;
+  margin-bottom: 20px;
 }
