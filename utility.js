@@ -980,15 +980,16 @@ export async function downloadZip() {
 }
 
 // Function to get the API key and run the query
+export async function isPerplexityEnabled() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("usePerplexity", (result) => {
+      resolve(!!result.usePerplexity); // Convert to boolean (true/false)
+    });
+  });
+}
 
 export async function callPerplexity(query) {
-  const usePerplexity = await new Promise((resolve) => {
-    chrome.storage.local.get("usePerplexity", (result) => {
-      resolve(result.usePerplexity)
-      return
-      //handle edge cases if keys are not added
-    })
-  })
+  const usePerplexity = await isPerplexityEnabled()
 
   console.log("usePerplexity>>>>>>>>.", usePerplexity)
   if (usePerplexity) {

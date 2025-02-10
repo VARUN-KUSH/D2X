@@ -19,7 +19,8 @@ import {
   downloadpostreport,
   downloadprofilereport,
   downloadZip,
-  fetchEvaluation
+  fetchEvaluation,
+  isPerplexityEnabled
 } from "./utility.js"
 import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils.js"
 
@@ -717,6 +718,7 @@ async function processContent(messages) {
         `Ich habe ${reportablePostsWithOriginalInfo.length} anzeigbare Posts identifiziert.`,
         60
       )
+      await calculate_estimated_time_in_reportDownloading(reportablePostsWithOriginalInfo.length)
       finalreports = await captureReportablePostScreenshots(
         reportablePostsWithOriginalInfo
       )
@@ -734,6 +736,21 @@ async function processContent(messages) {
     updateAnalysisStatus(getActiveAnalysisId(), "error")
     throw error
   }
+}
+
+async function calculate_estimated_time_in_reportDownloading(reportablePostslength) {
+  //time taken on each individual post also varies on perlixity toggle if enabled then time will be 1 min for each post other wise 0.5 min
+  let timeforonepost = 0.5; // 1/2 minute per post
+  const usePerplexity = await isPerplexityEnabled()
+  
+  console.log("usePerplexity>>>>>>>>.", usePerplexity)
+  if (usePerplexity) {
+    timeforonepost = 1; // 1 minute per post
+  }
+  
+  let totalTime = reportablePostslength * timeforonepost;
+  // Send total time to the side panel
+  chrome.runtime.sendMessage({ action: "updateTime", time: totalTime });
 }
 
 // Neue Funktion zur Verarbeitung erfasster Screenshots

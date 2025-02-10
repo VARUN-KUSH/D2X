@@ -83,6 +83,8 @@ function SidePanel() {
     "backgroundInfoSection"
   )
 
+  const [esttimemin, setesttimemin] = useState(null)
+
   //state save locally
   const [isaddress, setisAddress] = useState(false)
   const [backgroundInfopresent, setbackgroundInfopresent] = useState(false)
@@ -147,7 +149,6 @@ function SidePanel() {
     }))
   }
 
-
   const handleProfileSearch = async () => {
     //update it to simply ask from checkbox not locally
     const usePerplexity = await new Promise((resolve) => {
@@ -157,18 +158,16 @@ function SidePanel() {
         //handle edge cases if keys are not added
       })
     })
-   
 
     const { perplexityApiKey } = apiKeys
-   
-   
+
     setAnalysisData((prevState) => ({
       ...prevState,
       profilesdata: null,
       perplexityresponse: null
     }))
 
-    let response:any
+    let response: any
     if (!usePerplexity) {
       //send a message to background script
       setShowProgressBar(true)
@@ -198,7 +197,6 @@ function SidePanel() {
         )
       })
       setProgress(50)
-
     } else {
       if (!perplexityApiKey) {
         setShowMessage("Please add PerplexityAI API key to start the analysis.")
@@ -234,19 +232,19 @@ function SidePanel() {
     }
 
     const { analysisId, perplexityresponse, userprofileinfo } = response
-      console.log(
-        "perplexityresponse>>>>>>>",
-        perplexityresponse,
-        "userprofileinfo>>>",
-        userprofileinfo
-      )
-      setAnalysisData((prevState) => ({
-        ...prevState,
-        profilesdata: userprofileinfo || "",
-        perplexityresponse: perplexityresponse,
-        screenName: userprofileinfo?.screenname || "",
-        analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
-      }))
+    console.log(
+      "perplexityresponse>>>>>>>",
+      perplexityresponse,
+      "userprofileinfo>>>",
+      userprofileinfo
+    )
+    setAnalysisData((prevState) => ({
+      ...prevState,
+      profilesdata: userprofileinfo || "",
+      perplexityresponse: perplexityresponse,
+      screenName: userprofileinfo?.screenname || "",
+      analysisID: prevState.analysisID || analysisId // Keep existing analysisID if it exists, otherwise use new one
+    }))
 
     // Update analysisId state using the same logic
     setProgress(100)
@@ -504,7 +502,6 @@ function SidePanel() {
       AnalysisData.posts &&
       AnalysisData.visiblescreenshot &&
       AnalysisData.profilesdata
-      
     ) {
       const results = {
         ...(AnalysisData.posts[0] || ""),
@@ -1098,12 +1095,17 @@ function SidePanel() {
               setResults("Verarbeitung: " + request.message)
               break
 
+            case "updateTime":
+              setesttimemin(request.time)
+              break
+
             case "downloadZip":
+              setesttimemin(null)
               console.log("recieved message", request)
               chrome.storage.local.get(["downloadData"], (result) => {
                 // Process the data here
                 const base64 = result.downloadData
-                console.log("base64>>>>>>>>>>>", base64)
+                // console.log("base64>>>>>>>>>>>", base64)
 
                 // Check if data exists
                 if (!result.downloadData) {
@@ -1654,7 +1656,14 @@ function SidePanel() {
                 Seite automatisch auswerten
               </button>
             </div>
+
+            <div>
+              {esttimemin ? (
+                <strong>Geschätzte Zeit: {esttimemin} Min.</strong>
+              ) : null}
+            </div>
           </details>
+
           <h3>Manuelle Auswertung:</h3>
           <details
             id="screenshotSection"
