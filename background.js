@@ -739,18 +739,30 @@ async function processContent(messages) {
 }
 
 async function calculate_estimated_time_in_reportDownloading(reportablePostslength) {
-  //time taken on each individual post also varies on perlixity toggle if enabled then time will be 1 min for each post other wise 0.5 min
-  let timeforonepost = 0.5; // 1/2 minute per post
-  const usePerplexity = await isPerplexityEnabled()
-  
-  console.log("usePerplexity>>>>>>>>.", usePerplexity)
+  // Berechnung der benötigten Zeit pro Post (0.5 min oder 1 min)
+  let timeForOnePost = 0.7; 
+  const usePerplexity = await isPerplexityEnabled();
   if (usePerplexity) {
-    timeforonepost = 1; // 1 minute per post
+    timeForOnePost = 1;
   }
   
-  let totalTime = reportablePostslength * timeforonepost;
-  // Send total time to the side panel
-  chrome.runtime.sendMessage({ action: "updateTime", time: totalTime });
+  // Gesamtdauer in Minuten (kann Bruchteile enthalten)
+  const totalTime = reportablePostslength * timeForOnePost;
+  // Aufrunden auf volle Minuten
+  const roundedMinutes = Math.ceil(totalTime);
+  
+  // Aktuelle Zeit holen
+  const now = new Date();
+  // Endzeitpunkt berechnen: aktuelle Zeit + roundedMinutes
+  const expectedTime = new Date(now.getTime() + roundedMinutes * 60000);
+  
+  // Formatierung in HH:MM (24-Stunden-Format)
+  const hours = expectedTime.getHours().toString().padStart(2, '0');
+  const minutes = expectedTime.getMinutes().toString().padStart(2, '0');
+  const timeString = `${hours}:${minutes}`;
+  
+  // Sende den erwarteten Endzeitpunkt an die Side Panel
+  chrome.runtime.sendMessage({ action: "updateTime", time: timeString });
 }
 
 // Neue Funktion zur Verarbeitung erfasster Screenshots

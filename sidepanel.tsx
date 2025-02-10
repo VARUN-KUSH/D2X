@@ -1063,7 +1063,7 @@ function SidePanel() {
     })
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      ;(async () => {
+      ; (async () => {
         try {
           switch (request.action) {
             case "progressUpdate":
@@ -1194,21 +1194,21 @@ function SidePanel() {
             AnalysisData.posts ||
             AnalysisData.fullscreenshot ||
             AnalysisData.profilesdata) && (
-            <span
-              className="main-icon"
-              title="Daten herunterladen"
-              onClick={toggledownloadSection}
-              style={{
-                cursor: "pointer",
-                transition: "transform 0.1s ease-in-out"
-              }}
-              onMouseDown={(e) =>
-                (e.currentTarget.style.transform = "scale(0.9)")
-              }
-              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-              ⬇️
-            </span>
-          )}
+              <span
+                className="main-icon"
+                title="Daten herunterladen"
+                onClick={toggledownloadSection}
+                style={{
+                  cursor: "pointer",
+                  transition: "transform 0.1s ease-in-out"
+                }}
+                onMouseDown={(e) =>
+                  (e.currentTarget.style.transform = "scale(0.9)")
+                }
+                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+                ⬇️
+              </span>
+            )}
 
           <span
             id="mainLinkIcon"
@@ -1657,11 +1657,6 @@ function SidePanel() {
               </button>
             </div>
 
-            <div>
-              {esttimemin ? (
-                <strong>Geschätzte Zeit: {esttimemin} Min.</strong>
-              ) : null}
-            </div>
           </details>
 
           <h3>Manuelle Auswertung:</h3>
@@ -1789,18 +1784,11 @@ function SidePanel() {
             </div>
           </section>
         )}
-
-        {/* // removing this section  */}
-        {results && (
-          <section id="resultsSection">
-            <button
-              id="downloadResults"
-              title="Speichert die bisher erstellten Ergebnisse in einem ZIP-Ordner, der im Download-Ordner abgelegt wird.">
-              Ergebnisse herunterladen
-            </button>
-            <div id="results">{results}</div>
-          </section>
-        )}
+        <div>
+          {esttimemin ? (
+            <strong>Erwartete Fertigstellung um: {esttimemin} Uhr</strong>
+          ) : null}
+        </div>
       </main>
     </div>
   )
