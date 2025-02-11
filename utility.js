@@ -348,10 +348,10 @@ export async function downloadprofilereport(results) {
   <html lang="de">
   <head>
     <meta charset="UTF-8">
-    <title>Übersicht Strafanzeigen</title>
+    <title>Übersicht Strafanzeigenentwürfe</title>
     <style>
       body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; }
-      .container { max-width: 1200px; margin: 0 auto; }
+      .container { max-width: 90%; margin: 0 5%; }
       .column-filter { width: 90%; padding: 4px; margin: 4px 0; border: 1px solid #ddd; border-radius: 3px; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
@@ -920,10 +920,10 @@ export async function createFinalReport(results, originalUrl = "") {
   <html lang="de">
   <head>
     <meta charset="UTF-8">
-    <title>Übersicht Strafanzeigen</title>
+    <title>Übersicht Strafanzeigenentwürfe</title>
     <style>
       body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; }
-      .container { max-width: 1200px; margin: 0 auto; }
+      .container { max-width: 90%; margin: 0 5%; }
       .column-filter { width: 90%; padding: 4px; margin: 4px 0; border: 1px solid #ddd; border-radius: 3px; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
