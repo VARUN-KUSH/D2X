@@ -320,6 +320,188 @@ export async function downloadprofilereport(results) {
   folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
   folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
 
+  console.log("About to generate Übersicht.html in downloadprofilereport")
+  function generateVerdachtStrafwahrscheinlichkeit(post) {
+    if (!post.Subsumtion || !Array.isArray(post.Subsumtion)) return "";
+    return post.Subsumtion
+      .map(item => `${item.Verdacht}:${item.Strafwahrsch}`)
+      .join("; ");
+  }
+  
+  function generateOverviewHtml(results, date, month, year) {
+    // Precompute the data array for each post
+    const postsArray = results.map(post => {
+      const tweetId = post.postUrl ? post.postUrl.split("/").pop() : "";
+      const fileName = generateFileName(post, tweetId, date, month, year);
+      const verdacht = generateVerdachtStrafwahrscheinlichkeit(post);
+      return {
+        post: post.Inhalt || "",
+        verdacht: verdacht,
+        bewertung: post.Schriftliche_Bewertung || "",
+        id: tweetId,
+        link: fileName
+      };
+    });
+  
+    // Return the full HTML as a string. All resources are embedded, so it works as a local file.
+    return `<!DOCTYPE html>
+  <html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <title>Übersicht Strafanzeigen</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; }
+      .container { max-width: 1200px; margin: 0 auto; }
+      .column-filter { width: 90%; padding: 4px; margin: 4px 0; border: 1px solid #ddd; border-radius: 3px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+      th { background-color: #f5f5f5; cursor: pointer; }
+      th:hover { background-color: #e5e5e5; }
+      th::after { content: '↕'; margin-left: 5px; opacity: 0.5; }
+      th.asc::after { content: '↑'; opacity: 1; }
+      th.desc::after { content: '↓'; opacity: 1; }
+      tr:hover { background-color: #f9f9f9; }
+      .filter-cell { padding: 4px; background-color: #f9f9f9; }
+      .active-filters { margin: 10px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; }
+      .filter-tag { display: inline-block; padding: 4px 8px; margin: 2px; background-color: #e0e0e0; border-radius: 4px; font-size: 0.9em; }
+      .filter-tag button { margin-left: 5px; border: none; background: none; cursor: pointer; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Übersicht der Strafanzeigen</h1>
+      
+      <div id="activeFilters" class="active-filters" style="display: none;">
+        <strong>Aktive Filter:</strong>
+        <div id="filterTags"></div>
+      </div>
+  
+      <table id="overviewTable">
+        <thead>
+          <tr class="filter-row">
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="post" placeholder="Filter Post..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="verdacht" placeholder="Filter Verdacht..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="bewertung" placeholder="Filter Bewertung..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="id" placeholder="Filter ID..."></th>
+          </tr>
+          <tr>
+            <th data-sort="post">Post</th>
+            <th data-sort="verdacht">Verdacht:Strafwahrscheinlichkeit</th>
+            <th data-sort="bewertung">Bewertung</th>
+            <th data-sort="id">ID</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  
+    <script>
+      // Embed the precomputed posts array
+      const posts = ${JSON.stringify(postsArray)};
+      let currentSort = { column: '', direction: '' };
+      let activeFilters = {};
+      let filteredData = [...posts];
+  
+      // Render the table rows based on the data provided
+      function renderTable(data) {
+        const tbody = document.querySelector('#overviewTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = \`
+            <td>\${item.post}</td>
+            <td>\${item.verdacht}</td>
+            <td>\${item.bewertung}</td>
+            <td><a href="\${item.link}" target="_blank">\${item.id}</a></td>
+          \`;
+          tbody.appendChild(row);
+        });
+      }
+  
+      // Update active filters display
+      function updateActiveFiltersDisplay() {
+        const filterTags = document.getElementById('filterTags');
+        const activeFiltersContainer = document.getElementById('activeFilters');
+        filterTags.innerHTML = '';
+        const hasActiveFilters = Object.values(activeFilters).some(filter => filter);
+        activeFiltersContainer.style.display = hasActiveFilters ? 'block' : 'none';
+        Object.entries(activeFilters).forEach(([column, value]) => {
+          if (value) {
+            const tag = document.createElement('span');
+            tag.className = 'filter-tag';
+            tag.innerHTML = \`\${column}: \${value} <button onclick="clearFilter('\${column}')">&times;</button>\`;
+            filterTags.appendChild(tag);
+          }
+        });
+      }
+  
+      // Clear an individual filter and reapply filters
+      function clearFilter(column) {
+        activeFilters[column] = '';
+        document.querySelector(\`input[data-column="\${column}"]\`).value = '';
+        applyFilters();
+      }
+  
+      // Apply all active filters
+      function applyFilters() {
+        filteredData = posts.filter(item => {
+          return Object.entries(activeFilters).every(([column, filterValue]) => {
+            if (!filterValue) return true;
+            return item[column].toLowerCase().includes(filterValue.toLowerCase());
+          });
+        });
+        updateActiveFiltersDisplay();
+        renderTable(filteredData);
+      }
+  
+      // Sort the data by the given column
+      function sortData(column) {
+        const direction = column === currentSort.column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+        filteredData.sort((a, b) => {
+          const aVal = a[column].toLowerCase();
+          const bVal = b[column].toLowerCase();
+          if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+          if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+          th.classList.remove('asc', 'desc');
+          if (th.dataset.sort === column) {
+            th.classList.add(direction);
+          }
+        });
+        currentSort = { column, direction };
+        renderTable(filteredData);
+      }
+  
+      // Set up filter event listeners
+      document.querySelectorAll('.column-filter').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const column = e.target.dataset.column;
+          activeFilters[column] = e.target.value;
+          applyFilters();
+        });
+      });
+  
+      // Set up header sorting event listeners
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          sortData(th.dataset.sort);
+        });
+      });
+  
+      // Initial render of the table
+      renderTable(posts);
+    </script>
+  </body>
+  </html>`;
+  }
+  
+  const overviewHtml = generateOverviewHtml(results, date, month, year);
+  mainFolder.file("Übersicht.html", overviewHtml);  
+  console.log("Added Übersicht.html to mainFolder")
+
   // number of folders depends on uniques username
   //run a loop
 
@@ -709,6 +891,189 @@ export async function createFinalReport(results, originalUrl = "") {
   folder1.file("Betreff.txt", "Anzeige zu Kommentar auf X/Twitter")
   folder1.file("Datumszeile.txt", `${city}, den ${date}.${month}.${year}`)
   folder1.file("Empf.Adresse.txt", `${formatText(recipientAddress)}`)
+
+  console.log("About to generate Übersicht.html in createFinalReport")
+  function generateVerdachtStrafwahrscheinlichkeit(post) {
+    if (!post.Subsumtion || !Array.isArray(post.Subsumtion)) return "";
+    return post.Subsumtion
+      .map(item => `${item.Verdacht}:${item.Strafwahrsch}`)
+      .join("; ");
+  }
+  
+  function generateOverviewHtml(results, date, month, year) {
+    // Precompute the data array for each post
+    const postsArray = results.map(post => {
+      const tweetId = post.postUrl ? post.postUrl.split("/").pop() : "";
+      const fileName = generateFileName(post, tweetId, date, month, year);
+      const verdacht = generateVerdachtStrafwahrscheinlichkeit(post);
+      return {
+        post: post.Inhalt || "",
+        verdacht: verdacht,
+        bewertung: post.Schriftliche_Bewertung || "",
+        id: tweetId,
+        link: fileName
+      };
+    });
+  
+    // Return the full HTML as a string. All resources are embedded, so it works as a local file.
+    return `<!DOCTYPE html>
+  <html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <title>Übersicht Strafanzeigen</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; padding: 20px; }
+      .container { max-width: 1200px; margin: 0 auto; }
+      .column-filter { width: 90%; padding: 4px; margin: 4px 0; border: 1px solid #ddd; border-radius: 3px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+      th { background-color: #f5f5f5; cursor: pointer; }
+      th:hover { background-color: #e5e5e5; }
+      th::after { content: '↕'; margin-left: 5px; opacity: 0.5; }
+      th.asc::after { content: '↑'; opacity: 1; }
+      th.desc::after { content: '↓'; opacity: 1; }
+      tr:hover { background-color: #f9f9f9; }
+      .filter-cell { padding: 4px; background-color: #f9f9f9; }
+      .active-filters { margin: 10px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; }
+      .filter-tag { display: inline-block; padding: 4px 8px; margin: 2px; background-color: #e0e0e0; border-radius: 4px; font-size: 0.9em; }
+      .filter-tag button { margin-left: 5px; border: none; background: none; cursor: pointer; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Übersicht der Strafanzeigen</h1>
+      
+      <div id="activeFilters" class="active-filters" style="display: none;">
+        <strong>Aktive Filter:</strong>
+        <div id="filterTags"></div>
+      </div>
+  
+      <table id="overviewTable">
+        <thead>
+          <tr class="filter-row">
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="post" placeholder="Filter Post..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="verdacht" placeholder="Filter Verdacht..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="bewertung" placeholder="Filter Bewertung..."></th>
+            <th class="filter-cell"><input type="text" class="column-filter" data-column="id" placeholder="Filter ID..."></th>
+          </tr>
+          <tr>
+            <th data-sort="post">Post</th>
+            <th data-sort="verdacht">Verdacht:Strafwahrscheinlichkeit</th>
+            <th data-sort="bewertung">Bewertung</th>
+            <th data-sort="id">ID</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  
+    <script>
+      // Embed the precomputed posts array
+      const posts = ${JSON.stringify(postsArray)};
+      let currentSort = { column: '', direction: '' };
+      let activeFilters = {};
+      let filteredData = [...posts];
+  
+      // Render the table rows based on the data provided
+      function renderTable(data) {
+        const tbody = document.querySelector('#overviewTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = \`
+            <td>\${item.post}</td>
+            <td>\${item.verdacht}</td>
+            <td>\${item.bewertung}</td>
+            <td><a href="\${item.link}" target="_blank">\${item.id}</a></td>
+          \`;
+          tbody.appendChild(row);
+        });
+      }
+  
+      // Update active filters display
+      function updateActiveFiltersDisplay() {
+        const filterTags = document.getElementById('filterTags');
+        const activeFiltersContainer = document.getElementById('activeFilters');
+        filterTags.innerHTML = '';
+        const hasActiveFilters = Object.values(activeFilters).some(filter => filter);
+        activeFiltersContainer.style.display = hasActiveFilters ? 'block' : 'none';
+        Object.entries(activeFilters).forEach(([column, value]) => {
+          if (value) {
+            const tag = document.createElement('span');
+            tag.className = 'filter-tag';
+            tag.innerHTML = \`\${column}: \${value} <button onclick="clearFilter('\${column}')">&times;</button>\`;
+            filterTags.appendChild(tag);
+          }
+        });
+      }
+  
+      // Clear an individual filter and reapply filters
+      function clearFilter(column) {
+        activeFilters[column] = '';
+        document.querySelector(\`input[data-column="\${column}"]\`).value = '';
+        applyFilters();
+      }
+  
+      // Apply all active filters
+      function applyFilters() {
+        filteredData = posts.filter(item => {
+          return Object.entries(activeFilters).every(([column, filterValue]) => {
+            if (!filterValue) return true;
+            return item[column].toLowerCase().includes(filterValue.toLowerCase());
+          });
+        });
+        updateActiveFiltersDisplay();
+        renderTable(filteredData);
+      }
+  
+      // Sort the data by the given column
+      function sortData(column) {
+        const direction = column === currentSort.column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+        filteredData.sort((a, b) => {
+          const aVal = a[column].toLowerCase();
+          const bVal = b[column].toLowerCase();
+          if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+          if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+          th.classList.remove('asc', 'desc');
+          if (th.dataset.sort === column) {
+            th.classList.add(direction);
+          }
+        });
+        currentSort = { column, direction };
+        renderTable(filteredData);
+      }
+  
+      // Set up filter event listeners
+      document.querySelectorAll('.column-filter').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const column = e.target.dataset.column;
+          activeFilters[column] = e.target.value;
+          applyFilters();
+        });
+      });
+  
+      // Set up header sorting event listeners
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          sortData(th.dataset.sort);
+        });
+      });
+  
+      // Initial render of the table
+      renderTable(posts);
+    </script>
+  </body>
+  </html>`;
+  }
+  
+  const overviewHtml = generateOverviewHtml(results, date, month, year);
+  mainFolder.file("Übersicht.html", overviewHtml);  
+  console.log("Added Übersicht.html to mainFolder")
+
 
   // number of folders depends on uniques username
   //run a loop
