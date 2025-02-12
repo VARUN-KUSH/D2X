@@ -1183,30 +1183,24 @@ function SidePanel() {
               break
 
             case "processUpdate":
-              setprojectStatus(request.data)
-              if (request.currentloaderprogress) {
-                setProgress(request.currentloaderprogress)
-              }
-
               if (
-                request.data.includes(
-                  "Dokumente erfolgreich heruntergeladen."
-                ) ||
-                request.data.includes(
-                  "Ich habe keine anzeigbaren Posts gefunden."
-                )
+                request.data.includes("Dokumente erfolgreich heruntergeladen.") ||
+                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.")
               ) {
-                setisAnimating(false) // Stop animation
-                //  setTimeout(() => {
-                //   setShowProgressBar(false)
-                //   setAnimatedStatus("")
-                //    setprojectStatus("") // Clear the status after a delay
-                //  }, 3000) // Adjust the delay as needed
-
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, "0");
+                const minutes = now.getMinutes().toString().padStart(2, "0");
+                const formattedTime = `${hours}:${minutes} Uhr: `;
+                setprojectStatus(formattedTime + request.data);
+                setisAnimating(false); // Stop animation
               } else {
-                setisAnimating(true) // Start animation for other statuses
+                setprojectStatus(request.data);
+                setisAnimating(true); // Start animation for other statuses
               }
-              break
+              if (request.currentloaderprogress) {
+                setProgress(request.currentloaderprogress);
+              }
+              break;
             default:
               console.log("Unhandled message action:", request.action)
               break
