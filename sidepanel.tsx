@@ -954,6 +954,7 @@ function SidePanel() {
 
             // Ensure we're on the correct page
             if (currentTab.url !== url) {
+              // console.log("currentTaburl>>>>>", currentTab.url, "url>>>>>", url)
               reject(new Error("Current tab URL does not match target URL."))
               return
             }

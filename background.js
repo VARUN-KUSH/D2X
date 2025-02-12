@@ -812,11 +812,10 @@ async function captureReportablePostScreenshots(reportablePosts) {
       console.log("eachreportablepost>>>>>>>>>>", post)
       try {
         // Navigate to post URL if necessary
-        if (originalTab.url !== post.postUrl) {
           console.log("post url and originaltab are not equal")
           await chrome.tabs.update(originalTab.id, { url: post.postUrl })
           await waitForTabToLoad(originalTab.id)
-        }
+
 
         // Capture post screenshot
         //should be taken once the dom and assets fully loaded
