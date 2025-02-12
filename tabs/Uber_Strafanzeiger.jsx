@@ -89,6 +89,7 @@ const sections = [
     title: "Arbeiten mit Anzeigenentwürfen",
     links: [
       { name: "Die ZIP-Datei", href: "#die-zip-datei" },
+      { name: "Sich Übersicht verschaffen", href: "#ubersicht" },
       { name: "Struktur und Inhalte", href: "#struktur-und-inhalte" },
       { name: "Anzeigenentwürfe anpassen", href: "#anzeigenentwürfe-anpassen" },
       { name: "Anzeigen neu generieren", href: "#anzeigen-neu-generieren" },
@@ -395,6 +396,7 @@ function App() {
 
         <h3 id="rechtlicher-hinweis">Rechtlicher Hinweis</h3>
         <ul>
+          <li>Du musst dich an die Nutzungsbedingungen halten, die du beim ersten Programmstart akzeptieren musst und die du durch einen Klick auf das §-Symbol in der Menüleiste erneut lesen kannst.</li>
           <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
           <li>
             <em>Strafanzeiger</em> erstellt nur Entwürfe für Anzeigen - keine
@@ -891,6 +893,9 @@ function App() {
             <strong>📝</strong>: Link zum Anzeigen-neu-generieren-Tool
           </li>
           <li>
+            <strong>§</strong>: Link zu den Nutzungsbedigungen
+          </li>
+          <li>
             <strong>ⓘ</strong>: Diese Anleitung
           </li>
           <li>
@@ -1122,15 +1127,29 @@ function App() {
         </p>
         <ul>
           <li>Bei automatischer Analyse: Direkt heruntergeladen</li>
-          <li>Bei manueller Analyse: Zum Download angeboten</li>
+          <li>Bei manueller Analyse: ⬇️ Zum Download angeboten</li>
         </ul>
 
+        <h3 id="ubersicht">Sich Übersicht verschaffen</h3>
+        <p>
+          Am einfachsten verschaffst du dir eine Übersicht mit der Datei <strong>Übersicht.html</strong>, die Du im Ordner auf oberster Ebene mit den Anzeigeentwürfen findest.
+          Damit kannst du schnell die:
+        </p>
+        <ul>
+          <li>Inhalte der Posts</li>
+          <li>schriftliche Bewertung der KI</li>
+          <li>Tatbestand und Einstufung (HOCH, MITTEL, NIEDRIG)</li>
+        </ul>
+        <p>filtern und sortieren und dann ggf. direkt mit einem Klick auf die ID den Anzeigenentwurf öffnen.</p>
         <h3 id="struktur-und-inhalte">Struktur und Inhalte</h3>
 
         <h4 id="auf-der-hauptebene-findest-du">
           Auf der Hauptebene findest du:
         </h4>
         <ul>
+          <li>
+            <strong>Übersicht.html</strong>: Hier kannst Du Dir schnell einen Überblick verschaffen welche Anzeigen für dich relevant sind
+          </li>
           <li>
             <strong>Anzeige[@handle][TweetID][DELIKTART][Verdacht.Strafwahrscheinlichkeit][Datum].html</strong>:
             Die fertigen Anzeigen
