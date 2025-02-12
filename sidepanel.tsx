@@ -1197,11 +1197,12 @@ function SidePanel() {
                 )
               ) {
                 setisAnimating(false) // Stop animation
-                setTimeout(() => {
-                  setShowProgressBar(false)
-                  setAnimatedStatus("")
-                  setprojectStatus("") // Clear the status after a delay
-                }, 3000) // Adjust the delay as needed
+                //  setTimeout(() => {
+                //   setShowProgressBar(false)
+                //   setAnimatedStatus("")
+                //    setprojectStatus("") // Clear the status after a delay
+                //  }, 3000) // Adjust the delay as needed
+
               } else {
                 setisAnimating(true) // Start animation for other statuses
               }
