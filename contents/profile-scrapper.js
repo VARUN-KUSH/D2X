@@ -12,128 +12,117 @@ export async function profileScrape() {
         attempts++
         console.log(`Attempt ${attempts}: Checking for elements...`)
 
-        // Check if the main element is present
         const main = document.querySelector('main[role="main"]')
         if (!main) {
           console.log("Main element not found, retrying...")
-          retryOrResolve()
-          return
+          return retryOrResolve()
         }
 
-        console.log("main>>>>>>>>>>", main)
-        // Check if the profileBio element is present
-        const primaryColoumn = main.querySelector(
+        const primaryColumn = main.querySelector(
           'div[data-testid="primaryColumn"] > div[aria-label^="Home"] > div:nth-child(3)'
         )
-        console.log("primaryColoumn", primaryColoumn)
-        if (!primaryColoumn) {
-          console.log("Main element not found, retrying...")
-          retryOrResolve()
-          return
+        if (!primaryColumn) {
+          console.log("Primary column not found, retrying...")
+          return retryOrResolve()
         }
 
-        const profileBio = primaryColoumn.querySelector(
+        const profileBio = primaryColumn.querySelector(
           ":scope > div > div > div > div"
         )
         if (!profileBio) {
           console.log("Profile bio not found, retrying...")
-          retryOrResolve()
-          return
+          return retryOrResolve()
         }
 
-        console.log("profileBio>>>>>", profileBio)
-        // Select additional elements conditionally
-        const thirddivbio = profileBio.querySelector(
-          ":scope > div:nth-child(3)"
-        )
-        console.log("thirddivbio:", thirddivbio)
-
-        const otherbiodetails = profileBio.querySelector(
-          ":scope > div:nth-child(4)"
-        )
-        console.log("otherbiodetails:", otherbiodetails)
-
-        const following_followercount = profileBio.querySelector(
+        const followingFollowerCount = profileBio.querySelector(
           ":scope > div:nth-child(5)"
         )
-        console.log("following_followercount:", following_followercount)
+        if (!followingFollowerCount) {
+          console.log("Following/Follower count section not found, retrying...")
+          return retryOrResolve()
+        }
 
         const followingCount =
-          following_followercount?.querySelector('div > a[href*="following"]')
-            ?.innerText || " "
-        console.log("followingCount:", followingCount)
-
+          followingFollowerCount
+            ?.querySelector('div > a[href*="following"]')
+            ?.innerText.trim() || ""
         const followersCount =
-          following_followercount?.querySelector(
-            'div > a[href*="verified_followers"]'
-          )?.innerText || " "
-        console.log("followersCount:", followersCount)
+          followingFollowerCount
+            ?.querySelector('div > a[href*="verified_followers"]')
+            ?.innerText.trim() || ""
 
-        let profilebiodata
-        const profileBioofUser = thirddivbio?.querySelector(
+        if (!followersCount || !followingCount) {
+          console.log("Follower/Following count not found, retrying...")
+          return retryOrResolve()
+        }
+
+        console.log("Followers Count:", followersCount)
+        console.log("Following Count:", followingCount)
+
+        // Now extract other profile details
+        const thirdDivBio = profileBio.querySelector(
+          ":scope > div:nth-child(3)"
+        )
+        const otherBioDetails = profileBio.querySelector(
+          ":scope > div:nth-child(4)"
+        )
+
+        let profileBioData = ""
+        const profileBioOfUser = thirdDivBio?.querySelector(
           ':scope > div > div[data-testid="UserDescription"]'
         )
-        console.log("profileBioofUser:", profileBioofUser)
-        if (profileBioofUser) {
-          const profiledata = profileBioofUser.querySelectorAll(":scope > span")
-          profilebiodata =
-            Array.from(profiledata)
+        if (profileBioOfUser) {
+          const profileData = profileBioOfUser.querySelectorAll(":scope > span")
+          profileBioData =
+            Array.from(profileData)
               .map((span) => span.textContent.trim())
               .join(" ") || ""
-          console.log("profilebiodata:", profilebiodata)
-        } else {
-          console.log("profilebiodata: Data not found")
         }
 
-        const userlocation =
-          otherbiodetails?.querySelector(
-            ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]'
-          )?.innerText || ""
-        console.log("userlocation:", userlocation)
-
+        const userLocation =
+          otherBioDetails
+            ?.querySelector(
+              ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserLocation"]'
+            )
+            ?.innerText.trim() || ""
         const userBirthdate =
-          otherbiodetails?.querySelector(
-            ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]'
-          )?.innerText || ""
-        console.log("userBirthdate:", userBirthdate)
-
-        const userJoindate =
-          otherbiodetails?.querySelector(
-            ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]'
-          )?.innerText || ""
-        console.log("userJoindate:", userJoindate)
-
+          otherBioDetails
+            ?.querySelector(
+              ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserBirthdate"]'
+            )
+            ?.innerText.trim() || ""
+        const userJoinDate =
+          otherBioDetails
+            ?.querySelector(
+              ':scope > div[data-testid="UserProfileHeader_Items"] > span[data-testid="UserJoinDate"]'
+            )
+            ?.innerText.trim() || ""
         const userUrl =
-          otherbiodetails?.querySelector(
-            ':scope > div[data-testid="UserProfileHeader_Items"] > a[data-testid="UserUrl"]'
-          )?.innerText || ""
-        console.log("userUrl>>>>>>>", userUrl)
-        //screenname scrape
-        // Check if necessary data has been found
-        if (
-          followersCount !== "Data not found" &&
-          followingCount !== "Data not found"
-        ) {
-          const scrapedData = {
-            profilebiodata,
-            userJoindate,
-            followersCount,
-            followingCount,
-            userlocation,
-            userBirthdate,
-            userUrl
-          }
-          console.log("Scraped data:", scrapedData)
-          resolve(scrapedData)
-          return
+          otherBioDetails
+            ?.querySelector(
+              ':scope > div[data-testid="UserProfileHeader_Items"] > a[data-testid="UserUrl"]'
+            )
+            ?.innerText.trim() || ""
+
+        const scrapedData = {
+          profileBioData,
+          userJoinDate,
+          followersCount,
+          followingCount,
+          userLocation,
+          userBirthdate,
+          userUrl
         }
 
-        retryOrResolve()
+        console.log("Scraped Data:", scrapedData)
+        resolve(scrapedData)
       }
 
       const retryOrResolve = () => {
         if (attempts >= maxAttempts) {
-          console.log("Max attempts reached without finding all data.")
+          console.log(
+            "Max attempts reached without finding follower and following count."
+          )
           resolve({
             profileBioofUser: "",
             userJoindate: "",

@@ -811,8 +811,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
       // scraping the profile info section
       console.log("eachreportablepost>>>>>>>>>>", post)
       try {
-        // Navigate to post URL if necessary
-          console.log("post url and originaltab are not equal")
+          // Navigate to post URL if necessary
           await chrome.tabs.update(originalTab.id, { url: post.postUrl })
           await waitForTabToLoad(originalTab.id)
 
@@ -838,6 +837,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
 
         // Initialize profileScreenshot as null for each post
         let profileScreenshot = null
+        let scrapedProfileData = null
         let scrapedData = null
         // Capture user profile screenshot if not already done
         if (!capturedProfiles.has(post.userProfileUrl)) {
@@ -849,7 +849,7 @@ async function captureReportablePostScreenshots(reportablePosts) {
           }
           sendMessageToPopup("Ich lese die Benutzerprofilinformationen..")
           await delay(3000)
-          scrapedData = await new Promise((resolve, reject) => {
+          scrapedProfileData = await new Promise((resolve, reject) => {
             chrome.scripting.executeScript(
               {
                 target: { tabId: originalTab.id },
@@ -874,8 +874,8 @@ async function captureReportablePostScreenshots(reportablePosts) {
             )
           })
 
-          console.log("scrapedprofileData", scrapedData)
-
+          console.log("scrapedprofileData", scrapedProfileData)
+          scrapedData = {...scrapedProfileData, "User-Name": post.Screenname}
           await new Promise((resolve) => setTimeout(resolve, 3000))
           sendMessageToPopup(
             "Ich mache Screenshots der Profile zur Beweissicherung..."

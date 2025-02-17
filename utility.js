@@ -59,6 +59,7 @@ function generateUserInfoContent(post) {
   if (post.perplexityresponse?.known_info) {
     return post.perplexityresponse.known_info.replace(/\\n/g, "\n")
   }
+  
   // Fallback to scraped data
   return `
     - User-Name: ${safeValue(post.Screenname)}
@@ -1084,13 +1085,6 @@ export async function createFinalReport(results, originalUrl = "") {
     const userFolder = mainFolder.folder(username)
     const post = results.find((item) => item.Username === username)
 
-    // userFolder.file(
-    //   `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-
-    //   post.perplexityresponse?.online_praesenz ? `Weitere Informationen aus einer automatisierten Online-Recherche, die möglicherweise mit Tatverdächtigen*r zusammenhängen:
-    //   ${post.perplexityresponse?.online_praesenz || ""}`: ""
-    // )
-
     userFolder.file(
       `ExtraUserInfo_${post.Username}_${date}.${month}.${year}.txt`,
       generateExtraUserInfoContent(post)
@@ -1100,19 +1094,7 @@ export async function createFinalReport(results, originalUrl = "") {
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
-    // userFolder.file(
-    //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-    //   `
-    //   - User-Name: ${post.Screenname}
-    //   - User-Handle: ${post.Username}
-    //   - Beschreibung: ${post.scrapedData?.profilebiodata}
-    //   - Konto erstellt: ${post.scrapedData?.userJoindate}
-    //   - Ort: ${post.scrapedData.userlocation}
-    //   - URL: ${post.scrapedData.userUrl}
-    //   - Anzahl Konten denen dieser User folgt: ${post.scrapedData?.followingCount}
-    //   - Anzahl Konten die diesem User folgen: ${post.scrapedData?.followersCount}
-    //   - Geboren am ${post.scrapedData.userBirthdate}`
-    // )
+    
 
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
