@@ -1367,7 +1367,7 @@ async function runPerplexityQuery(query) {
 
       // Set up the API details
       const API_URL = "https://api.perplexity.ai/chat/completions"
-      const MODEL = "llama-3.1-sonar-huge-128k-online"
+      const MODEL = "sonar"
 
       // Set up request headers and body
       const headers = {
