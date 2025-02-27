@@ -396,8 +396,9 @@ function App() {
 
         <h3 id="rechtlicher-hinweis">Rechtlicher Hinweis</h3>
         <ul>
+          <li>Strafanzeiger dient der Beweissicherung und dem erstellen von Entwürfen für Strafanzeigen und darf nur für diesen Zweck verwendet werden. Die Nutzung der Anwendung und der gesicherten Beweise (wie z.B. Screenshots) für andere Zwecke, als die strafrechtliche Verfolgung, ist nicht Zweck von Strafanzeiger.</li>
           <li>Du musst dich an die Nutzungsbedingungen halten, die du beim ersten Programmstart akzeptieren musst und die du durch einen Klick auf das §-Symbol in der Menüleiste erneut lesen kannst.</li>
-          <li>Das Programm wird ohne Garantie bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Urheber und Anbieter haften nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
+          <li>Das Programm wird ohne eine Zusicherung oder ein Erfolgsversprechen bereitgestellt. Du nutzt es auf eigenes Risiko und trägst die Kosten für mögliche Probleme. Der Anbieter haftet nicht für Schäden, die durch die Nutzung entstehen, auch nicht bei Hinweis auf mögliche Risiken.</li>
           <li>
             <em>Strafanzeiger</em> erstellt nur Entwürfe für Anzeigen - keine
             rechtsverbindlichen Dokumente
@@ -411,6 +412,7 @@ function App() {
               <li>Die Richtigkeit der Angaben sicherzustellen</li>
             </ul>
           </li>
+          <li>Bedenke, dass eine wissentlich falsche Verdächtigung nach § 164 StGB strafbar sein kann.</li>
           <li>Bei Unsicherheiten: Sprich mit einem Anwalt</li>
         </ul>
 
@@ -655,8 +657,8 @@ function App() {
           <li>
             <p>API-Key generieren</p>
             <ul>
-              <li>Klicke auf dein Profilsymbol (oben rechts)</li>
-              <li>Wähle "View API Keys"</li>
+              <li>Klicke auf das Zahnradsymbol für Settings (oben rechts)</li>
+              <li>Wähle "API Keys" im Menü links</li>
               <li>Klicke "Create New Secret Key"</li>
               <li>
                 <strong>Wichtig</strong>: Kopiere den Key sofort — er wird nur
