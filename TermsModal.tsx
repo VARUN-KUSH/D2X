@@ -102,47 +102,55 @@ const TermsModalFinal: React.FC<TermsModalProps> = ({ alreadyAccepted, onAccept 
                     {/* --- VEREINHEITLICHTES KAPITEL 4: Datenschutz & Datenverarbeitung --- */}
                     <h4>4. Datenschutz &amp; Datenverarbeitung</h4>
 
-                    <p>
-                        <strong>4.1</strong> Die Extension speichert oder überträgt keine personenbezogenen Daten an den Anbieter oder Dritte,
-                        außer wenn dies durch den Nutzer selbst initiiert wird (z. B. API-Abfragen an OpenAI oder Perplexity).
-                    </p>
-                    <p>
-                        <strong>4.2</strong> Bei der automatisierten Analyse werden Benutzername und URL des Tweets anonymisiert.
-                        Der Tweet-Text selbst bleibt unverändert.
-                    </p>
-                    <p>
-                        <strong>4.3</strong> Die Nutzung der APIs von OpenAI und Perplexity erfordert eine eigenständige Registrierung
-                        bei diesen Diensten durch den Nutzer. Die Datenverarbeitung unterliegt den jeweiligen Datenschutzrichtlinien
-                        dieser Anbieter.
-                    </p>
-                    <p>
-                        <strong>4.4</strong> Der Nutzer ist selbst dafür verantwortlich, seine eigenen Daten zu sichern und
-                        sicherzustellen, dass keine unrechtmäßigen oder rechtswidrigen Datenverarbeitungen vorgenommen werden.
-                    </p>
-                    <p><strong>4.5 Verantwortlicher</strong><br />
+                    <p><strong>4.1 Verantwortlicher</strong><br />
                         Sie sind für die Datenverarbeitung im Rahmen der Nutzung der Extension verantwortlich.
                     </p>
-                    <p><strong>4.6 Verarbeitung personenbezogener Daten</strong><br />
-                        2.1 Die Extension verarbeitet keine personenbezogenen Daten der Nutzer auf einem eigenen Server. Alle
-                        Verarbeitungen finden lokal auf dem Rechner des Nutzers statt.<br />
-                        2.2 Personenbezogene Daten Dritter (z. B. Tweet-Inhalte und Profildaten) werden von der Extension nur zur
-                        Analyse und Beweissicherung verarbeitet. Diese Daten werden während der Verarbeitung temporär im Browser
-                        gehalten und nicht an den Anbieter der Extension übertragen.<br />
-                        2.3 Wenn der Nutzer OpenAI oder Perplexity zur Analyse nutzt, erfolgt die Datenübertragung an diese Anbieter
-                        direkt durch den Nutzer. Die Datenschutzrichtlinien der jeweiligen API-Anbieter sind zu beachten.
+
+                    <p><strong>4.2 Grundsatz</strong><br />
+                        Die Extension speichert oder überträgt keine personenbezogenen Daten an den Anbieter oder Dritte,
+                        außer wenn dies durch den Nutzer selbst initiiert wird (z. B. API-Abfragen an OpenAI oder Perplexity).
                     </p>
+
+                    <p><strong>4.3 Verarbeitung personenbezogener Daten</strong><br />
+                        4.3.1 Die Extension verarbeitet keine personenbezogenen Daten der Nutzer auf einem eigenen Server.
+                        Alle Verarbeitungen finden lokal auf dem Rechner des Nutzers statt.<br />
+                        4.3.2 Personenbezogene Daten Dritter (z. B. Tweet-Inhalte und Profildaten) werden von der Extension
+                        nur zur Analyse und Beweissicherung verarbeitet. Diese Daten werden während der Verarbeitung
+                        temporär im Browser gehalten und nicht an den Anbieter der Extension übertragen.<br />
+                        4.3.3 Wenn der Nutzer OpenAI oder Perplexity zur Analyse nutzt, erfolgt die Datenübertragung an diese
+                        Anbieter direkt durch den Nutzer. Die Datenschutzrichtlinien der jeweiligen API-Anbieter sind zu beachten.
+                    </p>
+
+                    <p><strong>4.4 Anonymisierung</strong><br />
+                        Bei der automatisierten Analyse werden Benutzername und URL des Tweets anonymisiert.
+                        Der Tweet-Text selbst bleibt unverändert.
+                    </p>
+
+                    <p><strong>4.5 Nutzung externer APIs</strong><br />
+                        Die Nutzung der APIs von OpenAI und Perplexity erfordert eine eigenständige Registrierung
+                        bei diesen Diensten durch den Nutzer. Die Datenverarbeitung unterliegt den jeweiligen
+                        Datenschutzrichtlinien dieser Anbieter.
+                    </p>
+
+                    <p><strong>4.6 Datensicherheit und Sorgfaltspflicht</strong><br />
+                        Der Nutzer ist selbst dafür verantwortlich, seine eigenen Daten zu sichern und
+                        sicherzustellen, dass keine unrechtmäßigen oder rechtswidrigen Datenverarbeitungen vorgenommen werden.
+                    </p>
+
                     <p><strong>4.7 Betroffenenrechte</strong><br />
-                        Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer eigenen Daten, soweit diese durch die Extension
-                        verarbeitet werden. Da die Extension keine zentralisierte Speicherung durchführt, liegt die Verantwortung für die
-                        Verwaltung und Löschung der lokal gespeicherten Daten beim Nutzer.
+                        Sie haben das Recht auf Auskunft, Berichtigung und Löschung Ihrer eigenen Daten, soweit diese durch die
+                        Extension verarbeitet werden. Da die Extension keine zentralisierte Speicherung durchführt, liegt die
+                        Verantwortung für die Verwaltung und Löschung der lokal gespeicherten Daten beim Nutzer.
                     </p>
+
                     <p><strong>4.8 Datenübermittlung in Drittländer</strong><br />
                         Wenn der Nutzer OpenAI oder Perplexity zur Analyse nutzt, können personenbezogene Daten in die USA übertragen
                         werden. Für diese Übermittlung gelten die Datenschutzvereinbarungen der jeweiligen API-Anbieter.
                     </p>
+
                     <p><strong>4.9 Speicherung und Löschung</strong><br />
-                        Die Extension speichert keine personenbezogenen Daten auf einem Server. Alle Daten bleiben lokal auf dem Gerät
-                        des Nutzers, bis dieser sie löscht.
+                        Die Extension speichert keine personenbezogenen Daten auf einem Server. Alle Daten bleiben lokal auf dem
+                        Gerät des Nutzers, bis dieser sie löscht.
                     </p>
 
                     <hr />
