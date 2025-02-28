@@ -330,18 +330,19 @@ function SidePanel() {
         }
       )
     })
-    setProgress(50)
+    setProgress(100)
     const { analysisId, openairesponse } = response
 
     console.log("openairesponse>>>>>>", openairesponse)
 
     if (!(openairesponse.length > 0)) {
+      setisAnimating(false);
       setprojectStatus(
-        "Der Beitrag wurde von OpenAI nicht als meldewürdig befunden..."
+        "Der Beitrag wurde von OpenAI nicht als strafbar befunden. Er wird nicht für einen Anzeigenentwurf gespeichert."
       )
-      setTimeout(() => {
-        setShowProgressBar(false)
-      }, 1000)
+      // setTimeout(() => {
+      //   setShowProgressBar(false)
+      // }, 1000)
       return
     }
 
@@ -355,9 +356,9 @@ function SidePanel() {
     setProgress(100)
     // Update analysisId state using the same logic
     setAnalysisId(AnalysisData.analysisID || analysisId)
-    setTimeout(() => {
-      setShowProgressBar(false)
-    }, 1000)
+    // setTimeout(() => {
+    //   setShowProgressBar(false)
+    // }, 1000)
   }
 
   const handleBackgroundInfo = (e) => {
@@ -1186,7 +1187,8 @@ function SidePanel() {
             case "processUpdate":
               if (
                 request.data.includes("Dokumente erfolgreich heruntergeladen.") ||
-                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.")
+                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.") ||
+                request.data.includes("Der Kommentar ist vermutlich strafbar.")
               ) {
                 const now = new Date();
                 const hours = now.getHours().toString().padStart(2, "0");
@@ -1706,6 +1708,48 @@ function SidePanel() {
           </details>
 
           <h3>Manuelle Auswertung:</h3>
+          <details id="profileSection" open={openSection === "postSection"}>
+            <summary onClick={(e) => toggleSection("postSection", e)}>
+              Kommentaranalyse
+            </summary>
+            <div>
+              <label htmlFor="profileUrl">
+                ULR des Kommentars:{" "}
+                <span
+                  className="help-icon"
+                  title="Gib hier die URL des Kommentars ein, der untersucht werden soll.">
+                  ⓘ
+                </span>
+              </label>
+              <input
+                type="text"
+                id="profileUrl"
+                name="postUrl"
+                value={inputValuesPost.postUrl}
+                onChange={handleInputPostChanges}
+              />
+              <label htmlFor="knownProfileInfo">
+                Bekannte Postinformationen:{" "}
+                <span
+                  className="help-icon"
+                  title="Füge hier den Post ein, für den (mit OpenAI) geprüft werden soll, ob er angezeigt werden kann. Wichtig: Gib auch den Screennamen, das Userhandle und das Datum des Posts an, wie sie über oder unter dem Post stehen.">
+                  ⓘ
+                </span>
+              </label>
+              <textarea
+                id="knownProfileInfo"
+                name="knownPostInfo"
+                value={inputValuesPost.knownPostInfo}
+                onChange={handleInputPostChanges}></textarea>
+              <button
+                id="searchProfile"
+                title="Startet die Prüfung des Kommentars mithilfe von OpenAI. Die angegebenen Daten werden an OpenAI gesendet."
+                onClick={handlePostSearch}>
+                Kommentar analysieren
+              </button>
+            </div>
+          </details>
+
           <details
             id="screenshotSection"
             open={openSection === "screenshotSection"}>
@@ -1771,47 +1815,6 @@ function SidePanel() {
             </div>
           </details>
 
-          <details id="profileSection" open={openSection === "postSection"}>
-            <summary onClick={(e) => toggleSection("postSection", e)}>
-              Kommentaranalyse
-            </summary>
-            <div>
-              <label htmlFor="profileUrl">
-                ULR des Kommentars:{" "}
-                <span
-                  className="help-icon"
-                  title="Gib hier die URL des Kommentars ein, der untersucht werden soll.">
-                  ⓘ
-                </span>
-              </label>
-              <input
-                type="text"
-                id="profileUrl"
-                name="postUrl"
-                value={inputValuesPost.postUrl}
-                onChange={handleInputPostChanges}
-              />
-              <label htmlFor="knownProfileInfo">
-                Bekannte Postinformationen:{" "}
-                <span
-                  className="help-icon"
-                  title="Füge hier den Post ein, für den (mit OpenAI) geprüft werden soll, ob er angezeigt werden kann. Wichtig: Gib auch den Screennamen, das Userhandle und das Datum des Posts an, wie sie über oder unter dem Post stehen.">
-                  ⓘ
-                </span>
-              </label>
-              <textarea
-                id="knownProfileInfo"
-                name="knownPostInfo"
-                value={inputValuesPost.knownPostInfo}
-                onChange={handleInputPostChanges}></textarea>
-              <button
-                id="searchProfile"
-                title="Startet die Prüfung des Kommentars mithilfe von OpenAI. Die angegebenen Daten werden an OpenAI gesendet."
-                onClick={handlePostSearch}>
-                Kommentar analysieren
-              </button>
-            </div>
-          </details>
         </section>
 
         {showMessage && <div className="message">{showMessage}</div>}

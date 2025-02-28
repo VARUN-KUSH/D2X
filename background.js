@@ -1519,6 +1519,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             )
 
             console.log("Reportable posts:", reportablePosts)
+            if (reportablePosts.length > 0) {
+              sendMessageToPopup(
+                `"Der Kommentar ist vermutlich strafbar."`,
+                100
+              )
+            }
             sendResponse({
               analysisId: getActiveAnalysisId(),
               openairesponse: reportablePosts

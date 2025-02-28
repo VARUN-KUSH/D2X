@@ -917,9 +917,9 @@ function App() {
               </ul>
               <li>Manuelle Auswertung:</li>
               <ul>
+                <li>Kommentaranalyse</li>
                 <li>Screenshots erstellen</li>
                 <li>Profilrecherche</li>
-                <li>Kommentaranalyse</li>
               </ul>
 
             </ul>
@@ -1035,6 +1035,30 @@ function App() {
           Dafür gibt es diese Optionen:
         </p>
 
+        <h3 id="kommentaranalyse">Kommentaranalyse</h3>
+        <ol>
+          <li>Klappe "Kommentaranalyse" auf</li>
+          <li>
+            Füge die URL des Kommentars ein (Format:
+            https://x.com/userhandle/status/Zahlen) 💡 <strong>Tipp</strong>:
+            Die URL findest du in der Adresszeile deines Browsers, wenn du den
+            Kommentar geöffnet hast
+          </li>
+          <li>
+            Kopiere den kompletten Kommentar mit Kontext in das zweite Feld. <strong>User Name, @User Handle, Datum/Uhrzeit sind zwingend notwendig,</strong> wenn Du einen Anzeigenentwurf erstellen willst. Du kannst sie auch anonymisieren, aber dann werden sie so in den Entwurf übernommen.
+            <pre>
+              Max Beispielmann
+              <br />
+              @beispiel_user
+              <br />
+              Dies ist ein Beispielkommentar
+              <br />
+              11:42 vorm. · 1. Januar 2024
+            </pre>
+            💡 <strong>Tipp</strong>: Damit das Modell den Post besser bewerten kann, hinterlege im Abschnitt <em>Hintergrundinformationen</em> auch den Inhalt deines ursprünglichen Posts. Denn bei der manuellen Analyse kann <em>Strafanzeiger</em> diese Information nicht selbst finden kann.
+          </li>
+        </ol>
+
         <h3 id="screenshots-erstellen">Screenshots erstellen</h3>
         <ol>
           <li>Öffne die Seite, die du dokumentieren möchtest</li>
@@ -1076,30 +1100,6 @@ function App() {
           </li>
         </ol>
 
-        <h3 id="kommentaranalyse">Kommentaranalyse</h3>
-        <ol>
-          <li>Klappe "Kommentaranalyse" auf</li>
-          <li>
-            Füge die URL des Kommentars ein (Format:
-            https://x.com/userhandle/status/Zahlen) 💡 <strong>Tipp</strong>:
-            Die URL findest du in der Adresszeile deines Browsers, wenn du den
-            Kommentar geöffnet hast
-          </li>
-          <li>
-            Kopiere den kompletten Kommentar mit Kontext in das zweite Feld. <strong>User Name, @User Handle, Datum/Uhrzeit sind zwingend notwendig.</strong>
-            <pre>
-              Max Beispielmann
-              <br />
-              @beispiel_user
-              <br />
-              Dies ist ein Beispielkommentar
-              <br />
-              11:42 vorm. · 1. Januar 2024
-            </pre>
-            💡 <strong>Tipp</strong>: Markiere und kopiere einfach alles rund um
-            den Kommentar - je mehr Kontext, desto besser!
-          </li>
-        </ol>
         <p>💡 <strong>Tipp</strong>: Wenn du zu einem anzeigbaren Post alle manuellen Schritte durchgeführt hast (Screenshots von Post und Profil, Profilrecherche und Kommentaranalyse), wird beim Download automatisch ein Strafanzeigenentwurf erstellt.</p>
         <h2 id="nach-der-analyse">Nach der Analyse</h2>
         <ul>
