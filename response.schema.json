@@ -15,11 +15,11 @@
           "properties": {
             "_messageKey": {
               "type": "string",
-              "description": "The exact unique _messageKey that was given by the user - do not confuse this with the ID. This is the exact copy of field _messageKey. Only If you did not receiver the _messageKey return an empty string."
+              "description": "The exact unique identifier _messageKey which is a exact copy of the value given by the user as _messageKey. It has the format message_<timestamp>_<randomString>. Only If you did not receiver the _messageKey return an empty string."
             },
             "ID": {
               "type": "string",
-              "description": "A unique identifier for the post as given by the user."
+              "description": "A unique identifier for the post which is an exact copy of the value postId as given by the user. It is a UUID followed by an integer  UUID-int e.g. aee7b0a8-16b4-49d8-83da-a9b26213069f-3"
             },
             "postUrl": {
               "type": "string",
