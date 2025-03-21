@@ -247,9 +247,9 @@ function generateHtmlReport(
       <body>
           <!-- Print Controls -->
           <div class="print-controls">
-              <button onclick="printWithDisclaimer()">Drucken mit Hinweis</button>
-              <button onclick="printWithoutDisclaimer()">Drucken ohne Hinweis</button>
-              <span style="margin-left: 15px; font-size: 0.9em;">Hinweis: Der Disclaimer wird standardmäßig nicht gedruckt</span>
+              <button onclick="printWithoutDisclaimer()" style="background-color: #3B82F6; color: white; font-weight: bold; padding: 8px 15px; margin: 0 5px; cursor: pointer; border: none; border-radius: 4px;">Drucken ohne Hinweis</button>
+              <button onclick="printWithDisclaimer()"style="background-color: #e0e0e0; color: #666; padding: 8px 15px; margin: 0 5px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px;">Drucken mit Hinweis</button>
+              <span style="margin-left: 15px; font-size: 0.9em;">Der Hinweis wird standardmäßig nicht gedruckt</span>
           </div>
       
           <!-- Disclaimer Page -->
