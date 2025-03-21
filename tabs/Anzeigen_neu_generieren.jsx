@@ -149,247 +149,338 @@ const Anzeigen_neu_generieren = () => {
 
     for (const className in heights) {
       iframeStyles += `
-                      .${className} {
-                          height: ${heights[className]}px;
-                      }
-            `
+                    .${className} {
+                        height: ${heights[className]}px;
+                    }
+          `
     }
 
     const template = `
-            <!DOCTYPE html>
-            <html lang="de">
-            <head>
-                <meta charset="UTF-8">
-                <title>Anzeige_{{userHandle}}_{{postNo}}_{{offenceType}}_{{dateString}}</title>
-                <style>
-                    @page {
-                        size: A4;
-                        margin-top: 4.5cm;
-                        margin-bottom: 3cm;
-                        margin-left: 2.5cm;
-                        margin-right: 2cm;
-                    }
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+              <meta charset="UTF-8">
+              <title>Anzeige_{{userHandle}}_{{postNo}}_{{offenceType}}_{{dateString}}</title>
+              <style>
+                  @page {
+                      size: A4;
+                      margin-top: 4.5cm;
+                      margin-bottom: 3cm;
+                      margin-left: 2.5cm;
+                      margin-right: 2cm;
+                  }
 
-                    html, body {
-                        width: 100%;
-                        margin: 0;
-                        padding: 0;
-                        font-family: monospace;
-                        line-height: 1;
-                    }
+                  html, body {
+                      width: 100%;
+                      margin: 0;
+                      padding: 0;
+                      font-family: monospace;
+                      line-height: 1;
+                  }
 
-                    .container {
-                        max-width: 21cm;
-                        margin: 0 auto;
-                        padding: 0;
-                        position: relative;
-                        width: 100%;
-                    }
+                  .container {
+                      max-width: 21cm;
+                      margin: 0 auto;
+                      padding: 0;
+                      position: relative;
+                      width: 100%;
+                  }
+                  
+                  /* Disclaimer styles */
+                  .disclaimer-page {
+                      padding: 2cm;
+                      font-size: 14px;
+                      line-height: 1.4;
+                      border-bottom: 1px dashed #ccc;
+                      margin-bottom: 2cm;
+                      page-break-after: always;
+                  }
+                  
+                  .disclaimer-content {
+                      max-width: 16cm;
+                      margin: 0 auto;
+                      background-color: #f8f8f8;
+                      padding: 1.5cm;
+                      border: 1px solid #ddd;
+                      border-radius: 5px;
+                  }
+                  
+                  /* Print controls */
+                  .print-controls {
+                      background-color: #eee;
+                      padding: 10px;
+                      text-align: center;
+                      margin-bottom: 20px;
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      right: 0;
+                      z-index: 1000;
+                      border-bottom: 1px solid #ccc;
+                  }
+                  
+                  .print-controls button {
+                      padding: 8px 15px;
+                      margin: 0 5px;
+                      cursor: pointer;
+                      background-color: #3B82F6;
+                      color: white;
+                      border: none;
+                      border-radius: 4px;
+                  }
+                  
+                  .print-controls button:hover {
+                      background-color: #60A5FA;
+                  }
+                  
+                  @media print {
+                      .print-controls {
+                          display: none;
+                      }
+                      
+                      .disclaimer-page.no-print {
+                          display: none;
+                      }
+                  }
 
-                    .right-align {
-                        text-align: right;
-                        position: relative;
-                    }
+                  .right-align {
+                      text-align: right;
+                      position: relative;
+                  }
 
-                    .right-align iframe {
-                        position: relative;
-                        right: 0;
-                        width: 50%;
-                    }
+                  .right-align iframe {
+                      position: relative;
+                      right: 0;
+                      width: 50%;
+                  }
 
-                    .left-align {
-                        text-align: left;
-                    }
+                  .left-align {
+                      text-align: left;
+                  }
 
-                    .address-block, .subject, .date-line, .content-block, .signature, .attachments {
-                        clear: both;
-                    }
+                  .address-block, .subject, .date-line, .content-block, .signature, .attachments {
+                      clear: both;
+                  }
 
-                    h1, h2 {
-                        color: #333;
-                    }
+                  h1, h2 {
+                      color: #333;
+                  }
 
-                    /* DIN 5008 layout classes */
-                    .address-container {
-                        display: grid;
-                        grid-template-columns: 60% 40%;
-                        gap: 0.5rem;
-                        margin-bottom: 1rem;
-                    }
-                    
-                    .left-column {
-                        padding-top: 1.77cm;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: space-between;
-                    }
-                    
-                    .recipient-address {
-                        margin-bottom: auto;
-                    }
-                    
-                    .right-column {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 0;
-                    }
-                    
-                    .bottom-row {
-                        display: grid;
-                        grid-template-columns: 60% 40%;
-                        gap: 0.5rem;
-                        width: 100%;
-                        margin-top: 1rem;
-                    }
+                  /* DIN 5008 layout classes */
+                  .address-container {
+                      display: grid;
+                      grid-template-columns: 60% 40%;
+                      gap: 0.5rem;
+                      margin-bottom: 1rem;
+                  }
+                  
+                  .left-column {
+                      padding-top: 1.77cm;
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: space-between;
+                  }
+                  
+                  .recipient-address {
+                      margin-bottom: auto;
+                  }
+                  
+                  .right-column {
+                      display: flex;
+                      flex-direction: column;
+                      gap: 0;
+                  }
+                  
+                  .bottom-row {
+                      display: grid;
+                      grid-template-columns: 60% 40%;
+                      gap: 0.5rem;
+                      width: 100%;
+                      margin-top: 1rem;
+                  }
 
-                    .screenshot-section {
-                        display: block;
-                        margin: 0;
-                        width: 100%;
-                    }
+                  .screenshot-section {
+                      display: block;
+                      margin: 0;
+                      width: 100%;
+                  }
 
-                    .screenshot-section figcaption,
-                    .screenshot-section h2 {
-                        margin: 0;
-                        padding: 0;
-                        font-size: 0.95em;
-                        line-height: 1.2;
-                        page-break-after: avoid;
-                        break-after: avoid;
-                    }
+                  .screenshot-section figcaption,
+                  .screenshot-section h2 {
+                      margin: 0;
+                      padding: 0;
+                      font-size: 0.95em;
+                      line-height: 1.2;
+                      page-break-after: avoid;
+                      break-after: avoid;
+                  }
 
-                    .screenshot {
-                        display: block;
-                        width: 100%;
-                        height: auto;
-                        margin: 0;
-                        margin-top: -0.2cm;
-                        object-fit: contain; /* Ensure image fits within container */
-                    }
+                  .screenshot {
+                      display: block;
+                      width: 100%;
+                      height: auto;
+                      margin: 0;
+                      margin-top: -0.2cm;
+                      object-fit: contain; /* Ensure image fits within container */
+                  }
 
-                    iframe {
-                        width: 100%;
-                        border: none;
-                        overflow: hidden;
-                    }
+                  iframe {
+                      width: 100%;
+                      border: none;
+                      overflow: hidden;
+                  }
 
-                    /* Adjusted initial heights based on content size */
-                    {{iframeStyles}}
+                  /* Adjusted initial heights based on content size */
+                  {{iframeStyles}}
 
-                    /* Additional styles for page breaks and section boundaries */
-                    .page-break {
-                        page-break-before: always;
-                    }
+                  /* Additional styles for page breaks and section boundaries */
+                  .page-break {
+                      page-break-before: always;
+                  }
 
-                    .section {
-                        page-break-inside: avoid;
-                    }
+                  .section {
+                      page-break-inside: avoid;
+                  }
 
-                    @media print {
-                        /* Any print-specific styles can go here */
-                    }
-                </style>
-            </head>
-            <body>
-            
-                <!-- DIN 5008 Address Layout -->
-                <div class="address-container">
-                    <div class="left-column">
-                        <div class="recipient-address">
-                            <iframe src="Anschreiben_Basis_Daten/Empf.Adresse.txt" class="iframe-Empf_Adresse"></iframe>
-                        </div>
-                    </div>
-                    
-                    <div class="right-column">
-                        <iframe src="Anschreiben_Basis_Daten/Abs.Adresse.txt" class="iframe-Abs_Adresse"></iframe>
-                        <iframe src="Anschreiben_Basis_Daten/Abs.Kontakt.txt" class="iframe-Abs_Kontakt"></iframe>
-                        <iframe src="{{userHandle}}/{{postNo}}/unser_Zeichen.txt" class="iframe-unser_Zeichen"></iframe>
-                    </div>
-                </div>
-
-                <div class="bottom-row">
-                    <iframe src="Anschreiben_Basis_Daten/Betreff.txt" class="iframe-Betreff"></iframe>
-                    <iframe src="Anschreiben_Basis_Daten/Datumszeile.txt" class="iframe-Datumszeile"></iframe>
-                </div>
-            
-                <!-- AnzeigenEntwurf -->
-                <div class="content-block left-align">
-                    <iframe src="{{userHandle}}/{{postNo}}/AnzeigenEntwurf_{{userHandle}}_{{postNo}}_{{dateString}}.txt" class="iframe-AnzeigenEntwurf"></iframe>
-                </div>
-            
-                <!-- Abs.UnterzeichnendePerson.txt -->
-                <div class="signature left-align">
-                    <iframe src="Anschreiben_Basis_Daten/Abs.UnterzeichnendePerson.txt" class="iframe-Abs_UnterzeichnendePerson"></iframe>
-                </div>
-            
-                <!-- Anlagen.txt -->
-                <div class="attachments left-align">
-                    <iframe src="Anschreiben_Basis_Daten/Anlagen.txt" class="iframe-Anlagen"></iframe>
-                </div>
-            
-                <div class="page-break"></div>
-            
-                <!-- Sachverhalt Section -->
-                <h1>Sachverhalt</h1>
-            
-                <div class="content-block left-align">
-                    <p>
-                        Am <iframe src="AnalyseZeitpunkt.txt" class="iframe-AnalyseZeitpunkt" style="display: inline-block; vertical-align: middle;"></iframe>
-                        wurde bei der Sichtung der Plattform x.com/Twitter folgender Inhalt festgestellt.
-                    </p>
-                </div>
-            
-                <!-- Kommentar im Textformat -->
-                <div class="content-block">
-                    <p><strong>Kommentar im Textformat:</strong></p>
-                    <blockquote>
-                        <iframe src="{{userHandle}}/{{postNo}}/Post_{{userHandle}}_{{postNo}}_{{dateString}}.txt" class="iframe-Post"></iframe>
-                    </blockquote>
-                </div>
-            
-                <!-- Eckdaten -->
-                <div class="content-block left-align">
-                    <p><strong>Eckdaten:</strong>
-                        <iframe src="{{userHandle}}/{{postNo}}/Zeitpunkt.txt" class="iframe-Zeitpunkt" style="display: inline-block; vertical-align: middle;"></iframe>
-                        <iframe src="{{userHandle}}/userHandle.txt" class="iframe-userHandle" style="display: inline-block; vertical-align: middle;"></iframe>
-                        <iframe src="{{userHandle}}/screenname.txt" class="iframe-screenname" style="display: inline-block; vertical-align: middle;"></iframe>
-                        <iframe src="{{userHandle}}/profilUrl.txt" class="iframe-profilUrl" style="display: inline-block; vertical-align: middle;"></iframe>
-                        <iframe src="{{userHandle}}/{{postNo}}/postUrl.txt" class="iframe-postUrl" style="display: inline-block; vertical-align: middle;"></iframe>
-                        <iframe src="initialPostUrl.txt" class="iframe-initialPostUrl" style="display: inline-block; vertical-align: middle;"></iframe>
-                    </p>
-                </div>
-            
-                <div class="page-break"></div>
-            
-                <!-- UserInfo Section -->
-                <h2>Informationen aus dem Profil Tatverdächtige*r:</h2>
-                <div class="content-block left-align">
-                    <iframe src="{{userHandle}}/UserInfo_{{userHandle}}_{{dateString}}.txt" class="iframe-UserInfo"></iframe>
-                    <iframe src="{{userHandle}}/ExtraUserInfo_{{userHandle}}_{{dateString}}.txt" class="iframe-ExtraUserInfo"></iframe>
-                </div>
-            
-                <div class="page-break"></div>
-            
-                <!-- Screenshot of User Profile -->
-                <div class="section">
-                    <h2>Screenshot Nutzerprofil auf X/Twitter</h2>
-                    <figure class="screenshot-section">
-                        <img src="{{userHandle}}/screenshot_profile_{{userHandle}}_{{dateString}}.png" alt="Screenshot Profil" class="screenshot">
-                    </figure>
-                </div>
-            
-                <div class="page-break"></div>
-            
-                <!-- Screenshot of Comment and Context -->
-                <div class="section">
-                    <h2>Screenshot des Kommentars und Kontext:</h2>
-                    <figure class="screenshot-section">
-                        <img src="{{userHandle}}/{{postNo}}/screenshot_{{userHandle}}_{{postNo}}_{{dateString}}.png" alt="Screenshot Kommentar" class="screenshot">
-                    </figure>
-                </div>
-            
-            </body>
-            </html>`
+                  @media print {
+                      /* Any print-specific styles can go here */
+                  }
+              </style>
+              
+              <script>
+                  // Script to handle printing with or without disclaimer
+                  function printWithDisclaimer() {
+                      document.querySelector('.disclaimer-page').classList.remove('no-print');
+                      window.print();
+                  }
+                  
+                  function printWithoutDisclaimer() {
+                      document.querySelector('.disclaimer-page').classList.add('no-print');
+                      window.print();
+                  }
+                  
+                  // Initialize default print setting
+                  window.onload = function() {
+                      // By default, don't print disclaimer
+                      document.querySelector('.disclaimer-page').classList.add('no-print');
+                  }
+              </script>
+          </head>
+          <body>
+              <!-- Print Controls -->
+              <div class="print-controls">
+                  <button onclick="printWithDisclaimer()">Drucken mit Hinweis</button>
+                  <button onclick="printWithoutDisclaimer()">Drucken ohne Hinweis</button>
+                  <span style="margin-left: 15px; font-size: 0.9em;">Hinweis: Der Disclaimer wird standardmäßig nicht gedruckt</span>
+              </div>
+          
+              <!-- Disclaimer Page -->
+              <div class="disclaimer-page">
+                  <div class="disclaimer-content">
+                      <h2>Rechtlicher Hinweis</h2>
+                      <p>Dieser Anzeigenentwurf wurde automatisch durch künstliche Intelligenz erstellt. Er dient ausschließlich als Hilfestellung zur Vorbereitung einer Strafanzeige und ersetzt keine anwaltliche Beratung gemäß dem Rechtsdienstleistungsgesetz.</p>
+                      <p>Bitte prüfe den Entwurf sorgfältig und eigenverantwortlich auf Richtigkeit, Vollständigkeit und rechtliche Relevanz, bevor du ihn bei Behörden einreichst. Der Anbieter übernimmt keinerlei Haftung für Fehler, Unvollständigkeiten oder rechtliche Konsequenzen, die aus der Verwendung dieses KI-generierten Entwurfs entstehen könnten.</p>
+                  </div>
+              </div>
+          
+              <!-- DIN 5008 Address Layout -->
+              <div class="address-container">
+                  <div class="left-column">
+                      <div class="recipient-address">
+                          <iframe src="Anschreiben_Basis_Daten/Empf.Adresse.txt" class="iframe-Empf_Adresse"></iframe>
+                      </div>
+                  </div>
+                  
+                  <div class="right-column">
+                      <iframe src="Anschreiben_Basis_Daten/Abs.Adresse.txt" class="iframe-Abs_Adresse"></iframe>
+                      <iframe src="Anschreiben_Basis_Daten/Abs.Kontakt.txt" class="iframe-Abs_Kontakt"></iframe>
+                      <iframe src="{{userHandle}}/{{postNo}}/unser_Zeichen.txt" class="iframe-unser_Zeichen"></iframe>
+                  </div>
+              </div>
+              
+              <div class="bottom-row">
+                  <iframe src="Anschreiben_Basis_Daten/Betreff.txt" class="iframe-Betreff"></iframe>
+                  <iframe src="Anschreiben_Basis_Daten/Datumszeile.txt" class="iframe-Datumszeile"></iframe>
+              </div>
+          
+              <!-- AnzeigenEntwurf -->
+              <div class="content-block left-align">
+                  <iframe src="{{userHandle}}/{{postNo}}/AnzeigenEntwurf_{{userHandle}}_{{postNo}}_{{dateString}}.txt" class="iframe-AnzeigenEntwurf"></iframe>
+              </div>
+          
+              <!-- Abs.UnterzeichnendePerson.txt -->
+              <div class="signature left-align">
+                  <iframe src="Anschreiben_Basis_Daten/Abs.UnterzeichnendePerson.txt" class="iframe-Abs_UnterzeichnendePerson"></iframe>
+              </div>
+          
+              <!-- Anlagen.txt -->
+              <div class="attachments left-align">
+                  <iframe src="Anschreiben_Basis_Daten/Anlagen.txt" class="iframe-Anlagen"></iframe>
+              </div>
+          
+              <div class="page-break"></div>
+          
+              <!-- Sachverhalt Section -->
+              <h1>Sachverhalt</h1>
+          
+              <div class="content-block left-align">
+                  <p>
+                      Am <iframe src="AnalyseZeitpunkt.txt" class="iframe-AnalyseZeitpunkt" style="display: inline-block; vertical-align: middle;"></iframe>
+                      wurde bei der Sichtung der Plattform x.com/Twitter folgender Inhalt festgestellt.
+                  </p>
+              </div>
+          
+              <!-- Kommentar im Textformat -->
+              <div class="content-block">
+                  <p><strong>Kommentar im Textformat:</strong></p>
+                  <blockquote>
+                      <iframe src="{{userHandle}}/{{postNo}}/Post_{{userHandle}}_{{postNo}}_{{dateString}}.txt" class="iframe-Post"></iframe>
+                  </blockquote>
+              </div>
+          
+              <!-- Eckdaten -->
+              <div class="content-block left-align">
+                  <p><strong>Eckdaten:</strong>
+                      <iframe src="{{userHandle}}/{{postNo}}/Zeitpunkt.txt" class="iframe-Zeitpunkt" style="display: inline-block; vertical-align: middle;"></iframe>
+                      <iframe src="{{userHandle}}/userHandle.txt" class="iframe-userHandle" style="display: inline-block; vertical-align: middle;"></iframe>
+                      <iframe src="{{userHandle}}/screenname.txt" class="iframe-screenname" style="display: inline-block; vertical-align: middle;"></iframe>
+                      <iframe src="{{userHandle}}/profilUrl.txt" class="iframe-profilUrl" style="display: inline-block; vertical-align: middle;"></iframe>
+                      <iframe src="{{userHandle}}/{{postNo}}/postUrl.txt" class="iframe-postUrl" style="display: inline-block; vertical-align: middle;"></iframe>
+                      <iframe src="initialPostUrl.txt" class="iframe-initialPostUrl" style="display: inline-block; vertical-align: middle;"></iframe>
+                  </p>
+              </div>
+          
+              <div class="page-break"></div>
+          
+              <!-- UserInfo Section -->
+              <h2>Informationen aus dem Profil Tatverdächtige*r:</h2>
+              <div class="content-block left-align">
+                  <iframe src="{{userHandle}}/UserInfo_{{userHandle}}_{{dateString}}.txt" class="iframe-UserInfo"></iframe>
+                  <iframe src="{{userHandle}}/ExtraUserInfo_{{userHandle}}_{{dateString}}.txt" class="iframe-ExtraUserInfo"></iframe>
+              </div>
+          
+              <div class="page-break"></div>
+          
+              <!-- Screenshot of User Profile -->
+              <div class="section">
+                  <h2>Screenshot Nutzerprofil auf X/Twitter</h2>
+                  <figure class="screenshot-section">
+                      <img src="{{userHandle}}/screenshot_profile_{{userHandle}}_{{dateString}}.png" alt="Screenshot Profil" class="screenshot">
+                  </figure>
+              </div>
+          
+              <div class="page-break"></div>
+          
+              <!-- Screenshot of Comment and Context -->
+              <div class="section">
+                  <h2>Screenshot des Kommentars und Kontext:</h2>
+                  <figure class="screenshot-section">
+                      <img src="{{userHandle}}/{{postNo}}/screenshot_{{userHandle}}_{{postNo}}_{{dateString}}.png" alt="Screenshot Kommentar" class="screenshot">
+                  </figure>
+              </div>
+          
+          </body>
+          </html>`
 
     return template
       .replace("{{iframeStyles}}", iframeStyles)
@@ -709,7 +800,7 @@ const Anzeigen_neu_generieren = () => {
         <h3>1. Auswahl des Hauptverzeichnisses</h3>
         <ol>
           <li>
-            <strong>Klicke auf „Wähle das Hauptverzeichnis“.</strong>
+            <strong>Klicke auf „Wähle das Hauptverzeichnis".</strong>
           </li>
           <li>
             <strong>Wähle den Ordner aus</strong>, in dem sich die entpackten Dateien
@@ -749,7 +840,7 @@ const Anzeigen_neu_generieren = () => {
         <h3>3. Generierung der Anzeigen</h3>
         <ol>
           <li>
-            <strong>Klicke auf „Generiere Anzeige“.</strong>
+            <strong>Klicke auf „Generiere Anzeige".</strong>
           </li>
           <li>
             <strong>Warte, bis der Prozess abgeschlossen ist.</strong> Eine

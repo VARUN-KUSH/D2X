@@ -36,8 +36,7 @@ function generateHtmlReport(
     Verfolgungsart,
     fileContents
   ) {
-    // Define the HTML template with placeholders
-    console.log("username>>>>>>>>", username, "tweetId>>>>>>>>>>>>.", tweetId, "dateString>>>>>>>", dateString)
+    // Define the HTML template with disclaimer and print controls
     const htmlTemplate = `
       <!DOCTYPE html>
       <html lang="de">
@@ -67,6 +66,63 @@ function generateHtmlReport(
                   padding: 0;
                   position: relative;
                   width: 100%;
+              }
+              
+              /* Disclaimer styles */
+              .disclaimer-page {
+                  padding: 2cm;
+                  font-size: 14px;
+                  line-height: 1.4;
+                  border-bottom: 1px dashed #ccc;
+                  margin-bottom: 2cm;
+                  page-break-after: always;
+              }
+              
+              .disclaimer-content {
+                  max-width: 16cm;
+                  margin: 0 auto;
+                  background-color: #f8f8f8;
+                  padding: 1.5cm;
+                  border: 1px solid #ddd;
+                  border-radius: 5px;
+              }
+              
+              /* Print controls */
+              .print-controls {
+                  background-color: #eee;
+                  padding: 10px;
+                  text-align: center;
+                  margin-bottom: 20px;
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  z-index: 1000;
+                  border-bottom: 1px solid #ccc;
+              }
+              
+              .print-controls button {
+                  padding: 8px 15px;
+                  margin: 0 5px;
+                  cursor: pointer;
+                  background-color: #3B82F6;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+              }
+              
+              .print-controls button:hover {
+                  background-color: #60A5FA;
+              }
+              
+              @media print {
+                  .print-controls {
+                      display: none;
+                  }
+                  
+                  .disclaimer-page.no-print {
+                      display: none;
+                  }
               }
       
               .right-align {
@@ -167,13 +223,43 @@ function generateHtmlReport(
               .section {
                   page-break-inside: avoid;
               }
-      
-              @media print {
-                  /* Any print-specific styles can go here */
-              }
           </style>
+          
+          <script>
+              // Script to handle printing with or without disclaimer
+              function printWithDisclaimer() {
+                  document.querySelector('.disclaimer-page').classList.remove('no-print');
+                  window.print();
+              }
+              
+              function printWithoutDisclaimer() {
+                  document.querySelector('.disclaimer-page').classList.add('no-print');
+                  window.print();
+              }
+              
+              // Initialize default print setting
+              window.onload = function() {
+                  // By default, don't print disclaimer
+                  document.querySelector('.disclaimer-page').classList.add('no-print');
+              }
+          </script>
       </head>
       <body>
+          <!-- Print Controls -->
+          <div class="print-controls">
+              <button onclick="printWithDisclaimer()">Drucken mit Hinweis</button>
+              <button onclick="printWithoutDisclaimer()">Drucken ohne Hinweis</button>
+              <span style="margin-left: 15px; font-size: 0.9em;">Hinweis: Der Disclaimer wird standardmäßig nicht gedruckt</span>
+          </div>
+      
+          <!-- Disclaimer Page -->
+          <div class="disclaimer-page">
+              <div class="disclaimer-content">
+                  <h2>Rechtlicher Hinweis</h2>
+                  <p>Dieser Anzeigenentwurf wurde automatisch durch künstliche Intelligenz erstellt. Er dient ausschließlich als Hilfestellung zur Vorbereitung einer Strafanzeige und ersetzt keine anwaltliche Beratung gemäß dem Rechtsdienstleistungsgesetz.</p>
+                  <p>Bitte prüfe den Entwurf sorgfältig und eigenverantwortlich auf Richtigkeit, Vollständigkeit und rechtliche Relevanz, bevor du ihn bei Behörden einreichst. Der Anbieter übernimmt keinerlei Haftung für Fehler, Unvollständigkeiten oder rechtliche Konsequenzen, die aus der Verwendung dieses KI-generierten Entwurfs entstehen könnten.</p>
+              </div>
+          </div>
       
           <!-- DIN 5008 Address Layout -->
           <div class="address-container">
@@ -282,15 +368,15 @@ function generateHtmlReport(
      * @returns {number} - The total number of lines.
      */
     function calculateLineCount(content) {
-        if (!content) return 0;
-        const lines = content.split("\n");
-        let totalLines = 0;
-        lines.forEach((line) => {
-            totalLines += Math.ceil(line.length / 75) || 1;
-        });
-        return totalLines;
+      if (!content) return 0;
+      const lines = content.split("\n");
+      let totalLines = 0;
+      lines.forEach((line) => {
+        totalLines += Math.ceil(line.length / 75) || 1;
+      });
+      return totalLines;
     }
-
+  
     // Define default heights for each iframe class
     const defaultHeights = {
       "iframe-Abs_Adresse": 75,
@@ -312,7 +398,7 @@ function generateHtmlReport(
       "iframe-initialPostUrl": 45,
       "iframe-UserInfo": 230,
       "iframe-ExtraUserInfo": 170
-    }
+    };
   
 
 
@@ -333,20 +419,20 @@ function generateHtmlReport(
     //     return String(input).replace(/[&<>"']/g, function (m) {
     //       return map[m]
     //     })
-    //   }
+    //   }  
 
     // Calculate heights based on fileContents
     const heights = { ...defaultHeights };
     if (fileContents) {
-        for (const className in heights) {
-            const key = className.replace("iframe-", "");
-            if (fileContents[key]) {
-                const lineCount = calculateLineCount(fileContents[key]);
-                heights[className] = 30 + lineCount * 15;  // Same formula as Anzeigen_neu_generieren
-            }
+      for (const className in heights) {
+        const key = className.replace("iframe-", "");
+        if (fileContents[key]) {
+          const lineCount = calculateLineCount(fileContents[key]);
+          heights[className] = 30 + lineCount * 15;  // Same formula as Anzeigen_neu_generieren
         }
+      }
     }
-
+  
     /**
      * Generates CSS styles for iframes based on their calculated heights.
      *
@@ -354,29 +440,25 @@ function generateHtmlReport(
      * @returns {string} - The generated CSS styles as a string.
      */
     function generateIframeStyles(heights) {
-        let styles = "";
-        for (const className in heights) {
-            styles += `
-            .${className} {
-                height: ${heights[className]}px;
-            }
-            `;
+      let styles = "";
+      for (const className in heights) {
+        styles += `
+        .${className} {
+            height: ${heights[className]}px;
         }
-        return styles;
+        `;
+      }
+      return styles;
     }
   
     // Generate CSS styles for iframes
-    const iframeStyles = generateIframeStyles(heights)
+    const iframeStyles = generateIframeStyles(heights);
   
-//    // Replace placeholders in the template
-  let htmlContent = htmlTemplate.replace("{{iframeStyles}}", iframeStyles)
-//   // .replace(/{{userHandle}}/g, sanitizeInput(userProfileSubfolderName))
-//   // .replace(/{{postNo}}/g, sanitizeInput(postDataSubfolderName))
-//   // .replace(/{{dateString}}/g, sanitizeInput(dateString))
-//   // .replace(/{{Verfolgungsart}}/g, sanitizeInput(Verfolgungsart))
-
-  return htmlContent
-}
-
-// If using ES modules, uncomment the following line:
-export { generateHtmlReport }
+    // Replace placeholders in the template
+    let htmlContent = htmlTemplate.replace("{{iframeStyles}}", iframeStyles);
+  
+    return htmlContent;
+  }
+  
+  // If using ES modules, uncomment the following line:
+  export { generateHtmlReport }
