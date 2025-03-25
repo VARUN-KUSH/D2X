@@ -6,23 +6,6 @@ export const config = {
 
 var CAPTURE_DELAY = 700;
 
-// function onMessage(data, sender, callback) {
-//   if (data.msg === "scrollPage") {
-//     getPositions(callback);
-//     return true;
-//   } else if (data.msg === "logMessage") {
-//     console.log("[POPUP LOG]", data.data);
-//     callback(); // Always send a response
-//   } else {
-//     console.log("Ignoring unknown message in capture-page.js:", data);
-//     callback(); // Send a response to avoid message channel errors
-//   }
-// }
-
-// if (!window.hasScreenCapturePage) {
-//   window.hasScreenCapturePage = true;
-//   chrome.runtime.onMessage.addListener(onMessage);
-// }
 
 function onPortMessage(port) {
   port.onMessage.addListener((data) => {

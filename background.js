@@ -350,7 +350,7 @@ async function startFullAnalysis() {
     updateAnalysisStatus(uid, "processing")
     //change the lang to german
     sendMessageToPopup("Ich beginne mit der Verarbeitung der Posts...", 20)
-    const results = await processContent(scrapedContent)
+    const results = await processContent(scrapedContent, uid)
     console.log("Processed results:", results)
     console.log("finalreport>>>>>>", results.Report)
     if (!results.Report) {
@@ -379,25 +379,6 @@ async function startFullAnalysis() {
   }
 }
 
-// async function addAnalysisResultsToZip(results) {
-//   return new Promise((resolve, reject) => {
-//     chrome.runtime.sendMessage(
-//       {
-//         action: "addToZip",
-//         fileData: JSON.stringify(results, null, 2),
-//         filename: "analysis_results.json",
-//         directory: ""
-//       },
-//       (response) => {
-//         if (chrome.runtime.lastError || (response && response.error)) {
-//           reject(chrome.runtime.lastError || response.error)
-//         } else {
-//           resolve()
-//         }
-//       }
-//     )
-//   })
-// }
 
 // # Assistent functionality
 // Function to load API key storage
@@ -479,9 +460,9 @@ const getvictimname = (profileUrl) => {
 }
 
 // Function to process content with batching and error handling
-async function processContent(messages) {
+async function processContent(messages, uid) {
   try {
-    const uid = getActiveAnalysisId()
+   
     console.log(`Processing content for analysis ID: ${uid}`)
     updateAnalysisStatus(uid, "processing")
     const API_KEY = await getAPIKey()
@@ -1473,8 +1454,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             )
 
             console.log("Structured Response:", postresults)
-            // const posts = JSON.parse(postresults.choices[0].message?.content)
-            // console.log("posts>>>>>>", posts)
+           
             postresults.map((post) => {
               const posts = JSON.parse(post.choices[0].message?.content)
               results.push(...(posts?.Posts || []))

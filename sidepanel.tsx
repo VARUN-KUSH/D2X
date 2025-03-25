@@ -335,9 +335,6 @@ function SidePanel() {
       setprojectStatus(
         "Der Beitrag wurde von OpenAI nicht als strafbar befunden. Er wird nicht für einen Anzeigenentwurf gespeichert."
       )
-      // setTimeout(() => {
-      //   setShowProgressBar(false)
-      // }, 1000)
       return
     }
 
@@ -378,7 +375,6 @@ function SidePanel() {
   }
 
   const saveformdata = () => {
-    // e.preventDefault()
     // Save the formData locally using chrome.storage.local
     chrome.storage.local.set({ formData }, () => {
       console.log("Data saved locally", formData)

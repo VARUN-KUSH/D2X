@@ -234,14 +234,22 @@ async function getoriginalUrl() {
   return originalUrl
 }
 
-export async function downloadprofilereport(results) {
+function getCurrentDate() {
   let now = new Date()
   let year = now.getFullYear()
   let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
   let date = String(now.getDate()).padStart(2, "0")
-  let hours = String(now.getHours()).padStart(2, "0")
-  let minutes = String(now.getMinutes()).padStart(2, "0")
-  let seconds = String(now.getSeconds()).padStart(2, "0")
+  
+  return {
+    year: year,
+    month: month,
+    date: date,
+  }
+}
+
+export async function downloadprofilereport(results) {
+  const { year, month, date} = getCurrentDate()
+
   zip = null
   zip = new JSZip()
   let mainFolder = zip.folder("Strafanz_Report") // Main folder
@@ -517,13 +525,8 @@ export async function downloadprofilereport(results) {
   }
 }
 export async function downloadpostreport(results) {
-  let now = new Date()
-  let year = now.getFullYear()
-  let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
-  let day = String(now.getDate()).padStart(2, "0")
-  let hours = String(now.getHours()).padStart(2, "0")
-  let minutes = String(now.getMinutes()).padStart(2, "0")
-  let seconds = String(now.getSeconds()).padStart(2, "0")
+  const { year, month, day: date} = getCurrentDate()
+  
 
   // // Create folder name in format Strafanz_Report_year.month.date.time
   // let folderName = `Strafanz_Report_${year}.${month}.${date}.${hours}.${minutes}.${seconds}`
@@ -774,10 +777,7 @@ export async function createFinalReport(results, originalUrl = "") {
   }
 
   // First subfolder: "Anschreiben_Basis_Daten"
-  let now = new Date()
-  let year = now.getFullYear()
-  let month = String(now.getMonth() + 1).padStart(2, "0") // Months are 0-indexed, so we add 1
-  let date = String(now.getDate()).padStart(2, "0")
+  const { year, month, date } = getCurrentDate()
   let hours = String(now.getHours()).padStart(2, "0")
   let minutes = String(now.getMinutes()).padStart(2, "0")
   let seconds = String(now.getSeconds()).padStart(2, "0")
