@@ -49,25 +49,6 @@ export const CaptureAPI = (function () {
       currentMessageListener = null
     }
 
-    // Clean up any existing canvases
-    // const cleanup = () => {
-    //   // Clean up any existing canvases
-    //   const existingCanvases = document.querySelectorAll(
-    //     "canvas[data-screenshot]"
-    //   )
-    //   existingCanvases.forEach((canvas) => {
-    //     const ctx = canvas.getContext("2d")
-    //     ctx.clearRect(0, 0, canvas.width, canvas.height) // Clear the canvas
-    //     canvas.width = 0 // Reset dimensions
-    //     canvas.height = 0
-    //     canvas.remove() // Remove from DOM
-    //   })
-    //   return
-    // }
-
-    // Run cleanup immediately and after a short delay to catch any stragglers
-    // cleanup()
-    // setTimeout(cleanup, 100)
     setTimeout(resolve, 100)
   })
   }
@@ -106,21 +87,6 @@ export const CaptureAPI = (function () {
   }
 
   function initiateCapture(tab, callback) {
-    // const port = chrome.tabs.connect(tab.id)
-
-    // port.postMessage({ msg: "scrollPage" })
-
-    // port.onMessage.addListener((response) => {
-    //   if (response.msg === "scrollComplete") {
-    //     // We're done taking snapshots of all parts of the window.
-    //     // Display the resulting full screenshot images in a new browser tab.
-    //     callback()
-    //   } else if (response.msg === "logComplete") {
-    //     console.log("Log message acknowledged.")
-    //   } else if (response.msg === "unknownMessageHandled") {
-    //     console.log("Unknown message handled.")
-    //   }
-    // })
  
 
     currentPort = chrome.tabs.connect(tab.id)
@@ -139,9 +105,7 @@ export const CaptureAPI = (function () {
     })
   }
 
-  // const captureQueue = []
-  // let isCapturing = false
-  // const CAPTURE_DELAY = 1000 // 1 second delay between calls
+  
 
   function capture(data, screenshots, sendResponse, splitnotifier) {
     captureQueue.push(() =>
@@ -396,10 +360,7 @@ export const CaptureAPI = (function () {
   function captureToBlobs(tab, callback, errback, progress, splitnotifier) {
     // Add a cleanup function to reset global state
 
-    // let loaded = false
-    // let timedOut = false
-    // const timeout = 3000
-    // const noop = function () {}
+  
 
     callback = callback || noop
     errback = errback || noop
@@ -423,30 +384,11 @@ export const CaptureAPI = (function () {
 
     chrome.runtime.onMessage.addListener(currentMessageListener)
 
-    // TODO will this stack up if run multiple times? (I think it will get cleared?)
-    // chrome.runtime.onMessage.addListener(
-    //   function (request, sender, sendResponse) {
-    //     if (request.msg === "capture") {
-    //       progress(request.complete)
-    //       capture(request, screenshots, sendResponse, splitnotifier)
-
-    //       // https://developer.chrome.com/extensions/messaging#simple
-    //       //
-    //       // If you want to asynchronously use sendResponse, add return true;
-    //       // to the onMessage event handler.
-    //       //
-    //       return true
-    //     } else {
-    //       console.log("Ignoring unknown message in capture-api.js:", request)
-    //       return false
-    //     }
-    //   }
-    // )
+   
 
     console.log("Tab object before executeScript: ", tab)
 
-    // if (!injectedTabs.has(tab.id)) {
-    // injectedTabs.set(tab.id, true)
+  
 
     if (chrome.scripting) {
       chrome.scripting.executeScript(
@@ -473,13 +415,7 @@ export const CaptureAPI = (function () {
       // cleanupGlobalState()
       console.error("Scripting API is unavailable in this context.")
     }
-    // } else {
-    //   // `capture-page.js` already injected, proceed directly
-    //   console.log("`capture-page.js` already injected, proceed directly ");
-    //   initiateCapture(tab, function () {
-    //     callback(getBlobs(screenshots));
-    //   });
-    // }
+   
 
     window.setTimeout(function () {
       if (!loaded) {
@@ -502,11 +438,7 @@ export const CaptureAPI = (function () {
       `Starting captureToFiles: tabId=${tab.id}, filename=${filename}`
     )
 
-    // if (captureLocks.get(tab.id)) {
-    //   errback(new Error("Capture already in progress for this tab."))
-    //   return
-    // }
-    // captureLocks.set(tab.id, true)
+    
 
     if (typeof filename !== "string") {
       console.error("Invalid filename:", filename)

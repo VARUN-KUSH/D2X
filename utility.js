@@ -19,6 +19,7 @@ function modifyUrl(url) {
 
   return modifiedUrl
 }
+
 function generateSubsumptionDetails(post) {
   // Filter Subsumtions to include only those with "HOCH" or "MITTEL" and sort them by priority ("HOCH" first)
   const relevantSubsumtions = post.Subsumtion
@@ -202,27 +203,6 @@ export async function addTimestampToScreenshots(
   )
 }
 
-// export async function addToZip(fileData, filename, directory) {
-//   console.log(
-//     "filename>>>>>>",
-//     filename,
-//     "fileData>>>>>>>>>>>",
-//     fileData,
-//     "directory::::::::",
-//     directory
-//   )
-
-//   // No need to fetch; `fileData` is already a Blob
-//   const blobData = fileData
-
-//   if (directory) {
-//     zip.folder(directory).file(filename, blobData, { binary: true })
-//   } else {
-//     zip.file(filename, blobData, { binary: true })
-//   }
-
-//   await downloadallfullfilesZip()
-// }
 
 async function getFormData() {
   return new Promise((resolve, reject) => {
@@ -520,13 +500,7 @@ export async function downloadprofilereport(results) {
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
-    // userFolder.file(
-    //   `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
-    //   `Biografie: ${post.scrapedData?.profilebiodata}
-    //   ${post.scrapedData?.userJoindate}
-    //   Folgt: ${post.scrapedData?.followingCount}
-    //   Follower: ${post.scrapedData?.followersCount} `
-    // )
+   
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
       generateUserInfoContent(post)
@@ -665,13 +639,7 @@ export async function downloadpostreport(results) {
       `profilUrl.txt`,
       `URL Profil Tatverdächtige*r: ${post.userProfileUrl || ""}`
     )
-    // userFolder.file(
-    //   `UserInfo_${post.Username}_${day}.${month}.${year}.txt`,
-    //   `Biografie: ${post.scrapedData?.profilebiodata}
-    //   ${post.scrapedData?.userJoindate}
-    //   Folgt: ${post.scrapedData?.followingCount}
-    //   Follower: ${post.scrapedData?.followersCount} `
-    // )
+   
 
     userFolder.file(
       `UserInfo_${post.Username}_${date}.${month}.${year}.txt`,
@@ -747,19 +715,7 @@ export async function downloadpostreport(results) {
 
       folder2.file(`unser_Zeichen.txt`, `Unser Zeichen: ${tweetId}`)
       folder2.file(`Verfolgungsart.txt`, `${post.Verfolgungsart}`)
-      // folder2.file(
-      //   `Zeitpunkt.txt`,
-      //   // `Zeitpunkt des Kommentars: ${day}.${month}.${year} um ${hours}:${minutes} Uhr`
-      //   `Zeitpunkt des Kommentars: ${new Date(post?.Veröffentlichungszeitpunkt)
-      //     .toISOString()
-      //     .replace(/T/, " ")
-      //     .replace(/Z/, "")
-      //     .replace(
-      //       /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}).*$/,
-      //       (_, y, m, d, h, min) => `${d}.${m}.${y} ${h}:${min}`
-      //     )} Uhr`
-      // )
-      // Use in your code
+     
       folder2.file(
         `Zeitpunkt.txt`,
         `Zeitpunkt des Kommentars: ${formatDateTime(post.Veröffentlichungszeitpunkt)}${formatDateTime(post.Veröffentlichungszeitpunkt) ? " Uhr" : ""}`
@@ -854,11 +810,7 @@ export async function createFinalReport(results, originalUrl = "") {
       .join("\n")
   }
 
-  //Timestamp to add in this text file AnalyseZeitpunkt.txt
-  // mainFolder.file(
-  //   "initialPostUrl.txt",
-  //   `URL des Ausgangsposts: ${originalUrl || ""}`
-  // )
+ 
 
   if(originalUrl.trim() === "") {
     originalUrl = await getoriginalUrl()
@@ -1304,21 +1256,7 @@ export function getFilename(contentURL, uid) {
   return `screenshot-${shortUID}-${name}-${Date.now()}.png`
 }
 
-// export async function downloadallfullfilesZip() {
-//   // Generate the zip Blob
-//   // Generate the zip Blob
-//   // Generate the zip Blob
-//   const zipBlob = await zip.generateAsync({ type: "blob" })
 
-//   // Create a download link
-//   const url = URL.createObjectURL(zipBlob)
-//   const a = document.createElement("a")
-//   a.href = url
-//   a.download = "archive.zip"
-//   document.body.appendChild(a)
-//   a.click()
-//   URL.revokeObjectURL(url)
-// }
 
 export async function downloadZip() {
   // Generate the zip Blob

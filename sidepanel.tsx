@@ -122,12 +122,7 @@ function SidePanel() {
   const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(false) // Default is on (header visible)
   const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(false)
 
-  // const [darkMode, setDarkMode] = useState(false); // Track dark mode state
-  // useEffect(() => {
-  //     setupMessageListener();
-  //     // Ensure "Seite automatisch auswerten" is open by default
-  //     document.getElementById("evaluateSection").open = true;
-  // }, []);
+ 
 
   // State to control the display of the Terms Modal
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -777,7 +772,7 @@ function SidePanel() {
   }
 
   const triggerFullAnalysis = () => {
-    const { openaiApiKey, perplexityApiKey } = apiKeys
+    const { openaiApiKey} = apiKeys
 
     // Check API key conditions
     if (!openaiApiKey) {
@@ -801,7 +796,7 @@ function SidePanel() {
       }
     )
 
-    // setupMessageListener()
+    
   }
 
   const takefullpagess = async () => {

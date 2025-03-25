@@ -340,17 +340,6 @@ async function startFullAnalysis() {
     console.log("tabid>>>>>>>>>>>>>", tabId)
     console.log("url>>>>>>>>>>>>>>", url)
 
-    // Capture initial screenshot without navigation
-    //send status of project to popup
-    //chnage this to german language
-    // sendMessageToPopup("Ich erstelle einen Screenshot der ganzen Seite...")
-    // const screenshot = await requestinitialScreenshotCapture(
-    //   url,
-    //   "initial_page.png",
-    //   ""
-    // )
-    // console.log("initialscreenshot>>>>>>>>>", screenshot)
-
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
     console.log("Scraping content for URL:", url)
@@ -1042,27 +1031,6 @@ async function captureReportablePostScreenshots(reportablePosts) {
 }
 
 async function requestinitialScreenshotCapture(url, filename, directory) {
-  // return await new Promise((resolve, reject) => {
-  //   chrome.runtime.sendMessage(
-  //     {
-  //       action: "captureScreenshot",
-  //       analysisId: getActiveAnalysisId(),
-  //       url: url,
-  //       filename: filename,
-  //       directory: directory,
-  //     },
-  //     (response) => {
-  //       if (chrome.runtime.lastError || (response && response.error)) {
-  //         reject(chrome.runtime.lastError || response.error);
-  //       } else {
-  //         if (response.success && response.modifiedscreenshots) {
-  //           resolve(response.modifiedscreenshots)
-  //           return
-  //         }
-  //       }
-  //     }
-  //   );
-  // });
 
   return await new Promise((resolve, reject) => {
     const port = chrome.runtime.connect({ name: "fullpagescreenshot" })
@@ -1543,11 +1511,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           sendResponse({ analysisId: getActiveAnalysisId() })
           break
 
-        //case "storeScreenshot":
-        //await storeScreenshot(request.analysisId, request.screenshot);
-        //sendResponse({ status: "Screenshot stored successfully" });
-        //break;
-
         case "scrapeContent":
           const content = await scrapeContent(
             request.analysisId,
@@ -1559,11 +1522,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case "scrapePostURL":
           handleAsyncScrape(request, sendResponse)
           return true // This is crucial - tells Chrome to keep the message channel open
-        // analysisId = getActiveAnalysisId()
-        // const scrapedPost = await handlePostURLScrape(analysisId, request.url)
-        // console.log("scrapedPost>>>>>>>", scrapedPost)
-        // sendResponse(scrapedPost)
-
+      
         case "SAVE_REPORT":
           // Handle the finalreport data
           const reports = request.payload
