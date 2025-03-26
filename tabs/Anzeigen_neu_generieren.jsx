@@ -1,6 +1,6 @@
 import React from "react"
 
-import "../main.css"
+import "../anzeigen_neu_gen.css"
 
 //logs metric
 

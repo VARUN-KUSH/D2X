@@ -39,7 +39,8 @@ body {
     color: #333333;
 }
 
-.sidebar ul, .sidebar ol {
+.sidebar ul,
+.sidebar ol {
     margin-left: 20px;
     color: #555555;
     font-size: 14px;
@@ -123,7 +124,8 @@ select:focus {
     margin-top: 20px;
     color: #333333;
     font-size: 14px;
-    white-space: pre-line; /* Ermöglicht Zeilenumbrüche in Statusmeldungen */
+    white-space: pre-line;
+    /* Ermöglicht Zeilenumbrüche in Statusmeldungen */
 }
 
 /* Responsive Anpassung */

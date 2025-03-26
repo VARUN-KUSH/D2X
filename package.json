@@ -1,8 +1,8 @@
 {
   "name": "twitter_threat",
   "displayName": "Strafanzeiger",
-  "version": "0.0.1",
-  "description": "extension to combat onilne harassment on Twitter/X",
+  "version": "0.0.2",
+  "description": "extension to combat online harassment on Twitter/X",
   "author": "varun",
   "scripts": {
     "dev": "plasmo dev",
