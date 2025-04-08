@@ -4,9 +4,9 @@
 // Screenshot functionality based on Peter Coles - http://mrcoles.com/ - from https://github.com/chemtrails/FullCap
 
 // Screenshot functionality based on Peter Coles - http://mrcoles.com/ - from https://github.com/chemtrails/FullCap
-function logFileOperation(operation, path) {
-  console.log(`File Operation: ${operation}, Path: ${path}`)
-}
+// function logFileOperation(operation, path) {
+//   console.log(`File Operation: ${operation}, Path: ${path}`)
+// }
 
 export const CaptureAPI = (function () {
   const MAX_PRIMARY_DIMENSION = 15000 * 2,
