@@ -1,6 +1,6 @@
 import JSZip from "jszip.min.js"
 
-import { generateHtmlReport } from "./generateHtmlReport.js"
+import { generateHtmlReport } from "../generateHtmlReport.js"
 
 let zip = null
 

@@ -1,14 +1,4 @@
-// Function to handle the full analysis workflow
-// TODO implement Workflow
-//  - Start analysis with user button click
-//  - Generate a UID
-//  - trigger screenshot of the social media page with timestamps and url added
-//  - trigger scraping
-//  - Use LLM / Assitent API
-//    - if required (i.e. if scraping gives unstructured ORC result from universal scraper(i.e. a scraper flag = universalScraper)) structure the scrape into a format of messages and replies
-//    - evaluate if post can be reported to authorities
-//  - create report / download report (folder with screenshot, and report and possibly csv with analysis results so the user can change the suggestions and then automate reporting to the authorieties with a different program)
-// handle when no reportable posts
+
 
 import { profileScrape } from "./contents/profile-scrapper.js"
 import jsonSchema from "./response.schema.json"
@@ -21,15 +11,14 @@ import {
   downloadZip,
   fetchEvaluation,
   isPerplexityEnabled
-} from "./utility.js"
-import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils.js"
+} from "./utils/utility.js"
+import { evaluatorSystemPrompt, generatePerplexityPrompt } from "./utils/utils.js"
 
 // ## Global variables
 let currentAnalysisId = null
 let activeAnalyses = new Map()
 
 // ## UID generation and management
-
 function generateUniqueId() {
   // The IDs follow the UUID (Universally Unique Identifier) version 4 format
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -119,9 +108,9 @@ function getUsername(profileUrl) {
   return username
 }
 
-function generateScreenshotFilename(analysisId, index, total) {
-  return `screenshot_${analysisId}_${index + 1}_of_${total}.png`
-}
+// function generateScreenshotFilename(analysisId, index, total) {
+//   return `screenshot_${analysisId}_${index + 1}_of_${total}.png`
+// }
 
 /**
  * Filters the scraped tweets for the victim’s posts and concatenates their data.
@@ -328,17 +317,15 @@ export function sendMessageToPopup(message, progress = null) {
   })
 }
 
-// ## Main analysis functions
-async function startFullAnalysis() {
+// ## Main function to start the full analysis
+async function startAutoFullAnalysis() {
   try {
     const uid = getActiveAnalysisId()
-    console.log("uid>>>>>>>>>>>>>>>>>>>>>", uid)
     console.log(`Starting full analysis with ID: ${uid}`)
 
     const tabId = await getCurrentTabId()
     const url = await getCurrentTabUrl()
-    console.log("tabid>>>>>>>>>>>>>", tabId)
-    console.log("url>>>>>>>>>>>>>>", url)
+    console.log("url>>>>>>>>>>>>>>", url, "tabid>>>>>>>>>>>>>", tabId)
 
     // Proceed with scraping and processing
     updateAnalysisStatus(uid, "scraping")
@@ -1141,7 +1128,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     try {
       switch (request.action) {
         case "startAnalysis":
-          await startFullAnalysis()
+          await startAutoFullAnalysis()
           sendResponse({ analysisId: getActiveAnalysisId() })
           break
 

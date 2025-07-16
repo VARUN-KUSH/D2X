@@ -1,6 +1,6 @@
 // App.js
 import React, { useState } from "react";
-import "../Uber_Strafanz.css";
+import "../css/Uber_Strafanz.css";
 
 const sections = [
   {

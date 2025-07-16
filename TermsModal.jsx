@@ -1,11 +1,12 @@
 import React from "react";
 
-interface TermsModalProps {
-    alreadyAccepted: boolean;
-    onAccept: () => void;
-}
 
-const TermsModalFinal: React.FC<TermsModalProps> = ({ alreadyAccepted, onAccept }) => {
+/**
+ * TermsModalFinal component displays the terms and conditions for the Chrome extension "Strafanzeiger".
+ * It includes sections on general terms, contract subject, user responsibilities, data protection,
+ * liability, rights of the provider, and applicable law.
+ */
+const TermsModalFinal = ({ alreadyAccepted, onAccept }) => {
     return (
         <div className="modal-overlay">
             <div className="modal-content">

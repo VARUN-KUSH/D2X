@@ -1,50 +1,19 @@
-import { CaptureAPI } from "capture-api"
 import React, { useEffect, useState } from "react"
-import TermsModal from "./TermsModal";
 import {
   addTimestampToScreenshots,
   capturereportablessandchangetoURLs,
   downloadScreenshots,
   getFilename
-} from "utility"
+} from "./utils/utility.js"
 
 import { profileScrape } from "./contents/profile-scrapper.js"
+import TermsModal from "./TermsModal"
+import {
+  captureToFiles,
+  cleanupGlobalState
+} from "./utils/handlefullpagescreenshots.js"
 
-import "./popup.css"
-
-//need to handle bug when user clicks multiple times the start analysis button
-//edge cases
-//disabling buttons when we start the automatic or manuala report creation until the process is complete
-//showing a nice message to user when they did not added any api key before
-//showing message of each detailed step that is going on during the process
-//api change to chat completions from assistant api
-//side panel and also should be open when we click the icon similar to popup
-//fixed sidepanel errors
-//perplexity response consistecny
-//hover effects
-// click effects
-//save and delete locally to all input fields
-//ui with effects
-//optimisation and making the process faster
-//darkmode (toggle to enable dark mode and light mode)
-//hide the profile image while taking ss
-//making sure profile ss should be taken when profile image is loaded completely
-//post ss should be when post is completely loaded
-//automatic report -->> automatic report download
-//manual download -->> enabling button once step is completed
-//manual analysis and report creation
-//should be running in almost everyone browser
-//improvement in UI
-//user feedback for user functioanlity satisfation and rating
-//user price paying
-//stop button to stop the report creation
-//improving the scrapper so it should be scrolling to bottom and extracting all tweets
-//imrove consistency from openai
-//attaching the creating report tool into an extension itself
-//report iframes improvement
-//testing in multiple user systems
-//status logg
-//16-11-2024
+import "./css/sidepanel.css"
 
 function SidePanel() {
   const [inputValues, setInputValues] = useState({
@@ -80,9 +49,7 @@ function SidePanel() {
     city: "",
     fullName: ""
   })
-  const [openSection, setOpenSection] = useState<string | null>(
-    "backgroundInfoSection"
-  )
+  const [openSection, setOpenSection] = useState("backgroundInfoSection")
 
   const [esttimemin, setesttimemin] = useState(null)
 
@@ -122,43 +89,41 @@ function SidePanel() {
   const [isTwitterHeaderDisabled, setIsTwitterHeaderDisabled] = useState(false) // Default is on (header visible)
   const [isPerplexityDisabled, setIsPerplexityDisabled] = useState(false)
 
- 
-
   // State to control the display of the Terms Modal
-  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false)
   // State to track if terms have been accepted
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   useEffect(() => {
     // Check if the user has already accepted the terms
     chrome.storage.local.get("acceptedTerms", (result) => {
       if (result.acceptedTerms) {
-        setTermsAccepted(true);
+        setTermsAccepted(true)
       } else {
         // If not accepted, show the modal upon first launch
-        setShowTermsModal(true);
+        setShowTermsModal(true)
       }
-    });
-  }, []);
+    })
+  }, [])
 
   // Called when the user clicks the button in the modal
   const handleTermsAccept = () => {
     if (!termsAccepted) {
       // Store acceptance and update state
       chrome.storage.local.set({ acceptedTerms: true }, () => {
-        setTermsAccepted(true);
-        setShowTermsModal(false);
-      });
+        setTermsAccepted(true)
+        setShowTermsModal(false)
+      })
     } else {
       // If already accepted (e.g. modal triggered via the § icon), simply close it
-      setShowTermsModal(false);
+      setShowTermsModal(false)
     }
-  };
+  }
 
   // Toggle the modal when the § icon is clicked
   const toggleTermsModal = () => {
-    setShowTermsModal(true);
-  };
+    setShowTermsModal(true)
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -199,7 +164,7 @@ function SidePanel() {
       perplexityresponse: null
     }))
 
-    let response: any
+    let response
     if (!usePerplexity) {
       //send a message to background script
       setShowProgressBar(true)
@@ -305,7 +270,7 @@ function SidePanel() {
       post: null
     }))
 
-    const response: any = await new Promise((resolve, reject) => {
+    const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         {
           action: "SEARCH_POST",
@@ -331,7 +296,7 @@ function SidePanel() {
     console.log("openairesponse>>>>>>", openairesponse)
 
     if (!(openairesponse.length > 0)) {
-      setisAnimating(false);
+      setisAnimating(false)
       setprojectStatus(
         "Der Beitrag wurde von OpenAI nicht als strafbar befunden. Er wird nicht für einen Anzeigenentwurf gespeichert."
       )
@@ -570,7 +535,7 @@ function SidePanel() {
     setShowSettingsSection(!showSettingsSection)
   }
 
-  const toggleSection = (sectionId: string, event: React.MouseEvent) => {
+  const toggleSection = (sectionId, event) => {
     event.preventDefault()
     setShowHelpSection(false)
     setShowSettingsSection(false)
@@ -582,15 +547,13 @@ function SidePanel() {
     }
   }
 
-  const handleTwitterHeaderToggle = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleTwitterHeaderToggle = (e) => {
     const isChecked = e.target.checked
     setIsTwitterHeaderDisabled(isChecked)
     chrome.storage.local.set({ IsTwitterHeaderDisabled: isChecked })
   }
 
-  const handlePerplexityToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePerplexityToggle = (e) => {
     const isChecked = e.target.checked
     setIsPerplexityDisabled(isChecked)
 
@@ -636,7 +599,7 @@ function SidePanel() {
     })
   }, []) // Empty dependency array means this runs once when component mounts
 
-  const toggleSubSection = (sectionId: any) => {
+  const toggleSubSection = (sectionId) => {
     setOpenSubSections((prev) => ({
       ...prev,
       [sectionId]: !prev[sectionId]
@@ -767,8 +730,9 @@ function SidePanel() {
     })
   }
 
+  // trigger's the full analysis automatically
   const triggerFullAnalysis = () => {
-    const { openaiApiKey} = apiKeys
+    const { openaiApiKey } = apiKeys
 
     // Check API key conditions
     if (!openaiApiKey) {
@@ -777,22 +741,21 @@ function SidePanel() {
       return
     }
 
+    //enable the progress bar
     setShowProgressBar(true)
+
     chrome.runtime.sendMessage(
       { action: "startAnalysis" },
       function (response) {
         if (response && response.analysisId) {
           setAnalysisId(response.analysisId)
-          console.log("Analysis initiated with ID:", response.analysisId)
         } else {
-          console.error("Failed to start analysis", response)
-          alert("Failed to start analysis")
+          setShowMessage("Failed to start analysis")
+          setTimeout(() => setShowMessage(""), 1000)
           setShowProgressBar(false)
         }
       }
     )
-
-    
   }
 
   const takefullpagess = async () => {
@@ -805,7 +768,7 @@ function SidePanel() {
         fullscreenshot: null
       }))
 
-      const response: any = await new Promise((resolve, reject) => {
+      const response = await new Promise((resolve, reject) => {
         chrome.runtime.sendMessage(
           // if analysis id there send it
           { action: "fullpagelengthss" },
@@ -832,13 +795,12 @@ function SidePanel() {
         ? AnalysisData.analysisID
         : analysisId
 
-      const modifiednewscreenshots: any =
-        await screenshot.captureAndStoreScreenshot(
-          screenshotAnalysisId, // Use the determined analysisId
-          url,
-          filename,
-          directory
-        )
+      const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+        screenshotAnalysisId, // Use the determined analysisId
+        url,
+        filename,
+        directory
+      )
       console.log("modifiedscreenshots", modifiednewscreenshots)
 
       // Store new screenshot in state
@@ -867,7 +829,7 @@ function SidePanel() {
       visiblescreenshot: null
     }))
 
-    const response: any = await new Promise((resolve, reject) => {
+    const response = await new Promise((resolve, reject) => {
       chrome.runtime.sendMessage(
         { action: "visiblelengthss" },
         function (response) {
@@ -892,14 +854,13 @@ function SidePanel() {
       ? AnalysisData.analysisID
       : analysisId
 
-    const modifiednewscreenshots: any =
-      await screenshot.captureAndStoreScreenshot(
-        screenshotAnalysisId,
-        url,
-        filename,
-        directory,
-        portname
-      )
+    const modifiednewscreenshots = await screenshot.captureAndStoreScreenshot(
+      screenshotAnalysisId,
+      url,
+      filename,
+      directory,
+      portname
+    )
     console.log("modifiedscreenshots", modifiednewscreenshots)
     updateProgressBar(100)
 
@@ -933,7 +894,7 @@ function SidePanel() {
         "directory>>>",
         directory
       )
-      return new Promise<void>((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         chrome.tabs.query(
           { active: true, currentWindow: true },
           async function (tabs) {
@@ -981,13 +942,10 @@ function SidePanel() {
                 resolve(blobURLs)
                 return
               } else {
-                await new Promise((resolve) => {
-                  CaptureAPI.forceCleanup()
-                  setTimeout(resolve, 300) // Give cleanup time to complete
-                })
+                await cleanupGlobalState()
 
                 const blobURL = await new Promise((resolve, reject) => {
-                  CaptureAPI.captureToFiles(
+                  captureToFiles(
                     currentTab,
                     filename || getFilename(url, analysisId),
                     resolve,
@@ -1009,14 +967,6 @@ function SidePanel() {
                 )
 
                 console.log("processedScreenshots>>>>>>>>>>>>>>>>>", blobURLs)
-                // Add processed screenshots to ZIP
-
-                // for (let i = 0; i < blobURLs.length; i++) {
-                //   const response = await fetch(blobURLs[i])
-                //   const blob = await response.blob()
-                //   const fileName = filename || `screenshot_${i + 1}.png`
-                //   addToZip(blob, fileName, directory)
-                // }
 
                 resolve(blobURLs)
                 return
@@ -1067,7 +1017,7 @@ function SidePanel() {
         })
       } else if (port.name == "fullpagescreenshot") {
         port.onMessage.addListener(async (request) => {
-          console.log("Connection established in content script:", port)
+          // console.log("Connection established in content script:", port)
           if (request.action === "fulltweetsScreenshot") {
             try {
               const modifiednewscreenshots =
@@ -1093,7 +1043,7 @@ function SidePanel() {
     })
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      ; (async () => {
+      ;(async () => {
         try {
           switch (request.action) {
             case "progressUpdate":
@@ -1177,24 +1127,28 @@ function SidePanel() {
 
             case "processUpdate":
               if (
-                request.data.includes("Dokumente erfolgreich heruntergeladen.") ||
-                request.data.includes("Ich habe keine anzeigbaren Posts gefunden.") ||
+                request.data.includes(
+                  "Dokumente erfolgreich heruntergeladen."
+                ) ||
+                request.data.includes(
+                  "Ich habe keine anzeigbaren Posts gefunden."
+                ) ||
                 request.data.includes("Der Kommentar ist vermutlich strafbar.")
               ) {
-                const now = new Date();
-                const hours = now.getHours().toString().padStart(2, "0");
-                const minutes = now.getMinutes().toString().padStart(2, "0");
-                const formattedTime = `${hours}:${minutes} Uhr: `;
-                setprojectStatus(formattedTime + request.data);
-                setisAnimating(false); // Stop animation
+                const now = new Date()
+                const hours = now.getHours().toString().padStart(2, "0")
+                const minutes = now.getMinutes().toString().padStart(2, "0")
+                const formattedTime = `${hours}:${minutes} Uhr: `
+                setprojectStatus(formattedTime + request.data)
+                setisAnimating(false) // Stop animation
               } else {
-                setprojectStatus(request.data);
-                setisAnimating(true); // Start animation for other statuses
+                setprojectStatus(request.data)
+                setisAnimating(true) // Start animation for other statuses
               }
               if (request.currentloaderprogress) {
-                setProgress(request.currentloaderprogress);
+                setProgress(request.currentloaderprogress)
               }
-              break;
+              break
             default:
               console.log("Unhandled message action:", request.action)
               break
@@ -1220,21 +1174,21 @@ function SidePanel() {
             AnalysisData.posts ||
             AnalysisData.fullscreenshot ||
             AnalysisData.profilesdata) && (
-              <span
-                className="main-icon"
-                title="Daten herunterladen"
-                onClick={toggledownloadSection}
-                style={{
-                  cursor: "pointer",
-                  transition: "transform 0.1s ease-in-out"
-                }}
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.9)")
-                }
-                onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
-                ⬇️
-              </span>
-            )}
+            <span
+              className="main-icon"
+              title="Daten herunterladen"
+              onClick={toggledownloadSection}
+              style={{
+                cursor: "pointer",
+                transition: "transform 0.1s ease-in-out"
+              }}
+              onMouseDown={(e) =>
+                (e.currentTarget.style.transform = "scale(0.9)")
+              }
+              onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+              ⬇️
+            </span>
+          )}
 
           <span
             id="mainLinkIcon"
@@ -1260,9 +1214,10 @@ function SidePanel() {
               cursor: "pointer",
               transition: "transform 0.1s ease-in-out"
             }}
-            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.9)")}
-            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
-          >
+            onMouseDown={(e) =>
+              (e.currentTarget.style.transform = "scale(0.9)")
+            }
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
             §
           </span>
           <span
@@ -1694,8 +1649,8 @@ function SidePanel() {
                 title="Führt eine automatische Auswertung der Posts auf der aktuellen Seite durch. Erstellt für anzeigbare Posts Strafanzeigeentwürfe inklusive Beweissicherungen mit Screenshots und Profilsuchen und speichert die Ergebnisse im Download-Ordner.">
                 Seite automatisch auswerten
               </button>
+              {showMessage && <div className="message">{showMessage}</div>}
             </div>
-
           </details>
 
           <h3>Manuelle Auswertung:</h3>
@@ -1805,10 +1760,7 @@ function SidePanel() {
               </button>
             </div>
           </details>
-
         </section>
-
-        {showMessage && <div className="message">{showMessage}</div>}
 
         {showProgressBar && (
           <section id="progressSection">
@@ -1831,7 +1783,10 @@ function SidePanel() {
         </div>
       </main>
       {showTermsModal && (
-        <TermsModal alreadyAccepted={termsAccepted} onAccept={handleTermsAccept} />
+        <TermsModal
+          alreadyAccepted={termsAccepted}
+          onAccept={handleTermsAccept}
+        />
       )}
     </div>
   )

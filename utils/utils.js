@@ -1,10 +1,10 @@
 // Evaluator system prompt
 export function generatePerplexityPrompt(user_handle, user_info) {
-  console.log("generatePerplexityPrompt received:", {
-    user_handle,
-    user_info,
-    type: typeof user_info
-  })
+  // console.log("generatePerplexityPrompt received:", {
+  //   user_handle,
+  //   user_info,
+  //   type: typeof user_info
+  // })
 
   const formattedUserInfo =
     typeof user_info === "object" && user_info !== null
